@@ -1,0 +1,48 @@
+GOOGLE CHECKOUT PLUGIN FOR OSCOMMERCE
+
+INTRODUCTION
+
+The Google Checkout plugin for osCommerce adds Google Checkout as a payment module within osCommerce. This allows merchants using osCommerce to build their sites with Google Checkout as a payment processing option, in addition to existing payment processing options. The plugin provides Level 2 integration of Google Checkout with osCommerce.
+
+Plugin features include:
+1. Support for Google Checkout V2 API
+2. Shipping support (Currently, flat rates, item rates and table rates are supported)
+3. Tax support
+4. User and order updates within osCommerce
+5. Order processing using osCommerce Admin UI 
+
+INSTALLATION NOTES
+
+The installation consists of a patch file google-checkout-oscommerce.patch used to patch existing installation of osCommerce with the plugin sepcific changes.
+"cd" into your main directory containing the catalog folder for osCommerce. The patch is for osCommerce version 2.2-ms2-51113 with the Register Globals patch applied to it(TThis patch is available in the contributions on the osCommerce site).Run the command "patch -p1 < <path to google-checkout-oscommerce.patch>".
+This will add all of the functionality required to integrate Google Checkout with your site. Verify the installation from the Admin site and selecting MODULES->PAYMENTS and checking if Google Checkout is listed as a payment option.
+Alternatively, a manual patch can be done by using the diff information from the patch file.
+
+SETUP ON ADMIN UI
+
+Select and install the Google Checkout payment module. The following are some of the fields you can update:
+
+1. Enable/Disable: Enable this if Google Checkout is to be enabled for the site.
+2. Merchant ID and Merchant Key: These are mandatory fields. If any of these are not set and the module is enabled, a disabled (gray) Checkout button appears on the Checkout page. These can be obtained by creating a seller Google account and checking the Settings->Integration link.
+3. Operation Mode: This allows merchants to test their site on the Sandbox server and later migrate to the Checkout server. It is important to remember to update the Merchant ID and key when migrating.
+4. Shipping Options: This is used to select one or more shipping options to be provided to the buyer during the checkout process. Again, if the shipping options have different tax rates on shipping, a disabled Checkout button will appear on the Checkout page.
+5. Sort order of display: This is used to decide the order in which payment options will be displayed. Since Google Checkout appears on the checkecout page itself, this field has no use currently. 
+
+Your Google Checkout setup page is correct if, upon viewing it, a non-disabled Google Checkout button appears.
+
+TRACKING USERS AND ORDERS
+
+In order to provide this support (as required for Level 2 integration), it is required to update the API callback request field in the seller account to https://<url-site-url>/catalog/googlecheckout/responsehandler.php (Modify this if the responsehandler.php file is located elsewhere). Note that this requires an SSL callback site for if you are using the Checkout server. The Sandbox server accepts non SSL callback URLs.
+
+When a buyer places an order using Google Checkout, a new order notification is sent to your Checkout merchant account. The order is added to your merchant inbox, and the customer list is updated if the buyer is using a Google Checkout account for the first time on your site. You can verify this by checking the Customers and Orders reports within the Reports tab in the Admin UI.
+
+For each order, the default starting state is PENDING. The state changes to PROCESSING and DELIVERED as follows; corresponding messages will be sent out to the Checkout server for order processing.
+
+| Original State | New State  | Action                         |
+| PENDING        | PROCESSING | charging the order             |
+| PROCESSING     | DELIVERED  | marking the order for delivery |
+
+FEEDBACK
+
+Send issues and feedback to vigneshgg@gmail.com.
+

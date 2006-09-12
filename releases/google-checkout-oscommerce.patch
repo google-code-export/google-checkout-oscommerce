@@ -1,6 +1,6 @@
-diff -Naur oscommerce-2.2ms2-051113/catalog/admin/includes/classes/phplot.php google-checkout-oscommerce/catalog/admin/includes/classes/phplot.php
---- oscommerce-2.2ms2-051113/catalog/admin/includes/classes/phplot.php	2003-06-20 17:23:08.000000000 -0400
-+++ google-checkout-oscommerce/catalog/admin/includes/classes/phplot.php	2006-08-28 12:46:51.497397000 -0400
+diff -Naur ./catalog/admin/includes/classes/phplot.php ./../google-checkout-oscommerce/catalog/admin/includes/classes/phplot.php
+--- ./catalog/admin/includes/classes/phplot.php	2003-06-20 17:23:08.000000000 -0400
++++ ./../google-checkout-oscommerce/catalog/admin/includes/classes/phplot.php	2006-08-28 12:46:51.497397000 -0400
 @@ -2598,7 +2598,7 @@
  						$this->DrawDots();
  					}
@@ -10,9 +10,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/admin/includes/classes/phplot.php go
  					$this->DrawPlotBorder();
  					$this->DrawLabels();
  					if ( $this->data_type == "text-data") {
-diff -Naur oscommerce-2.2ms2-051113/catalog/admin/includes/functions/general.php google-checkout-oscommerce/catalog/admin/includes/functions/general.php
---- oscommerce-2.2ms2-051113/catalog/admin/includes/functions/general.php	2006-08-03 10:18:37.000000000 -0400
-+++ google-checkout-oscommerce/catalog/admin/includes/functions/general.php	2006-09-01 13:14:13.001024000 -0400
+diff -Naur ./catalog/admin/includes/functions/general.php ./../google-checkout-oscommerce/catalog/admin/includes/functions/general.php
+--- ./catalog/admin/includes/functions/general.php	2006-08-03 10:18:37.000000000 -0400
++++ ./../google-checkout-oscommerce/catalog/admin/includes/functions/general.php	2006-09-01 13:14:13.001024000 -0400
 @@ -758,6 +758,22 @@
      return $string;
    }
@@ -36,9 +36,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/admin/includes/functions/general.php
  ////
  // Alias function for module configuration keys
    function tep_mod_select_option($select_array, $key_name, $key_value) {
-diff -Naur oscommerce-2.2ms2-051113/catalog/admin/modules.php google-checkout-oscommerce/catalog/admin/modules.php
---- oscommerce-2.2ms2-051113/catalog/admin/modules.php	2003-06-29 23:50:52.000000000 -0400
-+++ google-checkout-oscommerce/catalog/admin/modules.php	2006-09-01 13:22:05.973009000 -0400
+diff -Naur ./catalog/admin/modules.php ./../google-checkout-oscommerce/catalog/admin/modules.php
+--- ./catalog/admin/modules.php	2003-06-29 23:50:52.000000000 -0400
++++ ./../google-checkout-oscommerce/catalog/admin/modules.php	2006-09-01 13:22:05.973009000 -0400
 @@ -12,6 +12,14 @@
  
    require('includes/application_top.php');
@@ -77,10 +77,10 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/admin/modules.php google-checkout-os
          break;
        case 'install':
        case 'remove':
-diff -Naur oscommerce-2.2ms2-051113/catalog/admin/orders.php google-checkout-oscommerce/catalog/admin/orders.php
---- oscommerce-2.2ms2-051113/catalog/admin/orders.php	2005-11-10 15:05:04.000000000 -0500
-+++ google-checkout-oscommerce/catalog/admin/orders.php	2006-09-01 13:27:59.231169000 -0400
-@@ -11,6 +11,143 @@
+diff -Naur ./catalog/admin/orders.php ./../google-checkout-oscommerce/catalog/admin/orders.php
+--- ./catalog/admin/orders.php	2005-11-10 15:05:04.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/admin/orders.php	2006-09-11 19:54:31.292945000 -0400
+@@ -11,6 +11,139 @@
  */
  
    require('includes/application_top.php');
@@ -161,10 +161,6 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/admin/orders.php google-checkout-osc
 +        error_func("Cannot open " . API_CALLBACK_MESSAGE_LOG . " file.\n", 0);
 +        exit(1);
 +      }
-+      if(!is_integer($googlepay->table_order)) {
-+        fwrite($message_log, sprintf("\n\r%s:- No Google checkout operation performed due to SQL injection security concerns\n",date("D M j G:i:s T Y")));
-+        return;      
-+      }
 +      $google_answer = tep_db_fetch_array(tep_db_query("select google_order_number, order_amount from " . $googlepay->table_order . " where orders_id = " . (int)$oID ));
 +      $google_order = $google_answer['google_order_number'];  
 +      $amt = $google_answer['order_amount'];  
@@ -224,7 +220,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/admin/orders.php google-checkout-osc
  
    require(DIR_WS_CLASSES . 'currencies.php');
    $currencies = new currencies();
-@@ -46,14 +183,23 @@
+@@ -46,14 +179,23 @@
              if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
                $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
              }
@@ -254,9 +250,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/admin/orders.php google-checkout-osc
            tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
  
            $order_updated = true;
-diff -Naur oscommerce-2.2ms2-051113/catalog/checkout_payment.php google-checkout-oscommerce/catalog/checkout_payment.php
---- oscommerce-2.2ms2-051113/catalog/checkout_payment.php	2003-06-30 00:03:28.000000000 -0400
-+++ google-checkout-oscommerce/catalog/checkout_payment.php	2006-08-28 12:46:53.080122000 -0400
+diff -Naur ./catalog/checkout_payment.php ./../google-checkout-oscommerce/catalog/checkout_payment.php
+--- ./catalog/checkout_payment.php	2003-06-30 00:03:28.000000000 -0400
++++ ./../google-checkout-oscommerce/catalog/checkout_payment.php	2006-08-28 12:46:53.080122000 -0400
 @@ -216,8 +216,18 @@
            <tr class="infoBoxContents">
              <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
@@ -277,10 +273,10 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/checkout_payment.php google-checkout
    if (sizeof($selection) > 1) {
  ?>
                <tr>
-diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-checkout-oscommerce/catalog/googlecheckout/gcheckout.php
---- oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/googlecheckout/gcheckout.php	2006-09-01 14:44:01.403003000 -0400
-@@ -0,0 +1,383 @@
+diff -Naur ./catalog/googlecheckout/gcheckout.php ./../google-checkout-oscommerce/catalog/googlecheckout/gcheckout.php
+--- ./catalog/googlecheckout/gcheckout.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/googlecheckout/gcheckout.php	2006-09-11 19:41:23.288472000 -0400
+@@ -0,0 +1,378 @@
 +<?php
 +
 +/*
@@ -317,14 +313,6 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +  require_once('includes/languages/' . $language . '/' .
 +               'modules/payment/googlecheckout.php');
 +  require_once('includes/modules/payment/googlecheckout.php');
-+  define('API_CALLBACK_MESSAGE_LOG', "response_message.log");
-+  define('API_CALLBACK_ERROR_LOG', "response_error.log");
-+
-+  //Setup the log file
-+  if (!$message_log = fopen(API_CALLBACK_MESSAGE_LOG, "a")) {
-+    error_func("Cannot open " . API_CALLBACK_MESSAGE_LOG . " file.\n", 0);
-+    exit(1);
-+  }
 +
 +  // Function which returns the current URL  
 +  function selfURL() { 
@@ -375,6 +363,11 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +  $tax_array = array();
 +  $tax_name_aray = array();
 +  
++  if( sizeof($products) == 0) {
++    $googlepayment->variant = "disabled";
++    $current_checkout_url = selfURL();
++  }
++
 +  for ($i=0, $n=sizeof($products); $i<$n; $i++) {
 +    
 +    if (isset($products[$i]['attributes']) && 
@@ -389,7 +382,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +                                    where pa.products_id = '" . makeSqlInteger($products[$i]['id']) . "'
 +                                    and pa.options_id = '" . makeSqlString($option) . "'
 +                                    and pa.options_id = popt.products_options_id
-+                                    nd pa.options_values_id = '" . makeSqlString($value) . "'
++                                    and pa.options_values_id = '" . makeSqlString($value) . "'
 +                                    and pa.options_values_id = poval.products_options_values_id
 +                                    and popt.language_id = '" . $languages_id . "'
 +                                    and poval.language_id = '" . $languages_id . "'");
@@ -459,11 +452,11 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +  $gcheck->push('checkout-flow-support');
 +  $gcheck->push('merchant-checkout-flow-support');
 +  $gcheck->element('continue-shopping-url', $cont_shopping_cart);
-+			
++
 +  //Shipping options
 +  $gcheck->push('shipping-methods');
 +  $check_query = tep_db_query("select configuration_value 
-+                               from " . TABLE_CONFIGURATION . " i
++                               from " . TABLE_CONFIGURATION . " 
 +                               where configuration_key = 
 +                               'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING' ");
 +  $shipping_array = tep_db_fetch_array($check_query);
@@ -473,13 +466,13 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +  $tax_class_unique = array();
 +  //Add each shipping option to the options array
 +  $options = explode( ", ", $ship);
-+  
++
 +  for($i=0; $i< sizeof($googlepayment->shipping_display); $i++) {
-+    if(in_array($googlepayment->shipping_display[$i], $options))  {   	  
++    if(in_array($googlepayment->shipping_display[$i], $options))  {
 +      $curr_ship = strtoupper($googlepayment->shipping_support[$i]);
 +      $check_query = tep_db_query("select configuration_key,configuration_value 
-+                                   from " . TABLE_CONFIGURATION . " 
-+                                   where configuration_key LIKE 
++                                   from " . TABLE_CONFIGURATION.  "
++                                   where configuration_key LIKE
 +                                   'MODULE_SHIPPING_" . $curr_ship . "_%' ");
 +      $num_rows = tep_db_num_rows($check_query);
 +      $name = $googlepayment->getShippingType(
@@ -523,7 +516,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +        if($curr_tax_class != 0 && $curr_tax_class != '') {
 +           $tax_class[] = $curr_tax_class;
 +           if(!in_array($curr_tax_class, $tax_class_unique))
-+	     $tax_class_unique[] = $curr_tax_class;  	
++	     $tax_class_unique[] = $curr_tax_class;
 +        } 
 +        $gcheck->push('flat-rate-shipping', array('name' => $name));
 +        $gcheck->element('price', $price, array('currency' => 'USD'));
@@ -551,7 +544,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +  $gcheck->push('tax-rules');
 +		
 +  if(sizeof($tax_class_unique) == 1  && 
-+     sizeof($shipping_arr) == sizeof($tax_class)) {
++     sizeof($options) == sizeof($tax_class)) {
 +    $tax_rates_result =  tep_db_query("select countries_name, zone_code, tax_rate 
 +                                       from " . TABLE_TAX_RATES . " as tr, 
 +                                       " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz, 
@@ -579,8 +572,6 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +      $gcheck->pop('tax-area');			
 +      $gcheck->pop('default-tax-rule');			
 +    }
-+
-+    $tax_table = new gTaxTable($tax_name_array[0], $tax_rule, TAX_TABLE_DEFAULT); 
 +  } else {
 +    $gcheck->push('default-tax-rule');			
 +    $gcheck->element('rate', 0);
@@ -594,7 +585,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 + 
 +  if(sizeof($tax_class_unique) > 1 || 
 +    (sizeof($tax_class_unique) == 1 && 
-+     sizeof($shipping_arr) != sizeof($tax_class) ))  {
++     sizeof($options) != sizeof($tax_class) ))  {
 +    $googlepayment->variant = "disabled";	
 +    $current_checkout_url = selfURL();
 +  }
@@ -664,405 +655,19 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php google-
 +</table>
 +
 +<!-- ** END GOOGLE CHECKOUT ** -->
-diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php~ google-checkout-oscommerce/catalog/googlecheckout/gcheckout.php~
---- oscommerce-2.2ms2-051113/catalog/googlecheckout/gcheckout.php~	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/googlecheckout/gcheckout.php~	2006-09-01 13:57:33.000000000 -0400
-@@ -0,0 +1,382 @@
-+<?php
-+
-+/*
-+  Copyright (C) 2006 Google Inc.
-+
-+  This program is free software; you can redistribute it and/or
-+  modify it under the terms of the GNU General Public License
-+  as published by the Free Software Foundation; either version 2
-+  of the License, or (at your option) any later version.
-+
-+  This program is distributed in the hope that it will be useful,
-+  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+  GNU General Public License for more details.
-+
-+  You should have received a copy of the GNU General Public License
-+  along with this program; if not, write to the Free Software
-+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-+*/
-+
-+/* GOOGLE CHECKOUT
-+ * Script invoked when Google Checkout payment option has been enabled
-+ * It uses phpGCheckout library so it can work with PHP4 and PHP5
-+ * Generates the cart xml, shipping and tax options and adds them as hidden 
-+ * fields along with the Checkout button
-+ 
-+ * A disabled button is displayed in the following cases:
-+ * 1. If merchant id or merchant key is not set 
-+ * 2. If there are multiple shipping options selected and they use different 
-+ * shipping tax tables or some dont use tax tables
-+ */
-+ 
-+  require_once('admin/includes/configure.php');
-+  require_once('includes/languages/' . $language . '/' .
-+               'modules/payment/googlecheckout.php');
-+  require_once('includes/modules/payment/googlecheckout.php');
-+  define('API_CALLBACK_MESSAGE_LOG', "response_message.log");
-+  define('API_CALLBACK_ERROR_LOG', "response_error.log");
-+
-+  //Setup the log file
-+  if (!$message_log = fopen(API_CALLBACK_MESSAGE_LOG, "a")) {
-+    error_func("Cannot open " . API_CALLBACK_MESSAGE_LOG . " file.\n", 0);
-+    exit(1);
-+  }
-+
-+  // Function which returns the current URL  
-+  function selfURL() { 
-+    $s = empty($_SERVER["HTTPS"]) ? '' : ($_SERVER["HTTPS"] == "on") ? 
-+               "s" : ""; 
-+    $protocol = strleft(strtolower($_SERVER["SERVER_PROTOCOL"]), "/").$s; 
-+    $port = ($_SERVER["SERVER_PORT"] == "80") ? 
-+             "" : (":".$_SERVER["SERVER_PORT"]); 
-+    return $protocol."://".$_SERVER['SERVER_NAME'].
-+           $port.$_SERVER['REQUEST_URI']; 
-+  }
-+  // Used by selfURL 
-+  function strleft($s1, $s2) { 
-+    return substr($s1, 0, strpos($s1, $s2)); 
-+  }
-+
-+  //Functions used to prevent SQL injection attacks
-+  function makeSqlString($str) {
-+    return addcslashes(stripcslashes($sstr), "\"'\\\0..\37!@\@\177..\377');
-+  }
-+
-+  function makeSqlInteger($val) {
-+    return ((settype($val, 'integer'))?($val):0); 
-+  }
-+
-+  function makeSqlFloat($val) {
-+    return ((settype($val, 'float'))?($val):0); 
-+  }
-+
-+  $googlepayment = new googlecheckout();
-+  $current_checkout_url = $googlepayment->checkout_url;
-+
-+  /* if( ($googlepayment->merchantid == '') || ($googlepayment->merchantkey == ''))
-+       $googlepayment->variant = "disabled";
-+       $current_checkout_url = selfURL();
-+   */
-+
-+  //Create a cart and add items to it  
-+  require('googlecheckout/xmlwriter.php');
-+  $gcheck = new XmLWriter();
-+
-+  $gcheck->push('checkout-shopping-cart', 
-+          array('xmlns' => "http://checkout.google.com/schema/2"));
-+  $gcheck->push('shopping-cart');
-+  $gcheck->push('items');
-+	
-+  $products = $cart->get_products();
-+  $tax_array = array();
-+  $tax_name_aray = array();
-+  
-+  for ($i=0, $n=sizeof($products); $i<$n; $i++) {
-+    
-+    if (isset($products[$i]['attributes']) && 
-+        is_array($products[$i]['attributes'])) {
-+      while (list($option, $value) = each($products[$i]['attributes'])) {
-+        $attributes = tep_db_query("select popt.products_options_name, 
-+                                    poval.products_options_values_name, 
-+                                    pa.options_values_price, pa.price_prefix
-+                                    from " . TABLE_PRODUCTS_OPTIONS . " popt, 
-+                                         " . TABLE_PRODUCTS_OPTIONS_VALUES . 
-+                                    " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-+                                    where pa.products_id = '" . makeSqlInteger($products[$i]['id']) . "'
-+                                    and pa.options_id = '" . makeSqlString($option) . "'
-+                                    and pa.options_id = popt.products_options_id
-+                                    nd pa.options_values_id = '" . makeSqlString($value) . "'
-+                                    and pa.options_values_id = poval.products_options_values_id
-+                                    and popt.language_id = '" . $languages_id . "'
-+                                    and poval.language_id = '" . $languages_id . "'");
-+        $attributes_values = tep_db_fetch_array($attributes);
-+        $attr_value = $attributes_values['products_options_values_name'];
-+        $products[$i][$option]['products_options_name'] = 
-+                               $attributes_values['products_options_name'];
-+        $products[$i][$option]['options_values_id'] = $value;
-+        $products[$i][$option]['products_options_values_name'] = $attr_value;
-+        $products[$i][$option]['options_values_price'] = 
-+                               $attributes_values['options_values_price'];
-+        $products[$i][$option]['price_prefix'] = 
-+                               $attributes_values['price_prefix'];
-+      }
-+    }
-+    $products_name = $products[$i]['name'];
-+    $products_description = tep_db_fetch_array(tep_db_query(
-+                            "select products_description from ".TABLE_PRODUCTS_DESCRIPTION. " 
-+                             where products_id = '" . $products[$i]['id'] . "' 
-+                             and language_id = '". $languages_id ."'"));
-+    $products_description = $products_description['products_description'];
-+      
-+    $tax_result = tep_db_query("select tax_class_title 
-+                                from " . TABLE_TAX_CLASS . " 
-+                                where tax_class_id = ". 
-+                                makeSqlInteger($products[$i]['tax_class_id']) );
-+    $tax = tep_db_fetch_array($tax_result);
-+    $tt = $tax['tax_class_title'];
-+    if(!in_array($products[$i]['tax_class_id'], $tax_array)) {
-+      $tax_array[] = $products[$i]['tax_class_id'];	  
-+      $tax_name_array[] = $tt;
-+    }
-+    if (isset($products[$i]['attributes']) && 
-+        is_array($products[$i]['attributes'])) {
-+      reset($products[$i]['attributes']);
-+      while (list($option, $value) = each($products[$i]['attributes'])) {
-+        $products_name .= "\n" .'- ' . 
-+                  $products[$i][$option]['products_options_name'] . ' '.
-+                  $products[$i][$option]['products_options_values_name'] . '';
-+      }
-+    }
-+    $gcheck->push('item');
-+    $gcheck->element('item-name', $products_name);
-+    $gcheck->element('item-description', $products_description);
-+    $gcheck->element('unit-price', $products[$i]['final_price'], 
-+               array('currency'=> 'USD'));
-+    $gcheck->element('quantity', $products[$i]['quantity']);
-+    $gcheck->element('tax-table-selector', $tt);
-+    $gcheck->pop('item');
-+  }
-+  $gcheck->pop('items'); 
-+	
-+  $private_data = tep_session_id().';'.tep_session_name();
-+  $product_list = '';
-+  for ($i=0, $n=sizeof($products); $i<$n; $i++) {
-+    $product_list .= ";".(int)$products[$i]['id'];
-+  }
-+  $gcheck->push('merchant-private-data');
-+  $gcheck->element('session-data', $private_data);
-+  $gcheck->element('product-data', $product_list);
-+  $gcheck->pop('merchant-private-data');
-+	
-+  $gcheck->pop('shopping-cart');
-+	
-+  //Add the starting index file as the return url for the buyer.
-+  // This can be added as an option during the module installation
-+  $cont_shopping_cart = tep_href_link(FILENAME_DEFAULT);
-+  $gcheck->push('checkout-flow-support');
-+  $gcheck->push('merchant-checkout-flow-support');
-+  $gcheck->element('continue-shopping-url', $cont_shopping_cart);
-+			
-+  //Shipping options
-+  $gcheck->push('shipping-methods');
-+  $check_query = tep_db_query("select configuration_value 
-+                               from " . TABLE_CONFIGURATION . " i
-+                               where configuration_key = 
-+                               'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING' ");
-+  $shipping_array = tep_db_fetch_array($check_query);
-+  $ship =$shipping_array['configuration_value'];
-+  $tax_class = array();
-+  $shipping_arr = array();
-+  $tax_class_unique = array();
-+  //Add each shipping option to the options array
-+  $options = explode( ", ", $ship);
-+  
-+  for($i=0; $i< sizeof($googlepayment->shipping_display); $i++) {
-+    if(in_array($googlepayment->shipping_display[$i], $options))  {   	  
-+      $curr_ship = strtoupper($googlepayment->shipping_support[$i]);
-+      $check_query = tep_db_query("select configuration_key,configuration_value 
-+                                   from " . TABLE_CONFIGURATION . " 
-+                                   where configuration_key LIKE 
-+                                   'MODULE_SHIPPING_" . $curr_ship . "_%' ");
-+      $num_rows = tep_db_num_rows($check_query);
-+      $name = $googlepayment->getShippingType(
-+                   $googlepayment->shipping_display[$i]);
-+      $data_arr = array();
-+      $handling = 0;
-+      $table_mode = '';
-+	  
-+      for($j=0; $j < $num_rows; $j++)  {
-+        $flat_array = tep_db_fetch_array($check_query);
-+        $data_arr[$flat_array['configuration_key']]= 
-+                              $flat_array['configuration_value'];
-+      }
-+      $common_string = "MODULE_SHIPPING_".$curr_ship."_";
-+      $zone = $data_arr[$common_string."ZONE"]; 	
-+      $enable = $data_arr[$common_string."STATUS"];
-+      $curr_tax_class = $data_arr[$common_string."TAX_CLASS"];
-+      $price = $data_arr[$common_string."COST"];
-+      $handling = $data_arr[$common_string."HANDLING"];
-+      $table_mode = $data_arr[$common_string."MODE"];
-+      $price = $googlepayment->getShippingPrice(
-+               $googlepayment->shipping_display[$i], $cart, 
-+               $price, $handling, $table_mode);
-+     	  	  		  
-+      $zone_result = tep_db_query("select countries_name, zone_code 
-+                                   from " . TABLE_GEO_ZONES . " as gz ,
-+                                   " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz,
-+                                   " . TABLE_ZONES . " as z, 
-+                                   ". TABLE_COUNTRIES . " as c 
-+                                   where gz.geo_zone_id = " . $zone. " 
-+                                   and gz.geo_zone_id = ztgz.geo_zone_id 
-+                                   and ztgz.zone_id = z.zone_id 
-+                                   and z.zone_country_id = c.countries_id ");
-+      $zone_answer = tep_db_fetch_array($zone_result);
-+      $allowed_restriction_state = $zone_answer['zone_code'];
-+      $allowed_restriction_country = $zone_answer['countries_name'];
-+
-+      if($enable == "True") {
-+        if($curr_tax_class != 0 && $curr_tax_class != '') {
-+           $tax_class[] = $curr_tax_class;
-+           if(!in_array($curr_tax_class, $tax_class_unique))
-+	     $tax_class_unique[] = $curr_tax_class;  	
-+        } 
-+        $gcheck->push('flat-rate-shipping', array('name' => $name));
-+        $gcheck->element('price', $price, array('currency' => 'USD'));
-+        $gcheck->push('shipping-restrictions');
-+        $gcheck->push('allowed-areas');
-+        if($allowed_restriction_country == '')
-+          $gcheck->element('us-country-area','',
-+                            array('country-area' => 'ALL'));
-+	else { 
-+          $gcheck->push('us-state-area');
-+          $gcheck->element('state', $allowed_restriction_state);
-+          $gcheck->pop('us-state-area');
-+        }	
-+        $gcheck->pop('allowed-areas');
-+        $gcheck->pop('shipping-restrictions');
-+        $gcheck->pop('flat-rate-shipping');
-+      }
-+    }
-+  } 
-+  $gcheck->pop('shipping-methods');
-+
-+  //Tax options	
-+  $gcheck->push('tax-tables');
-+  $gcheck->push('default-tax-table');
-+  $gcheck->push('tax-rules');
-+		
-+  if(sizeof($tax_class_unique) == 1  && 
-+     sizeof($shipping_arr) == sizeof($tax_class)) {
-+    $tax_rates_result =  tep_db_query("select countries_name, zone_code, tax_rate 
-+                                       from " . TABLE_TAX_RATES . " as tr, 
-+                                       " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz, 
-+                                       " . TABLE_ZONES . " as z, 
-+                                       " . TABLE_COUNTRIES . " as c 
-+                                       where tr.tax_class_id = 
-+                                         " . $tax_class_unique[0] 
-+                                       . " and tr.tax_zone_id = ztgz.geo_zone_id 
-+                                       and ztgz.zone_id=z.zone_id 
-+                                       and ztgz.zone_country_id = c.countries_id");
-+    $num_rows = tep_db_num_rows($tax_rates_result);
-+    $tax_rule = array();
-+	  
-+    for($j=0; $j<$num_rows; $j++) {
-+      $tax_result = tep_db_fetch_array($tax_rates_result);
-+      $rate = ((double) ($tax_result['tax_rate']))/100.0;
-+	
-+      $gcheck->push('default-tax-rule');			
-+      $gcheck->element('shipping-taxed', 'true');
-+      $gcheck->element('rate', $rate);
-+      $gcheck->push('tax-area');			
-+      $gcheck->push('us-state-area');
-+      $gcheck->element('state', $tax_result['zone_code']);
-+      $gcheck->pop('us-state-area');			
-+      $gcheck->pop('tax-area');			
-+      $gcheck->pop('default-tax-rule');			
-+    }
-+
-+    $tax_table = new gTaxTable($tax_name_array[0], $tax_rule, TAX_TABLE_DEFAULT); 
-+  } else {
-+    $gcheck->push('default-tax-rule');			
-+    $gcheck->element('rate', 0);
-+    $gcheck->push('tax-area');			
-+    $gcheck->element('us-country-area','', array('country-area'=>'ALL'));
-+    $gcheck->pop('tax-area');			
-+    $gcheck->pop('default-tax-rule');			
-+  }
-+  $gcheck->pop('tax-rules');
-+  $gcheck->pop('default-tax-table');
-+ 
-+  if(sizeof($tax_class_unique) > 1 || 
-+    (sizeof($tax_class_unique) == 1 && 
-+     sizeof($shipping_arr) != sizeof($tax_class) ))  {
-+    $googlepayment->variant = "disabled";	
-+    $current_checkout_url = selfURL();
-+  }
-+	
-+  $i=0;
-+  $tax_tables = array();
-+  $gcheck->push('alternate-tax-tables');
-+	
-+  foreach($tax_array as $tax_table)  {
-+    $tax_rates_result =  tep_db_query("select countries_name, zone_code, tax_rate 
-+                                       from " . TABLE_TAX_RATES . " as tr, 
-+                                      " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz, 
-+                                      " . TABLE_ZONES . " as z, 
-+                                      " . TABLE_COUNTRIES . " as c 
-+                                      where tr.tax_class_id= " . $tax_array[$i]. " 
-+                                      and tr.tax_zone_id = ztgz.geo_zone_id 
-+                                      and ztgz.zone_id=z.zone_id 
-+                                      and ztgz.zone_country_id = c.countries_id");	
-+    $num_rows = tep_db_num_rows($tax_rates_result);
-+    $tax_rule = array();
-+
-+    $gcheck->push('alternate-tax-table',array('name' => $tax_name_array[$i]));
-+    $gcheck->push('alternate-tax-rules');
-+    for($j=0; $j<$num_rows; $j++) {
-+      $tax_result = tep_db_fetch_array($tax_rates_result);
-+      $rate = ((double)($tax_result['tax_rate']))/100.0;
-+      $gcheck->push('alternate-tax-rule');			
-+      $gcheck->element('rate', $rate);
-+      $gcheck->push('tax-area');			
-+      $gcheck->push('us-state-area');
-+      $gcheck->element('state', $tax_result['zone_code']);
-+      $gcheck->pop('us-state-area');			
-+      $gcheck->pop('tax-area');			
-+      $gcheck->pop('alternate-tax-rule');			
-+    }
-+    $gcheck->pop('alternate-tax-rules');
-+    $gcheck->pop('alternate-tax-table');
-+    $i++;
-+  }
-+  $gcheck->pop('alternate-tax-tables');
-+  $gcheck->pop('tax-tables');
-+	
-+  $gcheck->pop('merchant-checkout-flow-support');
-+  $gcheck->pop('checkout-flow-support');
-+  $gcheck->pop('checkout-shopping-cart');
-+	
-+?>
-+<table border="0" width="98%" cellspacing="1" cellpadding ="1"> 
-+<tr><br>
-+<td align="right" valign="middle" class = "main">
-+ <B><?php echo MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_OPTION ?> </B>
-+</td></tr>
-+</table> 
-+  
-+<table  border="0" width="100%" class="table-1" cellspacing="12" cellpadding="5"> 
-+  <!-- Print Error message if the shopping cart XML is invalid -->
-+
-+  <!-- Print the Google Checkout button in a form containing the shopping cart data -->
-+  <tr><td align="right" valign="middle" class = "main">
-+    <p><form method="POST" action="<?php echo $current_checkout_url; ?>">
-+     <input type="hidden" name="cart" value="<?php echo base64_encode($gcheck->getXml());?>">
-+     <input type="hidden" name="signature" value="<?php echo base64_encode( $googlepayment->CalcHmacSha1($gcheck->getXml())); ?>">
-+	   <input type="image" name="Checkout" alt="Checkout" 
-+            src="<?php echo $googlepayment->mode;?>buttons/checkout.gif?merchant_id= <?php echo $googlepayment->merchantid;?>&w=180&h=46&style=white&variant=<?php echo $googlepayment->variant;?>&loc=en_US"height="46" width="180">  
-+        </form></p>
-+    </td></tr>
-+</table>
-+
-+<!-- ** END GOOGLE CHECKOUT ** -->
-diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/response_error.log google-checkout-oscommerce/catalog/googlecheckout/response_error.log
---- oscommerce-2.2ms2-051113/catalog/googlecheckout/response_error.log	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/googlecheckout/response_error.log	2006-08-28 14:11:31.694147000 -0400
+diff -Naur ./catalog/googlecheckout/response_error.log ./../google-checkout-oscommerce/catalog/googlecheckout/response_error.log
+--- ./catalog/googlecheckout/response_error.log	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/googlecheckout/response_error.log	2006-08-28 14:11:31.694147000 -0400
 @@ -0,0 +1 @@
 +# This file is used to record all the response errors encountered by Google Checkout Plugin
-diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/response_message.log google-checkout-oscommerce/catalog/googlecheckout/response_message.log
---- oscommerce-2.2ms2-051113/catalog/googlecheckout/response_message.log	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/googlecheckout/response_message.log	2006-08-28 14:12:27.165920000 -0400
+diff -Naur ./catalog/googlecheckout/response_message.log ./../google-checkout-oscommerce/catalog/googlecheckout/response_message.log
+--- ./catalog/googlecheckout/response_message.log	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/googlecheckout/response_message.log	2006-08-28 14:12:27.165920000 -0400
 @@ -0,0 +1 @@
 +# This file is used to record all the response messages by  the Google Checkout plugin
-diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/responsehandler.php google-checkout-oscommerce/catalog/googlecheckout/responsehandler.php
---- oscommerce-2.2ms2-051113/catalog/googlecheckout/responsehandler.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/googlecheckout/responsehandler.php	2006-09-01 12:31:31.748497000 -0400
+diff -Naur ./catalog/googlecheckout/responsehandler.php ./../google-checkout-oscommerce/catalog/googlecheckout/responsehandler.php
+--- ./catalog/googlecheckout/responsehandler.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/googlecheckout/responsehandler.php	2006-09-11 20:13:11.969787000 -0400
 @@ -0,0 +1,532 @@
 +<?php
 +/*
@@ -1201,7 +806,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/responsehandler.php g
 +//Add the order details to the table
 +// This table could be modified to hold the merchant id and key if required 
 +// so that different mids and mkeys can be used for different orders
-+      tep_db_query("insert into " . $googlepayment->table_order . " values (" . $orders_id . ", ". makeSqlInteger($data[$root]['google-order-number']) . ", " . makeSqlFloat($data[$root]['order-total']) . ")");
++      tep_db_query("insert into " . $googlepayment->table_order . " values (" . $orders_id . ", ". makeSqlString($data[$root]['google-order-number']) . ", " . makeSqlFloat($data[$root]['order-total']) . ")");
 +			
 +      foreach($data[$root]['order-adjustment']['shipping'] as $ship); {
 +        $shipping =  $ship['shipping-name'];
@@ -1318,7 +923,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/responsehandler.php g
 +      $params = ' customers_id = '.$cust_id;
 +    } else {
 +// Else check if buyer is a new user from Google Checkout			
-+      $customer_info = tep_db_fetch_array(tep_db_query("select customers_id from " .$googlepayment->table_name  . " where buyer_id = ". makeSqlInteger($data[$root]['buyer-id'])  ));   
++      $customer_info = tep_db_fetch_array(tep_db_query("select customers_id from " .$googlepayment->table_name  . " where buyer_id = ". makeSqlString($data[$root]['buyer-id'])  ));   
 +      if($customer_info['customers_id'] == '')  {
 +// Add if new user
 +	$sql_data_array = array('customers_gender' => '',
@@ -1457,7 +1062,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/responsehandler.php g
 +//Insert entry into orders_status_history		
 +    $sql_data_array = array('orders_id' => $orders_id,
 +                           'orders_status_id' => 1,
-+                           'date_added' => $data[$root]['timestamp'],
++                           'date_added' => 'now()',
 +                           'customer_notified' => 1,
 +                           'comments' => ''); 
 +    tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);	
@@ -1583,7 +1188,7 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/responsehandler.php g
 +
 +  //Functions to prevent SQL injection attacks
 +  function makeSqlString($str) {
-+    return addcslashes(stripcslashes($sstr), "'\"\\\0..\37!@\@\177..\377");
++    return addcslashes(stripcslashes($str), "'\"\\\0..\37!@\@\177..\377");
 +  }
 +
 +  function makeSqlInteger($val) {
@@ -1596,9 +1201,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/responsehandler.php g
 +   
 +  // ** END GOOGLE CHECKOUT **
 +?>
-diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/xmlparser.php google-checkout-oscommerce/catalog/googlecheckout/xmlparser.php
---- oscommerce-2.2ms2-051113/catalog/googlecheckout/xmlparser.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/googlecheckout/xmlparser.php	2006-08-28 12:52:01.012117000 -0400
+diff -Naur ./catalog/googlecheckout/xmlparser.php ./../google-checkout-oscommerce/catalog/googlecheckout/xmlparser.php
+--- ./catalog/googlecheckout/xmlparser.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/googlecheckout/xmlparser.php	2006-08-28 12:52:01.012117000 -0400
 @@ -0,0 +1,64 @@
 +<?php
 +/*
@@ -1664,9 +1269,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/xmlparser.php google-
 +}
 +// ** END GOOGLE CHECKOUT ** 
 +?>
-diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/xmlwriter.php google-checkout-oscommerce/catalog/googlecheckout/xmlwriter.php
---- oscommerce-2.2ms2-051113/catalog/googlecheckout/xmlwriter.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/googlecheckout/xmlwriter.php	2006-08-28 12:52:51.262608000 -0400
+diff -Naur ./catalog/googlecheckout/xmlwriter.php ./../google-checkout-oscommerce/catalog/googlecheckout/xmlwriter.php
+--- ./catalog/googlecheckout/xmlwriter.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/googlecheckout/xmlwriter.php	2006-08-28 12:52:51.262608000 -0400
 @@ -0,0 +1,85 @@
 +<?php
 +/*
@@ -1753,9 +1358,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/googlecheckout/xmlwriter.php google-
 +}
 +// ** END GOOGLE CHECKOUT ** 
 +?>  
-diff -Naur oscommerce-2.2ms2-051113/catalog/includes/languages/english/modules/payment/googlecheckout.php google-checkout-oscommerce/catalog/includes/languages/english/modules/payment/googlecheckout.php
---- oscommerce-2.2ms2-051113/catalog/includes/languages/english/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/includes/languages/english/modules/payment/googlecheckout.php	2006-08-28 13:37:30.143722000 -0400
+diff -Naur ./catalog/includes/languages/english/modules/payment/googlecheckout.php ./../google-checkout-oscommerce/catalog/includes/languages/english/modules/payment/googlecheckout.php
+--- ./catalog/includes/languages/english/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/includes/languages/english/modules/payment/googlecheckout.php	2006-08-28 13:37:30.143722000 -0400
 @@ -0,0 +1,34 @@
 +<?php
 +
@@ -1791,9 +1396,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/includes/languages/english/modules/p
 +  
 +  // ** END GOOGLE CHECKOUT **
 +?>
-diff -Naur oscommerce-2.2ms2-051113/catalog/includes/languages/espanol/modules/payment/googlecheckout.php google-checkout-oscommerce/catalog/includes/languages/espanol/modules/payment/googlecheckout.php
---- oscommerce-2.2ms2-051113/catalog/includes/languages/espanol/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/includes/languages/espanol/modules/payment/googlecheckout.php	2006-08-28 13:18:46.736779000 -0400
+diff -Naur ./catalog/includes/languages/espanol/modules/payment/googlecheckout.php ./../google-checkout-oscommerce/catalog/includes/languages/espanol/modules/payment/googlecheckout.php
+--- ./catalog/includes/languages/espanol/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/includes/languages/espanol/modules/payment/googlecheckout.php	2006-08-28 13:18:46.736779000 -0400
 @@ -0,0 +1,32 @@
 +<?php
 +
@@ -1827,9 +1432,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/includes/languages/espanol/modules/p
 +  
 +  // ** END GOOGLE CHECKOUT **
 +?>
-diff -Naur oscommerce-2.2ms2-051113/catalog/includes/languages/german/modules/payment/googlecheckout.php google-checkout-oscommerce/catalog/includes/languages/german/modules/payment/googlecheckout.php
---- oscommerce-2.2ms2-051113/catalog/includes/languages/german/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/includes/languages/german/modules/payment/googlecheckout.php	2006-08-28 13:37:27.782753000 -0400
+diff -Naur ./catalog/includes/languages/german/modules/payment/googlecheckout.php ./../google-checkout-oscommerce/catalog/includes/languages/german/modules/payment/googlecheckout.php
+--- ./catalog/includes/languages/german/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/includes/languages/german/modules/payment/googlecheckout.php	2006-08-28 13:37:27.782753000 -0400
 @@ -0,0 +1,31 @@
 +<?php
 +
@@ -1862,9 +1467,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/includes/languages/german/modules/pa
 +	
 +  // ** END GOOGLE CHECKOUT **
 +?>
-diff -Naur oscommerce-2.2ms2-051113/catalog/includes/modules/payment/googlecheckout.php google-checkout-oscommerce/catalog/includes/modules/payment/googlecheckout.php
---- oscommerce-2.2ms2-051113/catalog/includes/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
-+++ google-checkout-oscommerce/catalog/includes/modules/payment/googlecheckout.php	2006-09-01 14:17:47.645270000 -0400
+diff -Naur ./catalog/includes/modules/payment/googlecheckout.php ./../google-checkout-oscommerce/catalog/includes/modules/payment/googlecheckout.php
+--- ./catalog/includes/modules/payment/googlecheckout.php	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/includes/modules/payment/googlecheckout.php	2006-09-11 19:26:07.017180000 -0400
 @@ -0,0 +1,218 @@
 +<?php
 +
@@ -1895,9 +1500,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/includes/modules/payment/googlecheck
 +class googlecheckout {
 +  var $code, $title, $description, $merchantid, $merchantkey, $mode, $enabled, $shipping_support, $variant;
 +  var $schema_url, $base_url, $checkout_url, $checkout_diagnose_url, $request_url, $request_diagnose_url;
-+	var $table_name = "google_checkout", $table_order = "google_orders";
++  var $table_name = "google_checkout", $table_order = "google_orders";
 +  var $ship_flat_ui;
-+		
++
 +// class constructor
 +  function googlecheckout() {
 +    global $order;
@@ -1961,9 +1566,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/includes/modules/payment/googlecheck
 +// Useful if some one wants to map to Google checkout shoppign types(flat, pickup or merchant calculate)
 +  function getShippingType($shipping_option) {
 +    switch($shipping_option) {
-+      case GOOGLECHECKOUT_FLAT_RATE_SHIPPING: return $this->ship_flat_ui; 
-+      case GOOGLECHECKOUT_ITEM_RATE_SHIPPING: return $this->ship_flat_ui; 
-+      case GOOGLECHECKOUT_TABLE_RATE_SHIPPING: return $this->ship_flat_ui;
++      case GOOGLECHECKOUT_FLAT_RATE_SHIPPING: return $this->ship_flat_ui."- Flat Rate"; 
++      case GOOGLECHECKOUT_ITEM_RATE_SHIPPING: return $this->ship_flat_ui."- Item Rate";
++      case GOOGLECHECKOUT_TABLE_RATE_SHIPPING: return $this->ship_flat_ui."- Table Rate";
 +      default: return "";
 +    }	
 +  }
@@ -2084,9 +1689,231 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/includes/modules/payment/googlecheck
 +}
 +// ** END GOOGLE CHECKOUT **
 +?>
-diff -Naur oscommerce-2.2ms2-051113/catalog/login.php google-checkout-oscommerce/catalog/login.php
---- oscommerce-2.2ms2-051113/catalog/login.php	2003-06-06 00:28:24.000000000 -0400
-+++ google-checkout-oscommerce/catalog/login.php	2006-08-28 12:46:55.151397000 -0400
+diff -Naur ./catalog/includes/modules/payment/googlecheckout.php~ ./../google-checkout-oscommerce/catalog/includes/modules/payment/googlecheckout.php~
+--- ./catalog/includes/modules/payment/googlecheckout.php~	1969-12-31 19:00:00.000000000 -0500
++++ ./../google-checkout-oscommerce/catalog/includes/modules/payment/googlecheckout.php~	2006-09-11 14:42:48.000000000 -0400
+@@ -0,0 +1,218 @@
++<?php
++
++/*
++  Copyright (C) 2006 Google Inc.
++
++  This program is free software; you can redistribute it and/or
++  modify it under the terms of the GNU General Public License
++  as published by the Free Software Foundation; either version 2
++  of the License, or (at your option) any later version.
++
++  This program is distributed in the hope that it will be useful,
++  but WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++  GNU General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with this program; if not, write to the Free Software
++  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++*/
++
++
++/* GOOGLE CHECKOUT
++ * Class provided in modules dir to add googlecheckout as a payment option
++ * Member variables refer to currently set paramter values from the database
++ */
++
++class googlecheckout {
++  var $code, $title, $description, $merchantid, $merchantkey, $mode, $enabled, $shipping_support, $variant;
++  var $schema_url, $base_url, $checkout_url, $checkout_diagnose_url, $request_url, $request_diagnose_url;
++  var $table_name = "google_checkout", $table_order = "google_orders";
++  var $ship_flat_ui;
++
++// class constructor
++  function googlecheckout() {
++    global $order;
++    global $language;
++    
++    require_once(DIR_FS_CATALOG.'includes/languages/'. $language . '/modules/payment/googlecheckout.php');
++    
++    $this->code = 'googlecheckout';
++    $this->title = MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
++    $this->description = MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_DESCRIPTION;
++    $this->sort_order = MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER;
++    $this->mode= MODULE_PAYMENT_GOOGLECHECKOUT_STATUS;
++    $this->merchantid = MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID;
++    $this->merchantkey = MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY;
++    $this->mode = MODULE_PAYMENT_GOOGLECHECKOUT_MODE;
++    $this->enabled = ((MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') ? true : false);
++			
++    // Add additional shipping options when supported here
++    $this->shipping_support = array("flat", "item", "table");
++    $this->shipping_display = array(GOOGLECHECKOUT_FLAT_RATE_SHIPPING, GOOGLECHECKOUT_ITEM_RATE_SHIPPING, GOOGLECHECKOUT_TABLE_RATE_SHIPPING);
++    $this->ship_flat_ui = "Standard flat-rate shipping";
++
++    $this->schema_url = "http://checkout.google.com/schema/2";
++    $this->base_url = $this->mode."cws/v2/Merchant/" . $this->merchantid;
++    $this->checkout_url =  $this->base_url . "/checkout";
++    $this->checkout_diagnose_url = $this->base_url . "/checkout/diagnose";
++    $this->request_url = $this->base_url . "/request";
++    $this->request_diagnose_url = $this->base_url . "/request/diagnose";
++    $this->variant = 'text';
++
++    if ((int)MODULE_PAYMENT_GOOGLECHECKOUT_ORDER_STATUS_ID > 0) {
++      $this->order_status = MODULE_PAYMENT_GOOGLECHECKOUT_ORDER_STATUS_ID;
++    }
++  }
++
++//Function used from Google sample code to sign the cart contents with the merchant key 		
++  function CalcHmacSha1($data) {
++    $key = $this->merchantkey;
++    $blocksize = 64;
++    $hashfunc = 'sha1';
++    if (strlen($key) > $blocksize) {
++      $key = pack('H*', $hashfunc($key));
++    }
++    $key = str_pad($key, $blocksize, chr(0x00));
++    $ipad = str_repeat(chr(0x36), $blocksize);
++    $opad = str_repeat(chr(0x5c), $blocksize);
++    $hmac = pack(
++                    'H*', $hashfunc(
++                            ($key^$opad).pack(
++                                    'H*', $hashfunc(
++                                            ($key^$ipad).$data
++                                    )
++                            )
++                    )
++                );
++    return $hmac; 
++  }
++		
++//Decides the shipping name to be used
++// May not call this if the same name is to be used
++// Useful if some one wants to map to Google checkout shoppign types(flat, pickup or merchant calculate)
++  function getShippingType($shipping_option) {
++    switch($shipping_option) {
++      case GOOGLECHECKOUT_FLAT_RATE_SHIPPING: return $this->ship_flat_ui."- Flat Rate"; 
++      case GOOGLECHECKOUT_ITEM_RATE_SHIPPING: return $this->ship_flat_ui."- Item Rate";
++      case GOOGLECHECKOUT_TABLE_RATE_SHIPPING: return $this->ship_flat_ui"- Table Rate";
++      default: return "";
++    }	
++  }
++	
++// Function used to compute the actual price for shipping depending upon the shipping type
++// selected
++  function getShippingPrice($ship_option, $cart, $actual_price, $handling=0, $table_mode="") {
++    switch($ship_option) {
++      case GOOGLECHECKOUT_FLAT_RATE_SHIPPING: {
++        return $actual_price;	
++      }
++      case GOOGLECHECKOUT_ITEM_RATE_SHIPPING: {
++        return ($actual_price * $cart->count_contents()) + $handling ;
++      }
++      case GOOGLECHECKOUT_TABLE_RATE_SHIPPING: {
++//Check the mode to be used for pricing the shipping
++        if($table_mode == "price")
++          $table_size = $cart->show_total();
++        else if ($table_mode == "weight")
++          $table_size = $cart->show_weight();
++					
++// Parse the price (value1:price1,value2:price2)						
++        $tok = strtok($actual_price, ",");
++        $tab_data = array();
++        while($tok != FALSE) {
++          $tab_data[] = $tok;
++          $tok = strtok(",");
++        }  
++        $initial_val=0;	  
++        foreach($tab_data as $curr) {
++          $final_val = strtok($curr, ":");
++          $pricing = strtok(":"); 
++          if($table_size >= $initial_val && $table_size <= $final_val) {
++            $price = $pricing + $handling;
++            break;  
++          }
++          $initial_val = $final_val;
++        }
++        return $price;
++      }
++      default: return 0;
++    }		
++  }
++
++// class methods
++  function update_status() {
++  }
++
++  function javascript_validation() {
++    return false;
++  }
++
++  function selection() {
++    return array('id' => $this->code,'module' => $this->title);
++  }
++
++  function pre_confirmation_check() {
++    return false;
++  }
++
++  function confirmation() {
++    return false;
++  }
++
++  function process_button() {
++  }
++
++  function before_process() {
++    return false;
++  }
++
++  function after_process() {
++    return false;
++  }
++
++  function output_error() {
++    return false;
++  }
++
++  function check() {
++    if (!isset($this->_check)) {
++      $check_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
++      $this->_check = tep_db_num_rows($check_query);
++    }
++    return $this->_check;
++  }
++
++  function install() {
++    global $language;
++    require_once(DIR_FS_CATALOG.'includes/languages/'. $language . '/modules/payment/googlecheckout.php');
++    $shipping_list .= "array(";
++    foreach($this->shipping_display as $ship) {
++      $shipping_list .= "\'".$ship."\',";	 
++    }	 
++    $shipping_list = substr($shipping_list,0,strlen($shipping_list)-1);
++    $shipping_list .= ")";
++    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable GoogleCheckout Module', 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS', 'True', 'Accepts payments through Google Checkout on your site', '6', '3', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
++    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant ID', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID', '', 'Your merchant ID is listed on the \"Integration\" page under the \"Settings\" tab', '6', '1', now())");
++    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant Key', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY', '', 'Your merchant key is also listed on the \"Integration\" page under the \"Settings\" tab', '6', '2', now())");
++    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Select Mode of Operation', 'MODULE_PAYMENT_GOOGLECHECKOUT_MODE', 'https://sandbox.google.com/', 'Select either the Developer\'s Sandbox or live Production environment', '6', '3', 'tep_cfg_select_option(array(\'https://sandbox.google.com/\', \'https://checkout.google.com/\'),',now())");
++    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Select shipping options.', 'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING', '', 'Select your shipping option(s), and make sure to configure them under the Shipping Modules section', '6', '0',\"tep_cfg_select_multioption($shipping_list, \",now())");
++    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '6', '0', now())");
++    tep_db_query("create table if not exists " . $this->table_name . " (customers_id int(11), buyer_id bigint(20) )");
++    tep_db_query("create table if not exists " . $this->table_order ." (orders_id int(11), google_order_number bigint(20), order_amount decimal(15,4) )");
++  }
++
++// If it is requried to delete these tables on removing the module, the two lines below
++// could be uncommented
++  function remove() {
++    tep_db_query("delete from " . TABLE_CONFIGURATION . " where configuration_key in ('" . implode("', '", $this->keys()) . "')");
++    //tep_db_query("drop table " . $this->table_name);
++    //tep_db_query("drop table " . $this->table_order);
++  }
++
++  function keys() {
++    return array('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY', 'MODULE_PAYMENT_GOOGLECHECKOUT_MODE','MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING','MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER');
++  }
++}
++// ** END GOOGLE CHECKOUT **
++?>
+diff -Naur ./catalog/login.php ./../google-checkout-oscommerce/catalog/login.php
+--- ./catalog/login.php	2003-06-06 00:28:24.000000000 -0400
++++ ./../google-checkout-oscommerce/catalog/login.php	2006-08-28 12:46:55.151397000 -0400
 @@ -201,17 +201,33 @@
                        <tr>
                          <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
@@ -2126,9 +1953,9 @@ diff -Naur oscommerce-2.2ms2-051113/catalog/login.php google-checkout-oscommerce
  <!-- body_text_eof //-->
      <td width="<?php echo BOX_WIDTH; ?>" valign="top"><table border="0" width="<?php echo BOX_WIDTH; ?>" cellspacing="0" cellpadding="2">
  <!-- right_navigation //-->
-diff -Naur oscommerce-2.2ms2-051113/catalog/shopping_cart.php google-checkout-oscommerce/catalog/shopping_cart.php
---- oscommerce-2.2ms2-051113/catalog/shopping_cart.php	2003-06-10 00:03:56.000000000 -0400
-+++ google-checkout-oscommerce/catalog/shopping_cart.php	2006-09-01 13:32:47.317415000 -0400
+diff -Naur ./catalog/shopping_cart.php ./../google-checkout-oscommerce/catalog/shopping_cart.php
+--- ./catalog/shopping_cart.php	2003-06-10 00:03:56.000000000 -0400
++++ ./../google-checkout-oscommerce/catalog/shopping_cart.php	2006-09-01 13:32:47.317415000 -0400
 @@ -194,13 +194,33 @@
  <?php
      }

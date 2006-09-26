@@ -14,6 +14,11 @@ Plugin features include:
 5. Order processing using osCommerce Admin UI 
 
 
+REQUIREMENT
+===========
+osCommerce v2.2
+
+
 INSTALLATION NOTES
 ==================
 "cd" into your main directory containing the catalog folder for osCommerce. 

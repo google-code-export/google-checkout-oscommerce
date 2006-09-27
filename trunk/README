@@ -14,9 +14,10 @@ Plugin features include:
 5. Order processing using osCommerce Admin UI 
 
 
-REQUIREMENT
-===========
+REQUIREMENTS
+============
 osCommerce v2.2
+PHP3 or PHP4 or PHP5 with cURL(libcurl) installed and enabled
 
 
 INSTALLATION NOTES

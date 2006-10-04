@@ -1,0 +1,413 @@
+HOW TO INSTALL GOOGLE CHECKOUT MODULE FOR OSCOMMERCE
+
+If you haven't read README file yet, please read it first.
+
+There are two installation options you need to choose from, so please read carefully to determine which option is right for you.
+
+OPTION A:
+=========
+If you have the basic osCommerce installation without any other modules or add-on's, simply copy the provided files into your osCommerce system, preserving the file structure. 
+
+ For your reference, here is the list of files you need to copy over to your system:
+
+   1. /catalog/googlecheckout/gcheckout.php
+   2. /catalog/googlecheckout/responsehandler.php
+   3. /catalog/googlecheckout/response_error.log
+   4. /catalog/googlecheckout/response_message.log
+   5. /catalog/googlecheckout/xmlbuilder.php
+   6. /catalog/googlecheckout/xmlparser.php
+   7. /catalog/includes/languages/english/modules/payment/googlecheckout.php
+   8. /catalog/includes/languages/espanol/modules/payment/googlecheckout.php
+   9. /catalog/includes/languages/german/modules/payment/googlecheckout.php
+  10. /catalog/includes/modules/payment/googlecheckout.php
+  11. /catalog/admin/includes/functions/general.php
+  12. /catalog/admin/modules.php
+  13. /catalog/admin/orders.php
+  14. /catalog/checkout_payment.php
+  15. /catalog/login.php
+  16. /catalog/shopping_cart.php
+
+* Note: If you applied a patch or manually modified the files to disable register_globals, go for Option B.
+
+
+OPTION B:
+=========
+
+If you have other modules installed on your osCommerce installation, replacing your existing files might break your existing installation. In this case, you need to edit the existing files manually.
+
+ For this option, follow the instructions below:
+
+ I. Copy the following new files into your existing system, preserving the file structure:
+ -----------------------------------------------------------------------------------------
+   1. /catalog/googlecheckout/gcheckout.php
+   2. /catalog/googlecheckout/responsehandler.php
+   3. /catalog/googlecheckout/response_error.log
+   4. /catalog/googlecheckout/response_message.log
+   5. /catalog/googlecheckout/xmlbuilder.php
+   6. /catalog/googlecheckout/xmlparser.php
+   7. /catalog/includes/languages/english/modules/payment/googlecheckout.php
+   8. /catalog/includes/languages/espanol/modules/payment/googlecheckout.php
+   9. /catalog/includes/languages/german/modules/payment/googlecheckout.php
+  10. /catalog/includes/modules/payment/googlecheckout.php
+
+
+ II. Manually edit the following files from your system as instructed below:
+ ---------------------------------------------------------------------------
+  1. /catalog/admin/includes/functions/general.php
+  2. /catalog/admin/modules.php
+  3. /catalog/admin/orders.php
+  4. /catalog/checkout_payment.php
+  5. /catalog/login.php
+  6. /catalog/shopping_cart.php
+
+* The LINE number indicates where the change would need to be made if the file was unchanged by other modules.
+  ----------------------------------------------------------------------------
+  1. /catalog/admin/includes/functions/general.php                    LINE 758
+  ============================================================================
+  ADD:
+
+    // ** GOOGLE CHECKOUT ** 
+    // Function to store configuration values(shipping options) using 
+    // checkboxes in the Administration Tool 
+    function tep_cfg_select_multioption($select_array, $key_value, $key = '') {
+      for ($i=0; $i<sizeof($select_array); $i++) {
+        $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
+        $string .= '<br><input type="checkbox" name="' . $name . '" value="' . $select_array[$i] . '"';
+        $key_values = explode( ", ", $key_value);
+        if ( in_array($select_array[$i], $key_values) ) $string .= ' CHECKED';
+        $string .= '> ' . $select_array[$i];
+      }
+      $string .= '<input type="hidden" name="' . $name . '" value="--none--">';
+      return $string;
+    }
+    // ** END GOOGLE CHECKOUT **  
+
+
+  ----------------------------------------------------------------------------
+  2a. /catalog/admin/modules.php                                       LINE 14
+  ============================================================================
+  ADD:
+
+    // ** GOOGLE CHECKOUT **
+    function makeSqlString($str) {
+      $single_quote = "'";
+      $escaped_str = addcslashes(stripcslashes($str), "'\"\\\0..\37!@\177..\377");
+      return ($single_quote.$escaped_str.$single_quote);
+    }
+    // **END GOOGLE CHECKOUT**
+
+
+  ----------------------------------------------------------------------------
+  2b. /catalog/admin/modules.php                                       LINE 46
+  ============================================================================
+  REPLACE:
+
+          while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
+             tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = '" . $value . "' where configuration_key = '" . $key . "'");
+          }
+          tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+
+  WITH:
+
+          while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
+            // ** GOOGLE CHECKOUT **    
+            // Checks if module is of type google checkout and also verfies if this configuration is 
+            // for the check boxes for the shipping options   				
+            if( is_array( $value ) ){
+              $value = implode( ", ", $value);
+              $value = ereg_replace (", --none--", "", $value);
+            }
+            // ** END GOOGLE CHECKOUT **
+   	        tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . makeSqlString($value) . " where configuration_key = " . makeSqlString($key));
+          }
+ 	      tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+
+
+  ----------------------------------------------------------------------------
+  3a. /catalog/admin/orders.php                                        LINE 14
+  ============================================================================
+  ADD:
+
+   // ** GOOGLE CHECKOUT **
+    define('STATE_PENDING', "1");
+    define('STATE_PROCESSING', "2");
+    define('STATE_DELIVERED', "3");
+ 
+   /*
+    * Function which posts a request to the specified url.
+    * @param url Url where request is to be posted
+    * @param merid The merchant ID used for HTTP Basic Authentication
+    * @param merkey The merchant key used for HTTP Basic Authentication
+    * @param postargs The post arguments to be sent
+    * @param message_log An opened log file poitner for appending logs
+    */
+    function send_google_req($url, $merid, $merkey, $postargs, $message_log) {
+      // Get the curl session object
+      $session = curl_init($url);
+
+      $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
+      $header_string_2 = "Content-Type: application/xml";
+      $header_string_3 = "Accept: application/xml";
+	
+      fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
+      // Set the POST options.
+      curl_setopt ($session, CURLOPT_POST, true);
+      curl_setopt($session, CURLOPT_HTTPHEADER, array($header_string_1, $header_string_2, $header_string_3));
+      curl_setopt ($session, CURLOPT_POSTFIELDS, $postargs);
+      curl_setopt($session, CURLOPT_HEADER, true);
+      curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
+
+      // Do the POST and then close the session
+      $response = curl_exec($session);
+      curl_close($session);
+
+      fwrite($message_log, sprintf("\r\n%s\n",$response));
+	
+      // Get HTTP Status code from the response
+      $status_code = array();
+      preg_match('/\d\d\d/', $response, $status_code);
+    
+      fwrite($message_log, sprintf("\r\n%s\n",$status_code[0]));
+      // Check for errors
+      switch( $status_code[0] ) {
+        case 200:
+          // Success
+          break;
+        case 503:
+          die('Error 503: Service unavailable. An internal problem prevented us from returning data to you.');
+          break;
+        case 403:
+          die('Error 403: Forbidden. You do not have permission to access this resource, or are over your rate limit.');
+          break;
+        case 400:
+          die('Error 400: Bad request. The parameters passed to the service did not match as expected. The exact error is returned in the XML response.');
+          break;
+        default:
+          die('Error :' . $status_code[0]);
+      }
+    }
+  
+    function google_checkout_state_change($check_status, $status, $oID, $cust_notify, $notify_comments) {
+      // If status update is from Pending -> Processing on the Admin UI
+      // this invokes the processing-order and charge-order commands
+      // 1->Pending, 2-> Processing
+
+        $curr_dir = getcwd();
+        define('API_CALLBACK_MESSAGE_LOG', $curr_dir."/googlecheckout/response_message.log");
+        define('API_CALLBACK_ERROR_LOG', $curr_dir."/googlecheckout/response_error.log");
+
+        include_once('includes/modules/payment/googlecheckout.php');
+        $googlepay = new googlecheckout();
+				
+        //Setup the log file
+        if (!$message_log = fopen(API_CALLBACK_MESSAGE_LOG, "a")) {
+          error_func("Cannot open " . API_CALLBACK_MESSAGE_LOG . " file.\n", 0);
+          exit(1);
+        }
+        $google_answer = tep_db_fetch_array(tep_db_query("select google_order_number, order_amount from " . $googlepay->table_order . " where orders_id = " . (int)$oID ));
+        $google_order = $google_answer['google_order_number'];  
+        $amt = $google_answer['order_amount'];  
+
+      if($check_status['orders_status'] == STATE_PENDING &&  $status == STATE_PROCESSING) {
+        if($google_order != '') {					
+          $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                      <charge-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\">
+                      <amount currency=\"USD\">" . $amt . "</amount>
+                      </charge-order>";
+          fwrite($message_log, sprintf("\r\n%s\n",$postargs));
+          send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
+                          $postargs, $message_log); 
+        
+        if($cust_notify == 1) {
+          $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                   <process-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"/> ";
+          fwrite($message_log, sprintf("\r\n%s\n",$postargs));
+          send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
+                      $postargs, $message_log); 
+          }
+        }
+      }			
+    
+      // If status update is from Processing -> Delivered on the Admin UI
+      // this invokes the deliver-order and archive-order commands
+      // 2->Processing, 3-> Delivered
+      if($check_status['orders_status'] == STATE_PROCESSING &&  $status == STATE_DELIVERED) {
+        $send_mail = "false";
+        if($cust_notify == 1) 
+          $send_mail = "true";
+        if($google_order != '') {					
+          $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                       <deliver-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"> 
+                       <send-email> " . $send_mail . "</send-email>
+                       </deliver-order> ";
+          fwrite($message_log, sprintf("\r\n%s\n",$postargs));
+          send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
+	                      $postargs, $message_log); 
+
+          $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                       <archive-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\"/>";
+          fwrite($message_log, sprintf("\r\n%s\n",$postargs));
+          send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
+                          $postargs, $message_log); 
+        }
+      }
+    
+      if(isset($notify_comments)) {
+        $postargs =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                     <send-buyer-message xmlns=\"http://checkout.google.com/schema/2\" google-order-number=\"". $google_order. "\">
+                     <message>". $notify_comments . "</message>
+                     </send-buyer-message>";    
+      }
+    }
+    // ** END GOOGLE CHECKOUT ** 
+
+
+  ----------------------------------------------------------------------------
+  3b. /catalog/admin/orders.php                                        LINE 50
+  ============================================================================
+  REPLACE:
+
+            $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
+
+            tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+
+            $customer_notified = '1';
+          }
+
+  WITH:
+
+          // ** GOOGLE CHECKOUT **
+            chdir("./..");
+            require_once('includes/languages/' . $language . '/' .'modules/payment/googlecheckout.php');
+            $payment_value= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
+            $num_rows = tep_db_num_rows(tep_db_query("select google_order_number from google_orders where orders_id= ". (int)$oID));
+            
+            //Check if order is a Google Checkout order
+            if($num_rows == 0) {
+              $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
+
+			  tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+            }
+            $customer_notified = '1';
+          }
+          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
+          // ** END GOOGLE CHECKOUT **
+
+
+  ----------------------------------------------------------------------------
+  4. /catalog/checkout_payment.php                                    LINE 219
+  ============================================================================
+  REPLACE:
+
+    $selection = $payment_modules->selection();
+
+  WITH:
+
+    // ** GOOGLE CHECKOUT **
+    // Skips Google Checkout as a payment option on the payments page since that option
+    // is provided in the checkout page
+    $selection = $payment_modules->selection();
+    for($i=0, $n=sizeof($selection); $i<$n; $i++) {
+      if($selection[$i]['module'] == 'GoogleCheckout') {
+        array_splice($selection, $i, 1);	
+        break;   
+      }
+    }
+    // ** END GOOGLE CHECKOUT **
+
+
+  ----------------------------------------------------------------------------
+  5. /catalog/login.php                                               LINE 203
+  ============================================================================
+  REPLACE:
+
+                        <td align="right"><?php echo tep_image_submit('button_login.gif', IMAGE_BUTTON_LOGIN); ?></td>
+                        <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+                      </tr>
+                    </table></td>
+                  </tr>
+                </table></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table></td>
+      </tr>
+    </table></form></td>
+
+  WITH:
+
+                        <td align="right"><?php echo tep_image_submit('button_login.gif', IMAGE_BUTTON_LOGIN); ?></td>
+                        <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td></form>
+                      </tr>
+                    </table></td>
+                  </tr>
+                </table></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table>
+    <?php
+    // ** GOOGLE CHECKOUT **
+    // Checks if the Google Checkout payment module has been enabled and if so 
+    // includes gcheckout.php to add the Checkout button to the page 
+    $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
+    while ($status = tep_db_fetch_array($status_query)) {
+      $status_flag = $status['configuration_value'];	
+    }
+    if ($status_flag == 'True') {
+      include('googlecheckout/gcheckout.php');
+    } 
+   	// ** END GOOGLE CHECKOUT **            
+    ?>
+        </td>
+      </tr>
+    </table></td>
+
+
+  ----------------------------------------------------------------------------
+  6. /catalog/shopping_cart.php                                       LINE 197
+  ============================================================================
+  REPLACE:
+
+                <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
+                <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table></td>
+      </tr>
+    <?php
+      } else {
+    ?>
+
+  WITH:
+
+                <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
+                <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table></form></td>
+      </tr>
+	  <tr>
+	    <td>
+    <?php
+    // ** GOOGLE CHECKOUT **
+    // Checks if the Google Checkout payment module has been enabled and if so 
+    // includes gcheckout.php to add the Checkout button to the page 
+  
+    $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
+    while ($status = tep_db_fetch_array($status_query)) {
+      $status_flag = $status['configuration_value'];	
+    }
+    if ($status_flag == 'True') {
+      include('googlecheckout/gcheckout.php');
+    }
+    // ** END GOOGLE CHECKOUT **
+    ?>
+        </td>
+      </tr>
+    <?php
+      } else {
+    ?>
+

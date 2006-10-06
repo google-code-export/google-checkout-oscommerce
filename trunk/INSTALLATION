@@ -1,6 +1,6 @@
 HOW TO INSTALL GOOGLE CHECKOUT MODULE FOR OSCOMMERCE
 
-If you haven't read README file yet, please read it first.
+If you haven't read the README file yet, please read it first.
 
 There are two installation options you need to choose from, so please read carefully to determine which option is right for you.
 
@@ -111,7 +111,7 @@ If you have other modules installed on your osCommerce installation, replacing y
 
           while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
             // ** GOOGLE CHECKOUT **    
-            // Checks if module is of type google checkout and also verfies if this configuration is 
+            // Checks if module is of type google checkout and also verifies if this configuration is 
             // for the check boxes for the shipping options   				
             if( is_array( $value ) ){
               $value = implode( ", ", $value);

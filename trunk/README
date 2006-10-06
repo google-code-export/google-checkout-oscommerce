@@ -1,8 +1,8 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.1.0 - 10/03/2006
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.1 - 10/03/2006
 
 INTRODUCTION
 ============
-The Google Checkout module for osCommerce adds Google Checkout as a Payment Module within osCommerce.
+The Google Checkout module for osCommerce adds Google Checkout as a Checkout Module within osCommerce.
 This will allow merchants using osCommerce to offer Google Checkout as an alternate checkout method.
 The plugin provides Level 2 integration of Google Checkout with osCommerce.
 
@@ -34,8 +34,7 @@ Select and install the Google Checkout payment module. The following are some of
 1. Enable/Disable: Enable this to use Google Checkout for your site.
 2. Merchant ID and Merchant Key:(Mandatory) If any of these are not set and the module is enabled, a disabled (gray) Checkout button appears on the Checkout page. 
    Set these values from your seller Google account under the Settings->Integration tab.
-3. Operation Mode: Test your site with Google Checkout's sandbox server before migrating to production. 
-   Remember to update your merchant ID and key when migrating.
+3. Operation Mode: Test your site with Google Checkout's sandbox server before migrating to production. You will need it signup for a separate Google Checkout sandbox account at http://sandbox.google.com/sell. Your sandbox account will have a different Merchant ID and Merchant Key. When you are ready to run against the production server, remember to update your merchant ID and key when migrating.
 4. Shipping Options: Select the shipping options to be supported.
    If the shipping tax rates differ, a disabled Checkout button will appear on the Checkout page.
 
@@ -44,7 +43,7 @@ Your Google Checkout setup page is correct if, upon viewing it, a non-disabled G
 
 TRACKING USERS AND ORDERS
 =========================
-In order to provide this support (as required for Level 2 integration), update the API callback request field in the seller account to https://<url-site-url>/catalog/googlecheckout/responsehandler.php . Note that this requires an SSL callback site for if you are using the Checkout server. 
+In order to provide this support (as required for Level 2 integration), update the API callback request field in the seller account to https://<url-site-url>/catalog/googlecheckout/responsehandler.php . Note that the production Checkout server requires an SSL callback site.
 The Sandbox server accepts non SSL callback URLs.
 
 View your Google Checkout customers and their orders in the Reports tab. 
@@ -58,8 +57,8 @@ The state changes to PROCESSING and DELIVERED as follows; corresponding messages
 Any comments added during state change will be sent to the buyer account page if you have selected the Append Comments option.
 
 All request and response messages will be logged to the file catalog/googlecheckout/response_message.log.
-In case an order payment is declined or an order is cancelled(by Google or otherwise),you can add code to catalog/googlecheckout/responsehandler.php for specific action you need to take.
- 
+In case an order payment is declined or an order is cancelled(by Google or otherwise), you can add code to catalog/googlecheckout/responsehandler.php for any specific actions you need to take.
+
 
 PROJECT HOME
 ============

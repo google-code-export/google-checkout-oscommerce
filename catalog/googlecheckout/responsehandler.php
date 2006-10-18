@@ -151,11 +151,9 @@
       require(DIR_WS_CLASSES . 'shipping.php');
       $shipping_modules = new shipping($shipping);
         
-      require_once('includes/languages/' . $language . '/' .
-          'modules/payment/googlecheckout.php');
+      require_once(DIR_WS_LANGUAGES . $language . '/modules/payment/googlecheckout.php');
 
 // Update values so that order_total modules get the correct values 			
-      $payment= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
       $order->info['total'] = $data[$root]['order-total'];
       $order->info['subtotal'] = $data[$root]['order-total'] - ($ship_cost + $tax_amt);
       $order->info['shipping_method'] = $shipping;
@@ -299,8 +297,8 @@
                           'entry_postcode' => makeSqlString($data[$root]['buyer-shipping-address']['postal-code']),
                           'entry_city' => makeSqlString($data[$root]['buyer-shipping-address']['city']),
                           'entry_state' => makeSqlString($data[$root]['buyer-shipping-address']['region']),
-                          'entry_country_id' => makeSqlInteger($zone_answer['zone_country_id']),
-                          'entry_zone_id' => makeSqlInteger($zone_answer['zone_id']));
+                          'entry_country_id' => makeSqlInteger($zone_answer->fields['zone_country_id']),
+                          'entry_zone_id' => makeSqlInteger($zone_answer->fields['zone_id']));
     tep_db_perform(TABLE_ADDRESS_BOOK, $sql_data_array, $oper, $params);	
 				
     if($oper == "insert") {
@@ -395,7 +393,7 @@
                            'customer_notified' => 1,
                            'comments' => ''); 
     tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);	
-    //send_ack(); 
+    send_ack();
     return $orders_id;
   }
  
@@ -403,8 +401,8 @@
     $new_financial_state = $data[$root]['new-financial-order-state'];
     $new_fulfillment_order = $data[$root]['new-fulfillment-order-state'];
 	
-    fwrite($log_file,sprintf("\n%s\n", $data[$root]['new-financial-order-state']));
-    fwrite($log_file, sprintf("\r\n%s\n",$request_url));
+    fwrite($message_log,sprintf("\n%s\n", $data[$root]['new-financial-order-state']));
+    fwrite($message_log, sprintf("\r\n%s\n",$request_url));
 	
     switch($new_financial_state) {
       case 'REVIEWING': {
@@ -448,70 +446,24 @@
       default:
          break;
     }
-      send_ack();	  
+    send_ack();	  
   }  
   function process_charge_amount_notification($root, $data, $message_log) {
     send_ack(); 	  
   }
   function process_chargeback_amount_notification($root, $data, $message_log) {
+    send_ack();
   }
   function process_refund_amount_notification($root, $data, $message_log) {
+    send_ack();
   }
   function process_risk_information_notification($root, $data, $message_log) {
     send_ack();	  
   }
   
-  function send_google_req($url, $merid, $merkey, $postargs, $message_log) {
-    //error_reporting(E_ALL);
-    // Get the curl session object
-    $session = curl_init($url);
-	
-    $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
-    $header_string_2 = "Content-Type: application/xml";
-    $header_string_3 = "Accept: application/xml";
-	
-    fwrite($log_file, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
-    // Set the POST options.
-    curl_setopt ($session, CURLOPT_POST, true);
-    curl_setopt($session, CURLOPT_HTTPHEADER, array($header_string_1, $header_string_2, $header_string_3));
-    curl_setopt ($session, CURLOPT_POSTFIELDS, $postargs);
-    curl_setopt($session, CURLOPT_HEADER, true);
-    curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
-
-    // Do the POST and then close the session
-    $response = curl_exec($session);
-    curl_close($session);
-
-    fwrite($log_file, sprintf("\r\n%s\n",$response));
-	
-    // Get HTTP Status code from the response
-    $status_code = array();
-    preg_match('/\d\d\d/', $response, $status_code);
-    fwrite($log_file, sprintf("\r\n%s\n",$status_code[0]));
-    
-    // Check for errors
-    switch( $status_code[0] ) {
-      case 200:
-        // Success
-        break;
-      case 503:
-        die('Error 503: Service unavailable. An internal problem prevented us from returning data to you.');
-        break;
-      case 403:
-        die('Error 403: Forbidden. You do not have permission to access this resource, or are over your rate limit.');
-        break;
-      case 400:
-        die('Error 400:  Bad request. The parameters passed to the service did not match as expected. The exact error is returned in the XML response.');
-        break;
-      default:
-        die('Error :' . $status_code[0]);
-    }
-  }
-
-  function send_ack($schema_url) {
+  function send_ack() {
     $acknowledgment = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" .
-    "<notification-acknowledgment xmlns=\"" . 
-    $schema_url . "\"/>";
+    "<notification-acknowledgment xmlns=\"http://checkout.google.com/schema/2\"/>";
     echo $acknowledgment;
   }
 

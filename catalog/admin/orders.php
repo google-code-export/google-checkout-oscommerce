@@ -96,7 +96,7 @@
       $google_order = $google_answer['google_order_number'];  
       $amt = $google_answer['order_amount'];  
 
-    if($check_status->fields['orders_status'] == STATE_PENDING &&  $status == STATE_PROCESSING) {
+    if($check_status['orders_status'] == STATE_PENDING &&  $status == STATE_PROCESSING) {
       if($google_order != '') {					
         $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                     <charge-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\">
@@ -117,7 +117,7 @@
     // If status update is from Processing -> Delivered on the Admin UI
     // this invokes the deliver-order and archive-order commands
     // 2->Processing, 3-> Delivered
-    if($check_status->fields['orders_status'] == STATE_PROCESSING &&  $status == STATE_DELIVERED) {
+    if($check_status['orders_status'] == STATE_PROCESSING &&  $status == STATE_DELIVERED) {
       $send_mail = "false";
       if($cust_notify == 1) 
         $send_mail = "true";
@@ -172,7 +172,7 @@
         $check_status_query = tep_db_query("select customers_name, customers_email_address, orders_status, date_purchased from " . TABLE_ORDERS . " where orders_id = '" . (int)$oID . "'");
         $check_status = tep_db_fetch_array($check_status_query);
 
-        if ( ($check_status->fields['orders_status'] != $status) || tep_not_null($comments)) {
+        if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
           tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
 
           $customer_notified = '0';
@@ -190,8 +190,8 @@
             
             //Check if order is a Google Checkout order
             if($num_rows == 0) {
-              $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status->fields['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
-              tep_mail($check_status->fields['customers_name'], $check_status->fields['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+              $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
+              tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
             }
             $customer_notified = '1';
           }

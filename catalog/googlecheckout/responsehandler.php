@@ -297,8 +297,8 @@
                           'entry_postcode' => makeSqlString($data[$root]['buyer-shipping-address']['postal-code']),
                           'entry_city' => makeSqlString($data[$root]['buyer-shipping-address']['city']),
                           'entry_state' => makeSqlString($data[$root]['buyer-shipping-address']['region']),
-                          'entry_country_id' => makeSqlInteger($zone_answer->fields['zone_country_id']),
-                          'entry_zone_id' => makeSqlInteger($zone_answer->fields['zone_id']));
+                          'entry_country_id' => makeSqlInteger($zone_answer['zone_country_id']),
+                          'entry_zone_id' => makeSqlInteger($zone_answer['zone_id']));
     tep_db_perform(TABLE_ADDRESS_BOOK, $sql_data_array, $oper, $params);	
 				
     if($oper == "insert") {

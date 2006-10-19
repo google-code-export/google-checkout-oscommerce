@@ -196,11 +196,10 @@ If you have other modules installed on your osCommerce installation, replacing y
       // this invokes the processing-order and charge-order commands
       // 1->Pending, 2-> Processing
   
-        $curr_dir = getcwd();
-        define('API_CALLBACK_MESSAGE_LOG', $curr_dir."/googlecheckout/response_message.log");
-        define('API_CALLBACK_ERROR_LOG', $curr_dir."/googlecheckout/response_error.log");
-  
-        include_once('includes/modules/payment/googlecheckout.php');
+        define('API_CALLBACK_MESSAGE_LOG', DIR_FS_CATALOG . "/googlecheckout/response_message.log");
+        define('API_CALLBACK_ERROR_LOG', DIR_FS_CATALOG. "/googlecheckout/response_error.log");
+
+        include_once(DIR_FS_CATALOG . '/includes/modules/payment/googlecheckout.php');
         $googlepay = new googlecheckout();
   				
         //Setup the log file

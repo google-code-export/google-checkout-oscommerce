@@ -40,6 +40,7 @@
     curl_setopt($session, CURLOPT_POSTFIELDS, $postargs);
     curl_setopt($session, CURLOPT_HEADER, true);
     curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($session, CURLOPT_CAINFO, "C:\\Program Files\\xampp\\apache\\conf\\ssl.crt\\ca-bundle.crt");
 
     // Do the POST and then close the session
     $response = curl_exec($session);
@@ -80,11 +81,10 @@
     // this invokes the processing-order and charge-order commands
     // 1->Pending, 2-> Processing
 
-      $curr_dir = getcwd();
-      define('API_CALLBACK_MESSAGE_LOG', $curr_dir."/googlecheckout/response_message.log");
-      define('API_CALLBACK_ERROR_LOG', $curr_dir."/googlecheckout/response_error.log");
+      define('API_CALLBACK_MESSAGE_LOG', DIR_FS_CATALOG . "/googlecheckout/response_message.log");
+      define('API_CALLBACK_ERROR_LOG', DIR_FS_CATALOG. "/googlecheckout/response_error.log");
 
-      include_once('includes/modules/payment/googlecheckout.php');
+      include_once(DIR_FS_CATALOG . '/includes/modules/payment/googlecheckout.php');
       $googlepay = new googlecheckout();
 				
       //Setup the log file

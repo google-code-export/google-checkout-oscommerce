@@ -1,4 +1,4 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.?.? - 11/17/2006
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.0.3 - 11/17/2006
 
 INTRODUCTION
 ============
@@ -38,20 +38,20 @@ Select and install the Google Checkout payment module. The following are some of
 4. Merchant Calculation Mode of Operation: Sets Merchant calculation URL for Sandbox environment. Could be HTTP or HTTPS. (Checkout production environemnt always requires HTTPS.)
 5. Default Values for Real Time Shipping Rates: Set your default values for all merchant calculates shipping rates. This values will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price.
 
-
 Your Google Checkout setup page is correct if, upon viewing it, a non-disabled Google Checkout button appears.
+
 
 MERCHANT CALCULATED SHIPPING
 ============================
-
-In order to use this module you must have some Real Time Shipping provider, such as USPS. This Module must be activated and configured in Modules->Shipping. For each enabled module you'll have to set a default value in the Google Checkout Admin UI.
+In order to use this module you must have some Real Time Shipping provider, such as USPS. This Module must be activated and configured in Modules->Shipping. For each enabled module you'll have to set the default values in the Google Checkout Admin UI.
 This Value will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price. Tha available shipping methods for each shipping provider must be configured in catalog/includes/modules/payment/googlecheckout.php in the mc_shipping_methods parameter. If you want to disable one or more methods, just comment them.
-Be aware that if you mix flat rate a real time rates, both will be merchant calculated. 
+Be aware that if you mix flat rate and real time rates, both will be taken as merchant-calculated-shipping. 
+
 
 TRACKING USERS AND ORDERS
 =========================
 In order to provide this support (as required for Level 2 integration), update the API callback request field in the seller account to https://<url-site-url>/catalog/googlecheckout/responsehandler.php . Note that the production Checkout server requires an SSL callback site.
-The Sandbox server accepts non SSL callback URLs.
+The Sandbox server accepts non SSL callback URLs, http://<url-site-url>/catalog/googlecheckout/responsehandler.php
 
 View your Google Checkout customers and their orders in the Reports tab. 
 For each order, the default starting state is PENDING. 
@@ -61,7 +61,7 @@ The state changes to PROCESSING and DELIVERED as follows; corresponding messages
 | PENDING        | PROCESSING | charging the order             |  Processing order message |
 | PROCESSING     | DELIVERED  | marking the order for delivery |  Shipped order message    |
 
-Any comments added during state change will be sent to the buyer account page if you have selected the Append Comments option.
+Any comments added during state change will be sent to the buyer account page if you have selected the Notify Customer option.
 
 All request and response messages will be logged to the file catalog/googlecheckout/response_message.log.
 In case an order payment is declined or an order is cancelled(by Google or otherwise), you can add code to catalog/googlecheckout/responsehandler.php for any specific actions you need to take.

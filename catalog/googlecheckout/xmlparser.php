@@ -20,6 +20,16 @@
 /* GOOGLE CHECKOUT
  * Class used to parse XML Data, uses SAX parser functions
  */
+ 
+ 
+ //$xml->child[0]->value;
+ /*
+class xmlNode {
+	var $value; // string
+	var $children; // array number
+ 	var $attributes; // array hash
+ 	
+}*/
 
 class XmlParser {
   var $params= array();
@@ -29,6 +39,9 @@ class XmlParser {
     $xmlp = xml_parser_create();
     xml_parse_into_struct($xmlp, $input, $vals, $index);
     xml_parser_free($xmlp);
+    //print_r($vals);
+    //print_r($index);
+    
     $this->updateMembers($vals, $index);
   }
 	
@@ -46,7 +59,10 @@ class XmlParser {
           $php_stmt .= '[$this->level['.$start_level.']]';
           $start_level++;
         }
-        $php_stmt .= '[$xml_elem[\'tag\']] = $xml_elem[\'value\'];';
+        if(isset($xml_elem['attributes']))
+        	$php_stmt .= '[$xml_elem[\'tag\']][] = array(\'value\' => $xml_elem[\'value\'], \'atributes\' => $xml_elem[\'attributes\']);';
+        else
+        	$php_stmt .= '[$xml_elem[\'tag\']][] = array(\'value\' => $xml_elem[\'value\']);';
         eval($php_stmt);
       }	
     }

@@ -53,10 +53,11 @@
  	
     switch ($action) {
       case 'save':
-      // fix configuration no saving - ropu
+// ** GOOGLE CHECKOUT **      
+      // fix configuration no saving -
       	reset($HTTP_POST_VARS['configuration']);
       // end fix
-      	
+// ** END GOOGLE CHECKOUT **      
 	    while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
 // ** GOOGLE CHECKOUT **    
 // Checks if module is of type google checkout and also verfies if this configuration is 

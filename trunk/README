@@ -83,61 +83,51 @@ MOST COMMON MISTAKES
 ====================
 1. Make sure you set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
 2. Set your Google callback url to https://<url-site-url>/googlecheckout/responsehandler.php
-	In Sandbox, HTTPS is not required.
-	In Production mode, HTTPS is required.
-	Set the correct option in the Google Checkout Admin UI
+  In Sandbox, HTTPS is not required.
+  In Production mode, HTTPS is required.
+  Set the correct option in the Google Checkout Admin UI
 3. Make sure you are using the correct combination of Merchant ID and Merchant Key. Remember that Sandbox and Production Mode have different ones.
-	
+  
+
 TROUBLE SHOOTING
 ================
 1. Problem: /public_html/googlecheckout/response_message.log) [function.fopen]: failed to open stream: Permission denied.
-	Solution: Set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
+   Solution: Set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
 2. Problem: Test order shows up in Google but not admin.
-	Solution: There is an error somewhere in the file /googlecheckout/responsehandler.php or you have set a worng API callback function in your seller Google account under the Settings->Integration tab.
+   Solution: There is an error somewhere in the file /googlecheckout/responsehandler.php or you have set a worng API callback function in your seller Google account under the Settings->Integration tab.
 3. Problem: <error-message>Malformed URL component: expected id: (\d{10})|(\d{15}), but got 8***********4 </error-message>
-	Solution: You have an extra space after your Google merchant id. Go to Admin->payment.  Edit Googlecheckout module.  Extra space will disappear. Click update button.
+   Solution: You have an extra space after your Google merchant id. Go to Admin->payment.  Edit Googlecheckout module.  Extra space will disappear. Click update button.
 4. Problem: <error-message>No seller found with id 7************8</error-message>
-	Solution: Wrong merchant id.  Sandbox merchant id can only be use with sandbox accounts.  Sandbox and Live mode use different merchant id. 
+   Solution: Wrong merchant id.  Sandbox merchant id can only be use with sandbox accounts.  Sandbox and Live mode use different merchant id. 
 5. Problem: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderE xception: unable to find valid certification path to requested target
-	Solution: Your SSL certificate is not accepted by Google Checkout.
+   Solution: Your SSL certificate is not accepted by Google Checkout.
 6. Problem: <error-message>Bad Signature on Cart</error-message>
-	Solution: Incorrect Merchant key.
-	
-
-		
+   Solution: Incorrect Merchant key.
+  
+    
 KNOWN BUGS - (Report bugs at http://forums.oscommerce.com/index.php?showtopic=229637)
 ==========
 
 
 CHANGE LOG
 ==========
-09/26/2006 v1.0  (Google Checkout team)
-	- Initial release. 
-		This Google Checkout module for osCommerce adds Google Checkout as a payment module within osCommerce.
-	This allows merchants using osCommerce to build their sites with Google Checkout as a payment processing option.
-	The plugin provides Level 2 integration of Google Checkout with osCommerce.
-	
-	Plugin features include:
-	1. Posting shopping carts to Google Checkout
-	2. Shipping support (Currently, flat rates, item rates and table rates are supported)
-	3. Tax support
-	4. User and order updates within osCommerce
-	5. Order processing using osCommerce Admin UI
+09/26/2006 v1.0.0 (Google Checkout team)
+           - Initial release. 
 
-09/27/2006 v1.0.1  (Google Checkout team)
-  Updated the original module to run on either PHP4 or PHP5.
+09/27/2006 v1.0.1 (Google Checkout team)
+           - Updated the original module to run on either PHP4 or PHP5.
 
 10/05/2006 v1.0.1b (Google Checkout team)
-  Step-by-step installation instructions included.
+           - Step-by-step installation instructions included.
 
-10/18/2006 v1.0.2  (Google Checkout team)
-  Fixed minor bugs in responsehandler.php and orders.php files
-	
+10/18/2006 v1.0.2 (Google Checkout team)
+           - Fixed minor bugs in responsehandler.php and orders.php files
+  
 11/17/2006 v1.0.3 (Google Checkout team)
-	Add support for Merchant Calculated Shipping Rates.
-  Fixed minor bugs in responsehandler.php and orders.php files
-  Change the XML parser and builder
-  Removed getallheader() function
-  Fixed worng qty in Admin UI
-  Fixed modules not saving their settings
-  Fixed Notify Customer option
+           - Add support for Merchant Calculated Shipping Rates.
+           - Fixed minor bugs in responsehandler.php and orders.php files
+           - Change the XML parser and builder
+           - Removed getallheader() function
+           - Fixed wrong Qty in Admin UI
+           - Fixed modules not saving their settings
+           - Fixed Notify Customer option

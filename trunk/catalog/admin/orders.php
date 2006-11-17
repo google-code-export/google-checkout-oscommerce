@@ -182,9 +182,9 @@
 
           $customer_notified = '0';
           if (isset($HTTP_POST_VARS['notify']) && ($HTTP_POST_VARS['notify'] == 'on')) {
-            $notify_comment = '';
+            $notify_comments = '';
             if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
-              $notify_comment = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
+              $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
             }
             
             // ** GOOGLE CHECKOUT **
@@ -195,12 +195,14 @@
             
             //Check if order is a Google Checkout order
             if($num_rows == 0) {
-              $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comment . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
+              $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
               tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
             }
             $customer_notified = '1';
           }
-          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comment);
+          if($HTTP_POST_VARS['notify'] != 'on')
+          	unset($notify_comments);
+          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
           // ** END GOOGLE CHECKOUT **
           
           tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");

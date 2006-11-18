@@ -53,20 +53,20 @@
  	
     switch ($action) {
       case 'save':
-// ** GOOGLE CHECKOUT **      
-      // fix configuration no saving -
+      // ** GOOGLE CHECKOUT **      
+        // fix configuration no saving -
       	reset($HTTP_POST_VARS['configuration']);
-      // end fix
-// ** END GOOGLE CHECKOUT **      
+        // end fix
+      // ** END GOOGLE CHECKOUT **      
 	    while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
-// ** GOOGLE CHECKOUT **    
-// Checks if module is of type google checkout and also verfies if this configuration is 
-// for the check boxes for the shipping options   				
-	       if( is_array( $value ) ){
-                 $value = implode( ", ", $value);
-                 $value = ereg_replace (", --none--", "", $value);
-               }
-// ** END GOOGLE CHECKOUT **
+        // ** GOOGLE CHECKOUT **    
+          // Checks if module is of type google checkout and also verfies if this configuration is 
+          // for the check boxes for the shipping options   				
+	      if( is_array( $value ) ){
+                $value = implode( ", ", $value);
+                $value = ereg_replace (", --none--", "", $value);
+              }
+        // ** END GOOGLE CHECKOUT **
 	
 		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . makeSqlString($value) . " where configuration_key = " . makeSqlString($key));
 	    }

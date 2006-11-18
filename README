@@ -123,7 +123,7 @@ CHANGE LOG
 10/18/2006 v1.0.2 (Google Checkout team)
            - Fixed minor bugs in responsehandler.php and orders.php files
   
-11/17/2006 v1.0.3 (Google Checkout team)
+11/17/2006 v1.0.3 (ropu)
            - Add support for Merchant Calculated Shipping Rates.
            - Fixed minor bugs in responsehandler.php and orders.php files
            - Change the XML parser and builder

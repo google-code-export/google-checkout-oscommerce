@@ -29,7 +29,7 @@
   define ('GOOGLECHECKOUT_ITEM_RATE_SHIPPING','Flat Rate Per Item');
   define ('GOOGLECHECKOUT_TABLE_RATE_SHIPPING','Vary by Weight/Price');
   // add ropu
-  define ('GOOGLECHECKOUT_TABLE_NO_MERCHANT_CALCULATION','No merchant calculation shipping selected');
+  define ('GOOGLECHECKOUT_TABLE_NO_MERCHANT_CALCULATION','No merchant calculated shipping selected');
   //end  add ropu
   // ** END GOOGLE CHECKOUT **
 ?>

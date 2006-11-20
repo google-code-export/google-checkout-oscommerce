@@ -39,7 +39,7 @@
 
     function GetXML() {
  	  $curr_dir = getcwd();
-      include_once($curr_dir.'/googlecheckout/xmlbuilder2.php');
+      include_once($curr_dir.'/googlecheckout/xmlbuilder.php');
       $xml_data = new XmlBuilder();
       $xml_data->Push('merchant-calculation-results', 
           array('xmlns' => $this->schema_url));

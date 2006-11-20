@@ -36,14 +36,13 @@
   if(check_file('includes/modules/payment/googlecheckout.php'))
     include_once('includes/modules/payment/googlecheckout.php');
 
-  //require_once($curr_dir.'/googlecheckout/googleresponse.php');
   require_once($curr_dir.'/googlecheckout/googlemerchantcalculations.php');
   require_once($curr_dir.'/googlecheckout/googleresult.php');
 
 
   
-  if(check_file($curr_dir. '/googlecheckout/xmlparser2.php'))
-    include_once($curr_dir.'/googlecheckout/xmlparser2.php');
+  if(check_file($curr_dir. '/googlecheckout/xmlparser.php'))
+    include_once($curr_dir.'/googlecheckout/xmlparser.php');
 	
 //Setup the log files
   if (!$message_log = fopen(API_CALLBACK_MESSAGE_LOG, "a")) {

@@ -525,7 +525,7 @@
                            'orders_status_id' => 1,
                            'date_added' => 'now()',
                            'customer_notified' => 1,
-                           'comments' => ''); 
+                           'comments' => 'Google Checkout Order No: ' . $data[$root]['google-order-number']['VALUE']);  //Add Order number to Comments box. For customer's reference. 
     tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);	
     send_ack();
     return $orders_id;

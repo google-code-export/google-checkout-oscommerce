@@ -53,7 +53,7 @@ class googlecheckout {
     $this->shipping_display = array(GOOGLECHECKOUT_FLAT_RATE_SHIPPING, GOOGLECHECKOUT_ITEM_RATE_SHIPPING, GOOGLECHECKOUT_TABLE_RATE_SHIPPING);
 
 	// this are all the available methods for each shipping provider, 
-	// see that you must set flat methods too!
+	// see that you must set flat methods too!}
 	// CONSTRAINT: Method's names MUST be UNIQUE
 	$this->mc_shipping_methods = array('usps' => array( 	'domestic_types' =>
 																array(	'Express' => 'Express Mail',
@@ -134,7 +134,7 @@ class googlecheckout {
   function getMethods(){
   	if($this->hash == NULL) {
 		$rta = array();
-  		$this->_gethash($this->mc_shipping_methods, &$rta);
+  		$this->_gethash($this->mc_shipping_methods, $rta);
   		$this->hash = $rta;
   	}
 	return $this->hash;
@@ -144,7 +144,7 @@ class googlecheckout {
   function _gethash($arr, &$rta, $path =array()) {
 	if(is_array($arr)){
 		foreach($arr as $key => $val){
-			$this->_gethash($arr[$key], &$rta, array_merge(array($key), $path));
+			$this->_gethash($arr[$key], $rta, array_merge(array($key), $path));
 		}
 	} else {
 		$rta[$arr] = $path;

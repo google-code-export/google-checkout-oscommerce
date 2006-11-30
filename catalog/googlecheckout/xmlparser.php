@@ -96,9 +96,9 @@
       //Reached end of array
       if($this->global_index >= count($vals))
         return;
-
+			$params = array();
       $tag = strtolower($vals[$this->global_index]['tag']);
-      $value = trim($vals[$this->global_index]['value']);
+      $value = trim(@$vals[$this->global_index]['value']);
       $type = $vals[$this->global_index]['type'];
 
       //Add attributes

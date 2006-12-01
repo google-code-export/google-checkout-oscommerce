@@ -137,4 +137,4 @@ CHANGE LOG
 
 11/30/2006 v1.0.4 (ropu)
            - Add state change, Risk and charge notification into the Admin UI
-					 - Fix Shopping cart not obtained from session. See TROUBLE SHOOTING.
+           - Fix Shopping cart not obtained from session. See TROUBLE SHOOTING.

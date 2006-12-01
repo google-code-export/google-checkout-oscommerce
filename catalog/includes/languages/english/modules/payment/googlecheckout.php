@@ -25,11 +25,10 @@
   define('MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_DESCRIPTION', 'GoogleCheckout');
   define('MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_OPTION', ' - Or use -');
   
-  define ('GOOGLECHECKOUT_FLAT_RATE_SHIPPING','Flat Rate Per Order');
-  define ('GOOGLECHECKOUT_ITEM_RATE_SHIPPING','Flat Rate Per Item');
-  define ('GOOGLECHECKOUT_TABLE_RATE_SHIPPING','Vary by Weight/Price');
-  // add ropu
-  define ('GOOGLECHECKOUT_TABLE_NO_MERCHANT_CALCULATION','No merchant calculation shipping selected');
-  //end  add ropu
+  define ('GOOGLECHECKOUT_FLAT_RATE_SHIPPING','Flat Rate (flat rate per order)');
+  define ('GOOGLECHECKOUT_ITEM_RATE_SHIPPING','Per Item (flat rate per item)');
+  define ('GOOGLECHECKOUT_TABLE_RATE_SHIPPING','Table Rate (vary by weight/price)');
+
+  
   // ** END GOOGLE CHECKOUT **
 ?>

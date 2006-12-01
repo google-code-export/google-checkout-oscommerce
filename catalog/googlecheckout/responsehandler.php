@@ -25,9 +25,7 @@
 // 1. Setup the log file 
 // 2. Parse the http header to verify the source
 // 3. Parse the XML message
-// 4. Trasfer control to appropriate function
-
-// error_reporting(0);
+// 4. Trasfer control to appropriate function 
 
   chdir('./..');
   $curr_dir = getcwd();
@@ -36,11 +34,6 @@
 
   if(check_file('includes/modules/payment/googlecheckout.php'))
     include_once('includes/modules/payment/googlecheckout.php');
-
-  require_once($curr_dir.'/googlecheckout/googlemerchantcalculations.php');
-  require_once($curr_dir.'/googlecheckout/googleresult.php');
-
-
   
   if(check_file($curr_dir. '/googlecheckout/xmlparser.php'))
     include_once($curr_dir.'/googlecheckout/xmlparser.php');
@@ -53,25 +46,18 @@
 
 // Retrieve the XML sent in the HTTP POST request to the ResponseHandler
   $xml_response = $HTTP_RAW_POST_DATA;
-  
-  
   if (get_magic_quotes_gpc()) {
     $xml_response = stripslashes($xml_response);
   }
-
   fwrite($message_log, sprintf("\n\r%s:- %s\n",date("D M j G:i:s T Y"),$xml_response));
-  fwrite($message_log, sprintf("\n\rHTTP_USER_AGENT:- %s\n",getenv('HTTP_USER_AGENT')));
   
   $xmlp = new XmlParser($xml_response);
   $root = $xmlp->getRoot();
   $data = $xmlp->getData();
   fwrite($message_log, sprintf("\n\r%s:- %s\n",date("D M j G:i:s T Y"), $root));	  
-
-	// restore session
-	
-	//print_r($data);
-  if(isset($data[$root]['shopping-cart']['merchant-private-data']['session-data']['VALUE'])) {
-    $private_data = $data[$root]['shopping-cart']['merchant-private-data']['session-data']['VALUE'];
+		
+  if(isset($data[$root]['shopping-cart']['merchant-private-data']['session-data'])) {
+    $private_data = $data[$root]['shopping-cart']['merchant-private-data']['session-data'];
     $sess_id = substr($private_data, 0 , strpos($private_data,";"));
     $sess_name = substr($private_data, strpos($private_data,";")+1);
     fwrite($message_log, sprintf("\r\n%s :- %s, %s\n",date("D M j G:i:s T Y"), $sess_id, $sess_name));						
@@ -81,10 +67,8 @@
     if(function_exists('session_name'))	
       session_name($sess_name);  
   }
-  
   if(check_file('includes/application_top.php'))
     include_once('includes/application_top.php');
-
   if(tep_session_is_registered('cart') && is_object($cart)) {
     $cart->restore_contents();
   } 
@@ -92,11 +76,14 @@
     error_func("Shopping cart not obtained from session.\n");
     exit(1);	
   }	
-
+			
 //Parse the http header to verify the source
-  if(isset($HTTP_SERVER_VARS['PHP_AUTH_USER']) && isset($HTTP_SERVER_VARS['PHP_AUTH_PW'])) {
-    $compare_mer_id = $HTTP_SERVER_VARS['PHP_AUTH_USER']; 
-    $compare_mer_key = $HTTP_SERVER_VARS['PHP_AUTH_PW'];
+  $headers = getallheaders();
+  if(isset($headers['Authorization'])) {
+    $auth_encode = $headers['Authorization'];
+    $auth = base64_decode(substr($auth_encode, strpos($auth_encode, " ") + 1));
+    $compare_mer_id = substr($auth, 0, strpos($auth,":"));
+    $compare_mer_key = substr($auth, strpos($auth,":")+1);
   } else {
     error_func("HTTP Basic Authentication failed.\n");
     exit(1);
@@ -104,7 +91,7 @@
   $googlepayment = new googlecheckout();
   $merchant_id =  $googlepayment->merchantid;
   $merchant_key = $googlepayment->merchantkey;
-
+	
   if($compare_mer_id != $merchant_id || $compare_mer_key != $merchant_key) {
     error_func("HTTP Basic Authentication failed.\n");
     exit(1);
@@ -132,38 +119,51 @@
       break;
     } 
     case "new-order-notification": {
-    	
-     		
-      $orders_id = process_new_order_notification($root, $data, $googlepayment, $cart, $customer_id, $languages_id, $message_log);
-	  	$cart->reset(TRUE);
-// Add the order details to the table
+      $new_cart = new shoppingCart;
+      $product_list = $data[$root]['shopping-cart']['merchant-private-data']['product-data'];
+//Retrieve the list of product ids to get the contents of the cart when it was posted 		
+      $tok = strtok($product_list, ";");
+      while($tok != FALSE) {
+        $product_id = $tok;
+        $new_cart->add_cart($product_id);
+        $tok = strtok(";");
+      }  
+//Reset the cart stored in the session
+      $cart->reset(TRUE);		
+      $orders_id = process_new_order_notification($root, $data, $googlepayment, $new_cart, $customer_id, $languages_id, $message_log);
+		
+//Add the order details to the table
 // This table could be modified to hold the merchant id and key if required 
 // so that different mids and mkeys can be used for different orders
-      tep_db_query("insert into " . $googlepayment->table_order . " values (" . $orders_id . ", ". makeSqlString($data[$root]['google-order-number']['VALUE']) . ", " . makeSqlFloat($data[$root]['order-total']['VALUE']) . ")");
-			if(is_array($data[$root]['order-adjustment']['shipping']))
+      tep_db_query("insert into " . $googlepayment->table_order . " values (" . $orders_id . ", ". makeSqlString($data[$root]['google-order-number']) . ", " . makeSqlFloat($data[$root]['order-total']) . ")");
+			
       foreach($data[$root]['order-adjustment']['shipping'] as $ship); {
-        $shipping =  $ship['shipping-name']['VALUE'];
-        $ship_cost = $ship['shipping-cost']['VALUE']; 
+        $shipping =  $ship['shipping-name'];
+        $ship_cost = $ship['shipping-cost']; 
       }
-      $tax_amt = $data[$root]['order-adjustment']['total-tax']['VALUE'];
-      $order_total = $data[$root]['order-total']['VALUE'];
+      $tax_amt = $data[$root]['order-adjustment']['total-tax'];
+      $order_total = $data[$root]['order-total'];
  
       require(DIR_WS_CLASSES . 'order.php');
       $order = new order();	    
+     
 // load the selected shipping module
       require(DIR_WS_CLASSES . 'shipping.php');
       $shipping_modules = new shipping($shipping);
         
-      require_once(DIR_WS_LANGUAGES . $language . '/modules/payment/googlecheckout.php');
+      require_once('includes/languages/' . $language . '/' .
+          'modules/payment/googlecheckout.php');
 
 // Update values so that order_total modules get the correct values 			
-      $order->info['total'] = $data[$root]['order-total']['VALUE'];
-      $order->info['subtotal'] = $data[$root]['order-total']['VALUE'] - ($ship_cost + $tax_amt);
+      $payment= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
+      $order->info['total'] = $data[$root]['order-total'];
+      $order->info['subtotal'] = $data[$root]['order-total'] - ($ship_cost + $tax_amt);
       $order->info['shipping_method'] = $shipping;
       $order->info['shipping_cost'] = $ship_cost;
       $order->info['tax_groups']['tax'] = $tax_amt ;  
       $order->info['currency'] = 'USD';
       $order->info['currency_value'] = 1;
+
       require(DIR_WS_CLASSES . 'order_total.php');
       $order_total_modules = new order_total;
       $order_totals = $order_total_modules->process();
@@ -179,13 +179,12 @@
       }
       break;
     }
-    
     case "order-state-change-notification": {
-      process_order_state_change_notification($root, $data, $message_log, $googlepayment);
+      process_order_state_change_notification($root, $data, $message_log);
       break;
     }
     case "charge-amount-notification": {
-      process_charge_amount_notification($root, $data, $message_log, $googlepayment);
+      process_charge_amount_notification($root, $data, $message_log);
       break;
     }
     case "chargeback-amount-notification": {
@@ -197,7 +196,7 @@
       break;
     }
     case "risk-information-notification": {
-      process_risk_information_notification($root, $data, $message_log, $googlepayment);
+      process_risk_information_notification($root, $data, $message_log);
       break;
     }
     default: {
@@ -235,124 +234,6 @@
   function process_checkout_redirect($root, $data, $message_log) {
   }
   function process_merchant_calculation_callback($root, $data, $message_log) {
-	global $cart, $googlepayment, $order;
-
-	// i get all the enabled shipping methods  
-	require(DIR_WS_CLASSES . 'shipping.php');
-	$shipping_modules = new shipping;
-	// i get an hash-array with the description of each shipping method 
-	$methods_hash = $googlepayment->getMethods();
-	require(DIR_WS_CLASSES . 'order.php');
-	$order = new order;
-	 
-	// register a random ID in the session to check throughout the checkout procedure
-	// against alterations in the shopping cart contents
-	if (!tep_session_is_registered('cartID')) tep_session_register('cartID');
-		$cartID = $cart->cartID;
-  	
-		$total_weight = $cart->show_weight();
-		$total_count = $cart->count_contents();
-  		
- 		
-        // Create the results and send it
-		$merchant_calc = new GoogleMerchantCalculations();
-      // Loop through the list of address ids from the callback
-		$addresses = get_arr_result($data[$root]['calculate']['addresses']['anonymous-address']);
-  
-  		// required for some shipping methods (ie. USPS)
-		require_once('includes/classes/http_client.php');
-		foreach($addresses as $curr_address) {
-	      	// set up the order address
-	        $curr_id = $curr_address['id'];
-	        $country = $curr_address['country-code']['VALUE'];
-	        $city = $curr_address['city']['VALUE'];
-	        $region = $curr_address['region']['VALUE'];
-	        $postal_code = $curr_address['postal-code']['VALUE'];
-	
-			$countr_query = tep_db_query("select * 
-		                               from " . TABLE_COUNTRIES . " 
-		                               where countries_iso_code_2 = '" . makeSqlString($country) ."'");
-	
-	
-			$row = tep_db_fetch_array($countr_query);
-		 	$order->delivery['country'] = array('id' => $row['countries_id'], 
-												'title' => $row['countries_name'], 
-												'iso_code_2' => $country, 
-												'iso_code_3' => $row['countries_iso_code_3']);
-	
-			$order->delivery['country_id'] = $row['countries_id'];
-			$order->delivery['format_id'] = $row['address_format_id'];
-			
-			$zone_query = tep_db_query("select * 
-		                               from " . TABLE_ZONES . "
-		                               where zone_code = '" . makeSqlString($region) ."'");
-	
-			$row = tep_db_fetch_array($zone_query);
-			$order->delivery['zone_id'] = $row['zone_id'];
-			$order->delivery['state'] = $row['zone_name'];
-	
-			$order->delivery['city'] = $city;
-			$order->delivery['postcode'] = $postal_code;
-			//print_r($order);
-	
-	        // Loop through each shipping method if merchant-calculated shipping
-	        // support is to be provided
-			if(isset($data[$root]['calculate']['shipping'])) {
-		        $shipping = get_arr_result($data[$root]['calculate']['shipping']['method']);
-		        foreach($shipping as $curr_ship) {
-		         	$name = $curr_ship['name'];
-		            
-		            //Compute the price for this shipping method and address id
-		        
-			        list($a, $method_name) = explode(': ',$name);
-		   
-			        //print_r($order);
-		            $quotes = $shipping_modules->quote($methods_hash[$method_name][0], $methods_hash[$method_name][2]);
-		            //print_r($quotes);
-		            $price = $quotes[0]['methods'][0]['cost'];
-		            $shippable = "true";
-		            //if there is a problem with the method, i mark it as non-shippable
-		            if(!isset($quotes[0]['methods'][0]['cost']) || isset($quotes[0]['error'])) {
-		            	$shippable = "false";
-		            	$price = "0";
-		            }
-		            
-		            $merchant_result = new GoogleResult($curr_id);
-		            $merchant_result->SetShippingDetails($name, $price, "USD", $shippable);
-		
-		            if($data[$root]['calculate']['tax']['VALUE'] == "true") {
-		              //Compute tax for this address id and shipping type
-		              $amount = 15; // Modify this to the actual tax value
-		              $merchant_result->SetTaxDetails($amount, "USD");
-		            }
-		
-		            $codes = get_arr_result($data[$root]['calculate']['merchant-code-strings']['merchant-code-string']);
-		            foreach($codes as $curr_code) {
-		              //Update this data as required to set whether the coupon is valid, the code and the amount
-		              $coupons = new GoogleCoupons("true", $curr_code['code'], 5, "USD", "test2");
-		              $merchant_result->AddCoupons($coupons);
-		            }
-		            $merchant_calc->AddResult($merchant_result);
-		          }
-	        } else {
-		          $merchant_result = new GoogleResult($curr_id);
-		          if($data[$root]['calculate']['tax']['VALUE'] == "true") {
-		            //Compute tax for this address id and shipping type
-		            $amount = 15; // Modify this to the actual tax value
-		            $merchant_result->SetTaxDetails($amount, "USD");
-		          }
-		          $codes = get_arr_result($data[$root]['calculate']['merchant-code-strings']
-		              ['merchant-code-string']);
-		          foreach($codes as $curr_code) {
-		            //Update this data as required to set whether the coupon is valid, the code and the amount
-		            $coupons = new GoogleCoupons("true", $curr_code['code'], 5, "USD", "test2");
-		            $merchant_result->AddCoupons($coupons);
-		          }
-		          $merchant_calc->AddResult($merchant_result);
-	        }
-      }
-      echo $merchant_calc->getXML();
-      //$response->ProcessMerchantCalculations($merchant_calc);
   }
   function process_new_order_notification($root, $data, $googlepayment, $cart, $customer_id, $languages_id, $message_log) {
 	  
@@ -364,7 +245,6 @@
 // 6. Check stock configuration and update inventory if required
 
     $products = $cart->get_products(); 
-    
 //Check if buyer had logged in
     if(isset($customer_id) && $customer_id != '') {
       $cust_id = $customer_id;
@@ -372,19 +252,18 @@
       $params = ' customers_id = '.$cust_id;
     } else {
 // Else check if buyer is a new user from Google Checkout			
-      $customer_info = tep_db_fetch_array(tep_db_query("select customers_id from " .$googlepayment->table_name  . " where buyer_id = ". makeSqlString($data[$root]['buyer-id']['VALUE'])  ));   
+      $customer_info = tep_db_fetch_array(tep_db_query("select customers_id from " .$googlepayment->table_name  . " where buyer_id = ". makeSqlString($data[$root]['buyer-id'])  ));   
       if($customer_info['customers_id'] == '')  {
 // Add if new user
 	$sql_data_array = array('customers_gender' => '',
-                          'customers_firstname' => makeSqlString($data[$root]['buyer-shipping-address']['contact-name']['VALUE']),
+                          'customers_firstname' => makeSqlString($data[$root]['buyer-shipping-address']['contact-name']),
                           'customers_lastname' => '',
                           'customers_dob' => '',
-                          'customers_email_address' => makeSqlString($data[$root]['buyer-shipping-address']['email']['VALUE']),
+                          'customers_email_address' => makeSqlString($data[$root]['buyer-shipping-address']['email']),
                           'customers_default_address_id' => 0,
-							// using billing address phone because GC doesn't return phone number in the buyer-shipping-address.
-                          'customers_telephone' => makeSqlString($data[$root]['buyer-billing-address']['phone']['VALUE']),
-                          'customers_fax' => makeSqlString($data[$root]['buyer-shipping-address']['fax']['VALUE']),
-                          'customers_password' => makeSqlString($data[$root]['buyer-id']['VALUE']), 
+                          'customers_telephone' => makeSqlString($data[$root]['buyer-shipping-address']['phone']),
+                          'customers_fax' => makeSqlString($data[$root]['buyer-shipping-address']['fax']),
+                          'customers_password' => makeSqlString($data[$root]['buyer-id']), 
                           'customers_newsletter' => ''); 
         tep_db_perform(TABLE_CUSTOMERS, $sql_data_array);	
 				$cust_id = tep_db_insert_id();
@@ -395,8 +274,8 @@
                           'customers_info_date_account_last_modified' => '',
                           'global_product_notifications' => ''); 
         tep_db_perform(TABLE_CUSTOMERS_INFO, $sql_data_array);	
-        $str = "insert into ". $googlepayment->table_name . " values ( " . $cust_id. ", ". $data[$root]['buyer-id']['VALUE']. ")";
-        tep_db_query("insert into ". $googlepayment->table_name . " values ( " . $cust_id. ", ". $data[$root]['buyer-id']['VALUE']. ")");	
+        $str = "insert into ". $googlepayment->table_name . " values ( " . $cust_id. ", ". $data[$root]['buyer-id']. ")";
+        tep_db_query("insert into ". $googlepayment->table_name . " values ( " . $cust_id. ", ". $data[$root]['buyer-id']. ")");	
         $oper="insert";
         $params="";
      } else {
@@ -407,21 +286,21 @@
    }
 // Update address book with the latest entry
 // This has the disadvantage of overwriting an existing address book entry of the user
-    $str = "select zone_id from ". TABLE_ZONES . " where zone_id = '" . makeSqlString($data[$root]['buyer-shipping-address']['region']['VALUE']) . "'";
-    $zone_answer = tep_db_fetch_array(tep_db_query("select zone_id, zone_country_id from ". TABLE_ZONES . " where zone_code = '" . $data[$root]['buyer-shipping-address']['region']['VALUE'] . "'")); 
+    $str = "select zone_id from ". TABLE_ZONES . " where zone_id = '" . makeSqlString($data[$root]['buyer-shipping-address']['region']) . "'";
+    $zone_answer = tep_db_fetch_array(tep_db_query("select zone_id, zone_country_id from ". TABLE_ZONES . " where zone_code = '" . $data[$root]['buyer-shipping-address']['region'] . "'")); 
 		
     $sql_data_array = array('customers_id' => $cust_id,
                           'entry_gender' => '',
-                          'entry_company' => makeSqlString($data[$root]['buyer-shipping-address']['company-name']['VALUE']),
-                          'entry_firstname' => makeSqlString($data[$root]['buyer-shipping-address']['contact-name']['VALUE']),
+                          'entry_company' => makeSqlString($data[$root]['buyer-shipping-address']['company-name']),
+                          'entry_firstname' => makeSqlString($data[$root]['buyer-shipping-address']['contact-name']),
                           'entry_lastname' => '',
-                          'entry_street_address' => makeSqlString($data[$root]['buyer-shipping-address']['address1']['VALUE']),
-      	                  'entry_suburb' => makeSqlString($data[$root]['buyer-shipping-address']['address2']['VALUE']),
-                          'entry_postcode' => makeSqlString($data[$root]['buyer-shipping-address']['postal-code']['VALUE']),
-                          'entry_city' => makeSqlString($data[$root]['buyer-shipping-address']['city']['VALUE']),
-                          'entry_state' => makeSqlString($data[$root]['buyer-shipping-address']['region']['VALUE']),
-                          'entry_country_id' => makeSqlInteger($zone_answer['zone_country_id']['VALUE']),
-                          'entry_zone_id' => makeSqlInteger($zone_answer['zone_id']['VALUE']));
+                          'entry_street_address' => makeSqlString($data[$root]['buyer-shipping-address']['address1']),
+      	                  'entry_suburb' => makeSqlString($data[$root]['buyer-shipping-address']['address2']),
+                          'entry_postcode' => makeSqlString($data[$root]['buyer-shipping-address']['postal-code']),
+                          'entry_city' => makeSqlString($data[$root]['buyer-shipping-address']['city']),
+                          'entry_state' => makeSqlString($data[$root]['buyer-shipping-address']['region']),
+                          'entry_country_id' => makeSqlInteger($zone_answer['zone_country_id']),
+                          'entry_zone_id' => makeSqlInteger($zone_answer['zone_id']));
     tep_db_perform(TABLE_ADDRESS_BOOK, $sql_data_array, $oper, $params);	
 				
     if($oper == "insert") {
@@ -430,42 +309,41 @@
     }
 		
     $sql_data_array = array('customers_id' => $cust_id,
-                           'customers_name' => $data[$root]['buyer-shipping-address']['contact-name']['VALUE'],
-                           'customers_company' => $data[$root]['buyer-shipping-address']['company-name']['VALUE'],
-                           'customers_street_address' => $data[$root]['buyer-shipping-address']['address1']['VALUE'],
-                           'customers_suburb' => $data[$root]['buyer-shipping-address']['address2']['VALUE'],
-                           'customers_city' => $data[$root]['buyer-shipping-address']['city']['VALUE'],
-                           'customers_postcode' => $data[$root]['buyer-shipping-address']['postal-code']['VALUE'], 
-                           'customers_state' => $data[$root]['buyer-shipping-address']['region']['VALUE'],
-                           'customers_country' => $data[$root]['buyer-shipping-address']['country-code']['VALUE'],
-                           // using billing address phone because GC doesn't return phone number in the buyer-shipping-address. 
-                           'customers_telephone' => $data[$root]['buyer-billing-address']['phone']['VALUE'], 
-                           'customers_email_address' => $data[$root]['buyer-shipping-address']['email']['VALUE'],
+                           'customers_name' => $data[$root]['buyer-shipping-address']['contact-name'],
+                           'customers_company' => $data[$root]['buyer-shipping-address']['company-name'],
+                           'customers_street_address' => $data[$root]['buyer-shipping-address']['address1'],
+                           'customers_suburb' => $data[$root]['buyer-shipping-address']['address2'],
+                           'customers_city' => $data[$root]['buyer-shipping-address']['city'],
+                           'customers_postcode' => $data[$root]['buyer-shipping-address']['postal-code'], 
+                           'customers_state' => $data[$root]['buyer-shipping-address']['region'],
+                           'customers_country' => $data[$root]['buyer-shipping-address']['country-code'], 
+                           'customers_telephone' => $data[$root]['buyer-shipping-address']['phone'], 
+                           'customers_email_address' => $data[$root]['buyer-shipping-address']['email'],
                            'customers_address_format_id' => 2, 
-                           'delivery_name' => $data[$root]['buyer-shipping-address']['contact-name']['VALUE'], 
-                           'delivery_company' => $data[$root]['buyer-shipping-address']['company-name']['VALUE'],
-                           'delivery_street_address' => $data[$root]['buyer-shipping-address']['address1']['VALUE'], 
-                           'delivery_suburb' => $data[$root]['buyer-shipping-address']['address2']['VALUE'], 
-                           'delivery_city' => $data[$root]['buyer-shipping-address']['city']['VALUE'], 
-                           'delivery_postcode' => $data[$root]['buyer-shipping-address']['postal-code']['VALUE'], 
-                           'delivery_state' => $data[$root]['buyer-shipping-address']['region']['VALUE'], 
-                           'delivery_country' => $data[$root]['buyer-shipping-address']['country-code']['VALUE'], 
+                           'delivery_name' => $data[$root]['buyer-shipping-address']['contact-name'], 
+                           'delivery_company' => $data[$root]['buyer-shipping-address']['company-name'],
+                           'delivery_street_address' => $data[$root]['buyer-shipping-address']['address1'], 
+                           'delivery_suburb' => $data[$root]['buyer-shipping-address']['address2'], 
+                           'delivery_city' => $data[$root]['buyer-shipping-address']['city'], 
+                           'delivery_postcode' => $data[$root]['buyer-shipping-address']['postal-code'], 
+                           'delivery_state' => $data[$root]['buyer-shipping-address']['region'], 
+                           'delivery_country' => $data[$root]['buyer-shipping-address']['country-code'], 
                            'delivery_address_format_id' => 2, 
-                           'billing_name' => makeSqlString($data[$root]['buyer-billing-address']['contact-name']['VALUE']), 
-                           'billing_company' => makeSqlString($data[$root]['buyer-billing-address']['company-name']['VALUE']),
-                           'billing_street_address' => makeSqlString($data[$root]['buyer-billing-address']['address1']['VALUE']), 
-                           'billing_suburb' => makeSqlString($data[$root]['buyer-billing-address']['address2']['VALUE']), 
-                           'billing_city' => makeSqlString($data[$root]['buyer-billing-address']['city']['VALUE']), 
-                           'billing_postcode' => makeSqlString($data[$root]['buyer-billing-address']['postal-code']['VALUE']), 
-                           'billing_state' => makeSqlString($data[$root]['buyer-billing-address']['region']['VALUE']), 
-                           'billing_country' => makeSqlString($data[$root]['buyer-billing-address']['country-code']['VALUE']), 
+                           'billing_name' => makeSqlString($data[$root]['buyer-billing-address']['contact-name']), 
+                           'billing_company' => makeSqlString($data[$root]['buyer-billing-address']['company-name']),
+                           'billing_street_address' => makeSqlString($data[$root]['buyer-billing-address']['address1']), 
+                           'billing_suburb' => makeSqlString($data[$root]['buyer-billing-address']['address2']), 
+                           'billing_city' => makeSqlString($data[$root]['buyer-billing-address']['city']), 
+                           'billing_postcode' => makeSqlString($data[$root]['buyer-billing-address']['postal-code']), 
+                           'billing_state' => makeSqlString($data[$root]['buyer-billing-address']['region']), 
+                           'billing_country' => makeSqlString($data[$root]['buyer-billing-address']['country-code']), 
                            'billing_address_format_id' => 2, 
                            'payment_method' => 'Google Checkout',
                            'cc_type' => '', 
                            'cc_owner' => '', 
                            'cc_number' => '', 
                            'cc_expires' => '', 
-                           'date_purchased' => makeSqlString($data[$root]['timestamp']['VALUE']), 
+                           'date_purchased' => makeSqlString($data[$root]['timestamp']), 
                            'orders_status' => 1, 
                            'currency' => "USD",
                            'currency_value' => 1);
@@ -473,8 +351,8 @@
 //Insert entries into orders_products	
     $orders_id = tep_db_insert_id();						
     for($i=0; $i<sizeof($products); $i++) {
-      $str = "select tax_rate from ". TABLE_TAX_RATES . " as tr, ". TABLE_ZONES . " as z, ". TABLE_ZONES_TO_GEO_ZONES . " as ztgz where z.zone_code= '". $data[$root]['buyer-shipping-address']['region']['VALUE'] . "' and z.zone_id = ztgz.zone_id and tr.tax_zone_id=ztgz.geo_zone_id and tax_class_id= ". $products[$i]['tax_class_id'];
-      $tax_answer = tep_db_fetch_array(tep_db_query("select tax_rate from ". TABLE_TAX_RATES . " as tr, ". TABLE_ZONES . " as z, ". TABLE_ZONES_TO_GEO_ZONES . " as ztgz where z.zone_code= '". $data[$root]['buyer-shipping-address']['region']['VALUE'] . "' and z.zone_id = ztgz.zone_id and tr.tax_zone_id=ztgz.geo_zone_id and tax_class_id= ". $products[$i]['tax_class_id']));
+      $str = "select tax_rate from ". TABLE_TAX_RATES . " as tr, ". TABLE_ZONES . " as z, ". TABLE_ZONES_TO_GEO_ZONES . " as ztgz where z.zone_code= '". $data[$root]['buyer-shipping-address']['region'] . "' and z.zone_id = ztgz.zone_id and tr.tax_zone_id=ztgz.geo_zone_id and tax_class_id= ". $products[$i]['tax_class_id'];
+      $tax_answer = tep_db_fetch_array(tep_db_query("select tax_rate from ". TABLE_TAX_RATES . " as tr, ". TABLE_ZONES . " as z, ". TABLE_ZONES_TO_GEO_ZONES . " as ztgz where z.zone_code= '". $data[$root]['buyer-shipping-address']['region'] . "' and z.zone_id = ztgz.zone_id and tr.tax_zone_id=ztgz.geo_zone_id and tax_class_id= ". $products[$i]['tax_class_id']));
       $products_tax = $tax_answer['tax_rate'];
       
       $sql_data_array = array('orders_id' => $orders_id,
@@ -484,7 +362,7 @@
                           'products_price' => makeSqlFloat($products[$i]['price']),
                           'final_price' => makeSqlFloat($products[$i]['final_price']),
                           'products_tax' => makeSqlFloat($products_tax), 
-                          'products_quantity' => makeSqlInteger($products[$i]['quantity'])); 
+                          'products_quantity' => makeSqlInteger($products[$i]['quantity'] )); 
       tep_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);	
 //Insert entries into orders_products_attributes								
       $orders_products_id = tep_db_insert_id();
@@ -509,125 +387,60 @@
           tep_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);	
         }		
       }		
-            
-	    // update inventory -- add by rancidtoys
-	    // 
-	    // must review!
-	    //
-//	    print_r($products);
-		$stock_query = tep_db_query("select products_quantity from " . TABLE_PRODUCTS . " where products_id = '" . $products[$i]['id'] . "'");
-		//echo "select products_quantity from " . TABLE_PRODUCTS . " where products_id = '" . $products[$i]['id'] . "'" . tep_db_num_rows($stock_query);
-		if (tep_db_num_rows($stock_query) > 0) {
-			$stock_values = tep_db_fetch_array($stock_query);
-			$stock_left = $stock_values['products_quantity'] - $products[$i]['quantity'];
-			tep_db_query("update " . TABLE_PRODUCTS . " set products_quantity = '" . $stock_left . "' where products_id = '" . $products[$i]['id'] . "'");
-			if ( ($stock_left < 1) && (STOCK_ALLOW_CHECKOUT == 'false') ) {
-				tep_db_query("update " . TABLE_PRODUCTS . " set products_status = '0' where products_id = '" . $products[$i]['id'] . "'");
-			}
-		}
-		// end add by rancidtoys
     }
-    
 //Insert entry into orders_status_history		
     $sql_data_array = array('orders_id' => $orders_id,
                            'orders_status_id' => 1,
                            'date_added' => 'now()',
                            'customer_notified' => 1,
-                           'comments' => 'Google Checkout Order No: ' . $data[$root]['google-order-number']['VALUE']."\n" .
-                           		'Merachnat Calculations: '. $data[$root]['order-adjustment']['merchant-calculation-successful']['VALUE']);  //Add Order number to Comments box. For customer's reference. 
+                           'comments' => ''); 
     tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);	
-    send_ack();
+    //send_ack(); 
     return $orders_id;
   }
-function process_order_state_change_notification($root, $data, $message_log, $googlepayment) {
-    $new_financial_state = $data[$root]['new-financial-order-state']['VALUE'];
-    $new_fulfillment_order = $data[$root]['new-fulfillment-order-state']['VALUE'];
-
-    $previous_financial_state = $data[$root]['previous-financial-order-state']['VALUE'];
-    $previous_fulfillment_order = $data[$root]['previous-fulfillment-order-state']['VALUE'];
-
-    $google_order_number = $data[$root]['google-order-number']['VALUE'];
-    
-    $google_orders = tep_db_query("SELECT orders_id from " . $googlepayment->table_order . " " .
-    														"where google_order_number = '". makeSqlString($google_order_number) ."'");
-		$google_order = tep_db_fetch_array($google_orders);
-		
-    fwrite($message_log,sprintf("\n%s\n", $data[$root]['new-financial-order-state']['VALUE']));
-
-		$update = false;
-		if($previous_financial_state != $new_financial_state)
+ 
+  function process_order_state_change_notification($root, $data, $message_log) {
+    $new_financial_state = $data[$root]['new-financial-order-state'];
+    $new_fulfillment_order = $data[$root]['new-fulfillment-order-state'];
+	
+    fwrite($log_file,sprintf("\n%s\n", $data[$root]['new-financial-order-state']));
+    fwrite($log_file, sprintf("\r\n%s\n",$request_url));
+	
     switch($new_financial_state) {
       case 'REVIEWING': {
         break;
       }
       case 'CHARGEABLE': {
-				$update = true;
-				$orders_status_id = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state."\n".'Order ready to be charged!'; 
-				$customer_notified = 0;
         break;
       }
       case 'CHARGING': {
         break;
       }
       case 'CHARGED': {
-				$update = true;
-				$orders_status_id = 2;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state ;
-				$customer_notified = 0;
         break;
       }
 
       case 'PAYMENT-DECLINED': {
-				$update = true;
-				$orders_status_id = 1;
-				$customer_notified = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state .'Payment was declined!'; 
         break;
       }
       case 'CANCELLED': {
-				$update = true;
-				$orders_status_id = 1;
-				$customer_notified = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state ."\n".'Order was canceled.'."\n".'Reason:'. $data[$root]['reason']['VALUE']; 
         break;
       }
       case 'CANCELLED_BY_GOOGLE': {
-				$update = true;
-				$orders_status_id = 1;
-				$customer_notified = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state ."\n".'Order was canceled by Google.'."\n".'Reason:'. $data[$root]['reason']['VALUE']; 
         break;
       }
       default:
-        break;
+        break;	
     }
-    
-    if($update) {
-	    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-	                           'orders_status_id' => $orders_status_id,
-	                           'date_added' => 'now()',
-	                           'customer_notified' => $customer_notified,
-	                           'comments' => $comments);
-      tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-      tep_db_query("UPDATE " . TABLE_ORDERS . "SET orders_status = '".$orders_status_id."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
-    }
-    
- 		$update = false;   
- 		if($previous_fulfillment_order != $new_fulfillment_order)
     switch($new_fulfillment_order) {
       case 'NEW': {
         break;
-      }
+      }	
       case 'PROCESSING': {
-        break;
+        break;	  
       }
       case 'DELIVERED': {
-				$update = true;
-				$orders_status_id = 3;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_fulfillment_order ."\n".'Order was Delivered.'."\n";
-				$customer_notified = 1;
-        break;
+        break;	  
       }
       case 'WILL_NOT_DELIVER': {
         break;
@@ -635,73 +448,70 @@ function process_order_state_change_notification($root, $data, $message_log, $go
       default:
          break;
     }
-
-    if($update) {
-	    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-	                           'orders_status_id' => $orders_status_id,
-	                           'date_added' => 'now()',
-	                           'customer_notified' => $customer_notified,
-	                           'comments' => $comments);
-      tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-      tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status = '".$orders_status_id."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
-    }
-
-    send_ack();	  
+      send_ack();	  
   }  
-  function process_charge_amount_notification($root, $data, $message_log, $googlepayment) {
-    $google_order_number = $data[$root]['google-order-number']['VALUE'];
-    $google_orders = tep_db_query("SELECT orders_id from " . $googlepayment->table_order . " " .
-    														"where google_order_number = '". makeSqlString($google_order_number) ."'");
-		$google_order = tep_db_fetch_array($google_orders);
-		
-//   	fwrite($message_log,sprintf("\n%s\n", $google_order['orders_id'],));
-  	 
-  	
-    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-                           'orders_status_id' => 2,
-                           'date_added' => 'now()',
-                           'customer_notified' => 0,
-                           'comments' => 'Latest charge amount: ' .$data[$root]['latest-charge-amount']['currency'].' ' .$data[$root]['latest-charge-amount']['VALUE']."\n". 'Total charge amount: ' .$data[$root]['latest-charge-amount']['currency'].' ' . $data[$root]['total-charge-amount']['VALUE']);  	
-    tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-    tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status = '". 2 ."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
-    send_ack();
+  function process_charge_amount_notification($root, $data, $message_log) {
+    send_ack(); 	  
   }
   function process_chargeback_amount_notification($root, $data, $message_log) {
-    send_ack(); 
   }
   function process_refund_amount_notification($root, $data, $message_log) {
-    send_ack(); 
   }
-  function process_risk_information_notification($root, $data, $message_log, $googlepayment) {
-    $google_order_number = $data[$root]['google-order-number']['VALUE'];
-    $google_orders = tep_db_query("SELECT orders_id from " . $googlepayment->table_order . " " .
-    														"where google_order_number = '". makeSqlString($google_order_number) ."'");
-		$google_order = tep_db_fetch_array($google_orders);
-		
-//   fwrite($message_log,sprintf("\n%s\n", $google_order->fields['orders_id']));
-  	 
-  	
-    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-                           'orders_status_id' => 1,
-                           'date_added' => 'now()',
-                           'customer_notified' => 0,
-                           'comments' => 'Risk Information: ' ."\n" .
-                            							' Elegible for Protection: '.$data[$root]['risk-information']['eligible-for-protection']['VALUE']."\n" .
-                           								' Avs Response: '.$data[$root]['risk-information']['avs-response']['VALUE']."\n" .
-																					' Cvn Response: '.$data[$root]['risk-information']['cvn-response']['VALUE']."\n" .
-																					' Partial CC number: '.$data[$root]['risk-information']['partial-cc-number']['VALUE']."\n" .
-																					' Buyer account age: '.$data[$root]['risk-information']['buyer-account-age']['VALUE']."\n" .
-																					' IP Address: '.$data[$root]['risk-information']['ip-address']['VALUE']."\n" 
-                           								);  	
-    tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-    tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status_id = '". 1 ."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
-    send_ack();
+  function process_risk_information_notification($root, $data, $message_log) {
+    send_ack();	  
+  }
+  
+  function send_google_req($url, $merid, $merkey, $postargs, $message_log) {
+    //error_reporting(E_ALL);
+    // Get the curl session object
+    $session = curl_init($url);
+	
+    $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
+    $header_string_2 = "Content-Type: application/xml";
+    $header_string_3 = "Accept: application/xml";
+	
+    fwrite($log_file, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
+    // Set the POST options.
+    curl_setopt ($session, CURLOPT_POST, true);
+    curl_setopt($session, CURLOPT_HTTPHEADER, array($header_string_1, $header_string_2, $header_string_3));
+    curl_setopt ($session, CURLOPT_POSTFIELDS, $postargs);
+    curl_setopt($session, CURLOPT_HEADER, true);
+    curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
+
+    // Do the POST and then close the session
+    $response = curl_exec($session);
+    curl_close($session);
+
+    fwrite($log_file, sprintf("\r\n%s\n",$response));
+	
+    // Get HTTP Status code from the response
+    $status_code = array();
+    preg_match('/\d\d\d/', $response, $status_code);
+    fwrite($log_file, sprintf("\r\n%s\n",$status_code[0]));
+    
+    // Check for errors
+    switch( $status_code[0] ) {
+      case 200:
+        // Success
+        break;
+      case 503:
+        die('Error 503: Service unavailable. An internal problem prevented us from returning data to you.');
+        break;
+      case 403:
+        die('Error 403: Forbidden. You do not have permission to access this resource, or are over your rate limit.');
+        break;
+      case 400:
+        die('Error 400:  Bad request. The parameters passed to the service did not match as expected. The exact error is returned in the XML response.');
+        break;
+      default:
+        die('Error :' . $status_code[0]);
+    }
   }
 
-  
-  function send_ack() {
+  function send_ack($schema_url) {
     $acknowledgment = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" .
-    "<notification-acknowledgment xmlns=\"http://checkout.google.com/schema/2\"/>";
+    "<notification-acknowledgment xmlns=\"" . 
+    $schema_url . "\"/>";
     echo $acknowledgment;
   }
 
@@ -717,32 +527,6 @@ function process_order_state_change_notification($root, $data, $message_log, $go
   function makeSqlFloat($val) {
     return ((settype($val, 'float'))?($val):0); 
   }
-    /* In case the XML API contains multiple open tags
-     with the same value, then invoke this function and
-     perform a foreach on the resultant array.
-     This takes care of cases when there is only one unique tag
-     or multiple tags.
-     Examples of this are "anonymous-address", "merchant-code-string"
-     from the merchant-calculations-callback API
-  */
-  function get_arr_result($child_node) {
-    $result = array();
-    if(isset($child_node)) {
-      if(is_associative_array($child_node)) {
-        $result[] = $child_node;
-      }
-      else {
-        foreach($child_node as $curr_node){
-          $result[] = $curr_node;
-        }
-      }
-    }
-    return $result;
-  }
-
-  /* Returns true if a given variable represents an associative array */
-  function is_associative_array( $var ) {
-    return is_array( $var ) && !is_numeric( implode( '', array_keys( $var ) ) );
-  } 
+   
   // ** END GOOGLE CHECKOUT **
 ?>

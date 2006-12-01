@@ -48,26 +48,18 @@
 
   $action = (isset($HTTP_GET_VARS['action']) ? $HTTP_GET_VARS['action'] : '');
 
-
   if (tep_not_null($action)) {
- 	
     switch ($action) {
       case 'save':
-      // ** GOOGLE CHECKOUT **      
-        // fix configuration no saving -
-      	reset($HTTP_POST_VARS['configuration']);
-        // end fix
-      // ** END GOOGLE CHECKOUT **      
 	    while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
-        // ** GOOGLE CHECKOUT **    
-          // Checks if module is of type google checkout and also verfies if this configuration is 
-          // for the check boxes for the shipping options   				
-	      if( is_array( $value ) ){
-                $value = implode( ", ", $value);
-                $value = ereg_replace (", --none--", "", $value);
-              }
-        // ** END GOOGLE CHECKOUT **
-	
+// ** GOOGLE CHECKOUT **    
+// Checks if module is of type google checkout and also verfies if this configuration is 
+// for the check boxes for the shipping options   				
+	       if( is_array( $value ) ){
+                 $value = implode( ", ", $value);
+                 $value = ereg_replace (", --none--", "", $value);
+               }
+// ** END GOOGLE CHECKOUT **
 		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . makeSqlString($value) . " where configuration_key = " . makeSqlString($key));
 	    }
 	    tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
@@ -207,9 +199,7 @@
   }
 
   ksort($installed_modules);
-
   $check_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = '" . $module_key . "'");
-  //echo tep_db_num_rows($check_query);
   if (tep_db_num_rows($check_query)) {
     $check = tep_db_fetch_array($check_query);
     if ($check['configuration_value'] != implode(';', $installed_modules)) {

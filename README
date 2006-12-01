@@ -1,4 +1,4 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.0.4 - 11/30/2006 
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.0.3 - 11/17/2006
 
 INTRODUCTION
 ============
@@ -103,10 +103,7 @@ TROUBLE SHOOTING
    Solution: Your SSL certificate is not accepted by Google Checkout.
 6. Problem: <error-message>Bad Signature on Cart</error-message>
    Solution: Incorrect Merchant key.
-7. Problem: (/public_html/googlecheckout/response_error.log) Tue Nov 28 8:56:21 PST 2006:- Shopping cart not obtained from session. 
-   Solution: Set to False admin->configuration->session->Prevent Spider Sessions configuration (Thx dawnmariegifts, beta tester)
-   Side effects: You'll see spiders as active users. Working on a permanent fix.
-   
+  
     
 KNOWN BUGS - (Report bugs at http://forums.oscommerce.com/index.php?showtopic=229637)
 ==========
@@ -134,7 +131,3 @@ CHANGE LOG
            - Fixed wrong Qty in Admin UI
            - Fixed modules not saving their settings
            - Fixed Notify Customer option
-
-11/30/2006 v1.0.4 (ropu)
-           - Add state change, Risk and charge notification into the Admin UI
-					 - Fix Shopping cart not obtained from session. See TROUBLE SHOOTING.

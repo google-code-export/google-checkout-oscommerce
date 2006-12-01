@@ -27,8 +27,7 @@
 // 3. Parse the XML message
 // 4. Trasfer control to appropriate function
 
-// error_reporting(0);
-
+ 
   chdir('./..');
   $curr_dir = getcwd();
   define('API_CALLBACK_MESSAGE_LOG', $curr_dir."/googlecheckout/response_message.log");
@@ -58,18 +57,14 @@
   if (get_magic_quotes_gpc()) {
     $xml_response = stripslashes($xml_response);
   }
-
   fwrite($message_log, sprintf("\n\r%s:- %s\n",date("D M j G:i:s T Y"),$xml_response));
-  fwrite($message_log, sprintf("\n\rHTTP_USER_AGENT:- %s\n",getenv('HTTP_USER_AGENT')));
   
   $xmlp = new XmlParser($xml_response);
   $root = $xmlp->getRoot();
   $data = $xmlp->getData();
   fwrite($message_log, sprintf("\n\r%s:- %s\n",date("D M j G:i:s T Y"), $root));	  
 
-	// restore session
-	
-	//print_r($data);
+	// restore session 		
   if(isset($data[$root]['shopping-cart']['merchant-private-data']['session-data']['VALUE'])) {
     $private_data = $data[$root]['shopping-cart']['merchant-private-data']['session-data']['VALUE'];
     $sess_id = substr($private_data, 0 , strpos($private_data,";"));
@@ -81,10 +76,8 @@
     if(function_exists('session_name'))	
       session_name($sess_name);  
   }
-  
   if(check_file('includes/application_top.php'))
     include_once('includes/application_top.php');
-
   if(tep_session_is_registered('cart') && is_object($cart)) {
     $cart->restore_contents();
   } 
@@ -92,7 +85,6 @@
     error_func("Shopping cart not obtained from session.\n");
     exit(1);	
   }	
-
 //Parse the http header to verify the source
   if(isset($HTTP_SERVER_VARS['PHP_AUTH_USER']) && isset($HTTP_SERVER_VARS['PHP_AUTH_PW'])) {
     $compare_mer_id = $HTTP_SERVER_VARS['PHP_AUTH_USER']; 
@@ -135,12 +127,12 @@
     	
      		
       $orders_id = process_new_order_notification($root, $data, $googlepayment, $cart, $customer_id, $languages_id, $message_log);
-	  	$cart->reset(TRUE);
+	  $cart->reset(TRUE);
 // Add the order details to the table
 // This table could be modified to hold the merchant id and key if required 
 // so that different mids and mkeys can be used for different orders
       tep_db_query("insert into " . $googlepayment->table_order . " values (" . $orders_id . ", ". makeSqlString($data[$root]['google-order-number']['VALUE']) . ", " . makeSqlFloat($data[$root]['order-total']['VALUE']) . ")");
-			if(is_array($data[$root]['order-adjustment']['shipping']))
+			
       foreach($data[$root]['order-adjustment']['shipping'] as $ship); {
         $shipping =  $ship['shipping-name']['VALUE'];
         $ship_cost = $ship['shipping-cost']['VALUE']; 
@@ -181,11 +173,11 @@
     }
     
     case "order-state-change-notification": {
-      process_order_state_change_notification($root, $data, $message_log, $googlepayment);
+      process_order_state_change_notification($root, $data, $message_log);
       break;
     }
     case "charge-amount-notification": {
-      process_charge_amount_notification($root, $data, $message_log, $googlepayment);
+      process_charge_amount_notification($root, $data, $message_log);
       break;
     }
     case "chargeback-amount-notification": {
@@ -197,7 +189,7 @@
       break;
     }
     case "risk-information-notification": {
-      process_risk_information_notification($root, $data, $message_log, $googlepayment);
+      process_risk_information_notification($root, $data, $message_log);
       break;
     }
     default: {
@@ -533,101 +525,52 @@
                            'orders_status_id' => 1,
                            'date_added' => 'now()',
                            'customer_notified' => 1,
-                           'comments' => 'Google Checkout Order No: ' . $data[$root]['google-order-number']['VALUE']."\n" .
-                           		'Merachnat Calculations: '. $data[$root]['order-adjustment']['merchant-calculation-successful']['VALUE']);  //Add Order number to Comments box. For customer's reference. 
+                           'comments' => 'Google Checkout Order No: ' . $data[$root]['google-order-number']['VALUE']);  //Add Order number to Comments box. For customer's reference. 
     tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);	
     send_ack();
     return $orders_id;
   }
-function process_order_state_change_notification($root, $data, $message_log, $googlepayment) {
+  function process_order_state_change_notification($root, $data, $message_log) {
     $new_financial_state = $data[$root]['new-financial-order-state']['VALUE'];
     $new_fulfillment_order = $data[$root]['new-fulfillment-order-state']['VALUE'];
-
-    $previous_financial_state = $data[$root]['previous-financial-order-state']['VALUE'];
-    $previous_fulfillment_order = $data[$root]['previous-fulfillment-order-state']['VALUE'];
-
-    $google_order_number = $data[$root]['google-order-number']['VALUE'];
-    
-    $google_orders = tep_db_query("SELECT orders_id from " . $googlepayment->table_order . " " .
-    														"where google_order_number = '". makeSqlString($google_order_number) ."'");
-		$google_order = tep_db_fetch_array($google_orders);
-		
+	
     fwrite($message_log,sprintf("\n%s\n", $data[$root]['new-financial-order-state']['VALUE']));
-
-		$update = false;
-		if($previous_financial_state != $new_financial_state)
+    fwrite($message_log, sprintf("\r\n%s\n",$request_url));
+	
     switch($new_financial_state) {
       case 'REVIEWING': {
         break;
       }
       case 'CHARGEABLE': {
-				$update = true;
-				$orders_status_id = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state."\n".'Order ready to be charged!'; 
-				$customer_notified = 0;
         break;
       }
       case 'CHARGING': {
         break;
       }
       case 'CHARGED': {
-				$update = true;
-				$orders_status_id = 2;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state ;
-				$customer_notified = 0;
         break;
       }
-
       case 'PAYMENT-DECLINED': {
-				$update = true;
-				$orders_status_id = 1;
-				$customer_notified = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state .'Payment was declined!'; 
         break;
       }
       case 'CANCELLED': {
-				$update = true;
-				$orders_status_id = 1;
-				$customer_notified = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state ."\n".'Order was canceled.'."\n".'Reason:'. $data[$root]['reason']['VALUE']; 
         break;
       }
       case 'CANCELLED_BY_GOOGLE': {
-				$update = true;
-				$orders_status_id = 1;
-				$customer_notified = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state ."\n".'Order was canceled by Google.'."\n".'Reason:'. $data[$root]['reason']['VALUE']; 
         break;
       }
       default:
-        break;
+        break;	
     }
-    
-    if($update) {
-	    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-	                           'orders_status_id' => $orders_status_id,
-	                           'date_added' => 'now()',
-	                           'customer_notified' => $customer_notified,
-	                           'comments' => $comments);
-      tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-      tep_db_query("UPDATE " . TABLE_ORDERS . "SET orders_status = '".$orders_status_id."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
-    }
-    
- 		$update = false;   
- 		if($previous_fulfillment_order != $new_fulfillment_order)
     switch($new_fulfillment_order) {
       case 'NEW': {
         break;
-      }
+      }	
       case 'PROCESSING': {
-        break;
+        break;	  
       }
       case 'DELIVERED': {
-				$update = true;
-				$orders_status_id = 3;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_fulfillment_order ."\n".'Order was Delivered.'."\n";
-				$customer_notified = 1;
-        break;
+        break;	  
       }
       case 'WILL_NOT_DELIVER': {
         break;
@@ -635,69 +578,20 @@ function process_order_state_change_notification($root, $data, $message_log, $go
       default:
          break;
     }
-
-    if($update) {
-	    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-	                           'orders_status_id' => $orders_status_id,
-	                           'date_added' => 'now()',
-	                           'customer_notified' => $customer_notified,
-	                           'comments' => $comments);
-      tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-      tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status = '".$orders_status_id."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
-    }
-
     send_ack();	  
   }  
-  function process_charge_amount_notification($root, $data, $message_log, $googlepayment) {
-    $google_order_number = $data[$root]['google-order-number']['VALUE'];
-    $google_orders = tep_db_query("SELECT orders_id from " . $googlepayment->table_order . " " .
-    														"where google_order_number = '". makeSqlString($google_order_number) ."'");
-		$google_order = tep_db_fetch_array($google_orders);
-		
-//   	fwrite($message_log,sprintf("\n%s\n", $google_order['orders_id'],));
-  	 
-  	
-    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-                           'orders_status_id' => 2,
-                           'date_added' => 'now()',
-                           'customer_notified' => 0,
-                           'comments' => 'Latest charge amount: ' .$data[$root]['latest-charge-amount']['currency'].' ' .$data[$root]['latest-charge-amount']['VALUE']."\n". 'Total charge amount: ' .$data[$root]['latest-charge-amount']['currency'].' ' . $data[$root]['total-charge-amount']['VALUE']);  	
-    tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-    tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status = '". 2 ."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
-    send_ack();
+  function process_charge_amount_notification($root, $data, $message_log) {
+    send_ack(); 	  
   }
   function process_chargeback_amount_notification($root, $data, $message_log) {
-    send_ack(); 
-  }
-  function process_refund_amount_notification($root, $data, $message_log) {
-    send_ack(); 
-  }
-  function process_risk_information_notification($root, $data, $message_log, $googlepayment) {
-    $google_order_number = $data[$root]['google-order-number']['VALUE'];
-    $google_orders = tep_db_query("SELECT orders_id from " . $googlepayment->table_order . " " .
-    														"where google_order_number = '". makeSqlString($google_order_number) ."'");
-		$google_order = tep_db_fetch_array($google_orders);
-		
-//   fwrite($message_log,sprintf("\n%s\n", $google_order->fields['orders_id']));
-  	 
-  	
-    $sql_data_array = array('orders_id' => $google_order['orders_id'],
-                           'orders_status_id' => 1,
-                           'date_added' => 'now()',
-                           'customer_notified' => 0,
-                           'comments' => 'Risk Information: ' ."\n" .
-                            							' Elegible for Protection: '.$data[$root]['risk-information']['eligible-for-protection']['VALUE']."\n" .
-                           								' Avs Response: '.$data[$root]['risk-information']['avs-response']['VALUE']."\n" .
-																					' Cvn Response: '.$data[$root]['risk-information']['cvn-response']['VALUE']."\n" .
-																					' Partial CC number: '.$data[$root]['risk-information']['partial-cc-number']['VALUE']."\n" .
-																					' Buyer account age: '.$data[$root]['risk-information']['buyer-account-age']['VALUE']."\n" .
-																					' IP Address: '.$data[$root]['risk-information']['ip-address']['VALUE']."\n" 
-                           								);  	
-    tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-    tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status_id = '". 1 ."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
     send_ack();
   }
-
+  function process_refund_amount_notification($root, $data, $message_log) {
+    send_ack();
+  }
+  function process_risk_information_notification($root, $data, $message_log) {
+    send_ack();	  
+  }
   
   function send_ack() {
     $acknowledgment = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" .

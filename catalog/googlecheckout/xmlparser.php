@@ -17,147 +17,48 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-/* This uses SAX parser to convert XML data into PHP associative arrays
- * When invoking the constructor with the input data, strip out the first XML line 
- * 
- * Member field Description:
- * $params: This stores the XML data. The attributes and contents of XML tags 
- * can be accessed as follows
- * 
- * <addresses>
- *  <anonymous-address id="123"> <test>data 1 </test>
- *  </anonymous-address>
- *  <anonymous-address id="456"> <test>data 2 </test>
- *  </anonymous-address>
- * </addresses>
- * 
- * print_r($this->params) will return 
- Array
-(
-    [addresses] => Array
-        (
-            [anonymous-address] => Array
-                (
-                    [0] => Array
-                        (
-                            [id] => 123
-                            [test] => Array
-                                (
-                                    [VALUE] => data 1
-                                )
+/* GOOGLE CHECKOUT
+ * Class used to parse XML Data, uses SAX parser functions
+ */
 
-                        )
-
-                    [1] => Array
-                        (
-                            [id] => 456
-                            [test] => Array
-                                (
-                                    [VALUE] => data 2
-                                )
-
-                        )
-
-                )
-
-        )
-
-)
-  * XmlParser returns an empty params array if it encounters 
-  * any error during parsing 
-  */
-  class XmlParser {
-
-    var $params= array(); //Stores the object representation of XML data
-    var $root;
-    var $global_index = -1;
-
-   /* Constructor for the class
-    * Takes in XML data as input( do not include the <xml> tag
-    */
-    function XmlParser($input) {
-      $xmlp = xml_parser_create();
-      xml_parse_into_struct($xmlp, $input, $vals, $index);
-      xml_parser_free($xmlp);
-      $this->root = strtolower($vals[0]['tag']);
-      $this->params = $this->UpdateRecursive($vals);
-    }
-
-   /* Returns true if a given variable represents an associative array */
-    function is_associative_array( $var ) {
-      return is_array( $var ) && !is_numeric( implode( '', array_keys( $var ) ) );
-    }
-
-   /* Converts the output of SAX parser into a PHP associative array similar to the 
-    * DOM parser output
-    */
-    function UpdateRecursive($vals) {
-      $this->global_index++;
-      //Reached end of array
-      if($this->global_index >= count($vals))
-        return;
-			$params = array();
-      $tag = strtolower($vals[$this->global_index]['tag']);
-      $value = trim(@$vals[$this->global_index]['value']);
-      $type = $vals[$this->global_index]['type'];
-
-      //Add attributes
-      if(isset($vals[$this->global_index]['attributes'])) {
-        foreach($vals[$this->global_index]['attributes'] as $key=>$val) {
-          $key = strtolower($key);
-          $params[$tag][$key] = $val;
-        }
+class XmlParser {
+  var $params= array();
+  var $level = array();
+	
+  function XmlParser($input) {
+    $xmlp = xml_parser_create();
+    xml_parse_into_struct($xmlp, $input, $vals, $index);
+    xml_parser_free($xmlp);
+    $this->updateMembers($vals, $index);
+  }
+	
+  // Converts the data returned into PHP objects and stores the result in params array  
+  function updateMembers($vals, $index) {
+    foreach ($vals as $xml_elem) {
+      if ($xml_elem['type'] == 'open') {
+        $this->level[$xml_elem['level']] = strtolower($xml_elem['tag']);
       }
-
-      if($type == 'open') {
-        $new_arr = array();
-
-        //Read all elements at the next levels and add to an array
-        while($vals[$this->global_index]['type'] != 'close' && 
-              $this->global_index < count($vals)) {
-          $arr = $this->UpdateRecursive($vals);
-          if(count($arr) > 0) {
-            $new_arr[] = $arr;
-          }
+      if ($xml_elem['type'] == 'complete') {
+        $xml_elem['tag'] = strtolower($xml_elem['tag']);
+        $start_level = 1;
+        $php_stmt = '$this->params';
+        while($start_level < $xml_elem['level']) {
+          $php_stmt .= '[$this->level['.$start_level.']]';
+          $start_level++;
         }
-        $this->global_index++;
-        foreach($new_arr as $arr) {
-          foreach($arr as $key=>$val) {
-            if(isset($params[$tag][$key])) {
-              //If this key already exists
-              if($this->is_associative_array($params[$tag][$key])) {
-                //If this is an associative array and not an indexed array
-                // remove exisiting value and convert to an indexed array
-                $val_key = $params[$tag][$key];
-                array_splice($params[$tag][$key], 0);
-                $params[$tag][$key][0] =  $val_key;
-                $params[$tag][$key][] =  $val;
-              } else {
-                $params[$tag][$key][] =  $val; 
-              }
-            } else {
-              $params[$tag][$key] =  $val;
-            }
-          }
-        }
-      }
-      else if ($type ==  'complete') {
-        if($value != '') 
-          $params[$tag]['VALUE'] = $value;
-      }
-      else
-        $params = array();
-      return $params;
-    }
-
-    /* Returns the root of the XML data */
-    function GetRoot() {
-      return $this->root;	
-    }
-
-    /* Returns the array representing the XML data */
-    function GetData() {
-      return $this->params;	
+        $php_stmt .= '[$xml_elem[\'tag\']] = $xml_elem[\'value\'];';
+        eval($php_stmt);
+      }	
     }
   }
+	
+  function getRoot() {
+    return $this->level[1];	
+  }
+	
+  function getData() {
+    return $this->params;	
+  }
+}
+// ** END GOOGLE CHECKOUT ** 
 ?>

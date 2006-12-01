@@ -30,7 +30,7 @@
     $session = curl_init($url);
 
     $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
-    $header_string_2 = "Content-Type: application/xml";	
+    $header_string_2 = "Content-Type: application/xml";
     $header_string_3 = "Accept: application/xml";
 	
     fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
@@ -40,8 +40,6 @@
     curl_setopt($session, CURLOPT_POSTFIELDS, $postargs);
     curl_setopt($session, CURLOPT_HEADER, true);
     curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
-	// Uncomment the following and set the path to your CA-bundle.crt file if SSL verification fails
-	//curl_setopt($session, CURLOPT_CAINFO, "C:\\Program Files\\xampp\\apache\\conf\\ssl.crt\\ca-bundle.crt");
 
     // Do the POST and then close the session
     $response = curl_exec($session);
@@ -82,10 +80,11 @@
     // this invokes the processing-order and charge-order commands
     // 1->Pending, 2-> Processing
 
-      define('API_CALLBACK_MESSAGE_LOG', DIR_FS_CATALOG . "/googlecheckout/response_message.log");
-      define('API_CALLBACK_ERROR_LOG', DIR_FS_CATALOG. "/googlecheckout/response_error.log");
+      $curr_dir = getcwd();
+      define('API_CALLBACK_MESSAGE_LOG', $curr_dir."/googlecheckout/response_message.log");
+      define('API_CALLBACK_ERROR_LOG', $curr_dir."/googlecheckout/response_error.log");
 
-      include_once(DIR_FS_CATALOG . '/includes/modules/payment/googlecheckout.php');
+      include_once('includes/modules/payment/googlecheckout.php');
       $googlepay = new googlecheckout();
 				
       //Setup the log file
@@ -97,7 +96,7 @@
       $google_order = $google_answer['google_order_number'];  
       $amt = $google_answer['order_amount'];  
 
-    if($check_status['orders_status'] == STATE_PENDING && $status == STATE_PROCESSING) {
+    if($check_status['orders_status'] == STATE_PENDING &&  $status == STATE_PROCESSING) {
       if($google_order != '') {					
         $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                     <charge-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\">
@@ -142,12 +141,8 @@
     if(isset($notify_comments)) {
       $postargs =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                    <send-buyer-message xmlns=\"http://checkout.google.com/schema/2\" google-order-number=\"". $google_order. "\">
-                   <message>". strip_tags($notify_comments) . "</message>
+                   <message>". $notify_comments . "</message>
                    </send-buyer-message>";    
-      fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-      send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey,
-                      $postargs, $message_log);
-
     }
   }
   // ** END GOOGLE CHECKOUT ** 
@@ -197,13 +192,10 @@
             if($num_rows == 0) {
               $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
               tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            }else {
-		          if($HTTP_POST_VARS['notify'] != 'on')
-		          	unset($notify_comments);
-		          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
             }
             $customer_notified = '1';
           }
+          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
           // ** END GOOGLE CHECKOUT **
           
           tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");

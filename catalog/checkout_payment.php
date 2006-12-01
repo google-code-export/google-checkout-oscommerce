@@ -227,8 +227,7 @@ function rowOutEffect(object) {
       break;   
     }
   }
-  // ** END GOOGLE CHECKOUT **
-
+	// ** END GOOGLE CHECKOUT **
   if (sizeof($selection) > 1) {
 ?>
               <tr>

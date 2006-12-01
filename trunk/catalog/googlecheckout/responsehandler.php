@@ -563,7 +563,7 @@ function process_order_state_change_notification($root, $data, $message_log, $go
       case 'CHARGEABLE': {
 				$update = true;
 				$orders_status_id = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state."\n".'Order ready to be charged!'; 
+				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state."\n".'Order is ready to be charged.';
 				$customer_notified = 0;
         break;
       }
@@ -582,7 +582,7 @@ function process_order_state_change_notification($root, $data, $message_log, $go
 				$update = true;
 				$orders_status_id = 1;
 				$customer_notified = 1;
-				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state .'Payment was declined!'; 
+				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_financial_state .'Payment was declined. Waiting for buyer to update his credit card...'; 
         break;
       }
       case 'CANCELLED': {
@@ -610,7 +610,7 @@ function process_order_state_change_notification($root, $data, $message_log, $go
 	                           'customer_notified' => $customer_notified,
 	                           'comments' => $comments);
       tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-      tep_db_query("UPDATE " . TABLE_ORDERS . "SET orders_status = '".$orders_status_id."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
+      tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status = '".$orders_status_id."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
     }
     
  		$update = false;   
@@ -626,7 +626,7 @@ function process_order_state_change_notification($root, $data, $message_log, $go
 				$update = true;
 				$orders_status_id = 3;
 				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_fulfillment_order ."\n".'Order was Delivered.'."\n";
-				$customer_notified = 1;
+				$customer_notified = 0;
         break;
       }
       case 'WILL_NOT_DELIVER': {
@@ -694,7 +694,7 @@ function process_order_state_change_notification($root, $data, $message_log, $go
 																					' IP Address: '.$data[$root]['risk-information']['ip-address']['VALUE']."\n" 
                            								);  	
     tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-    tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status_id = '". 1 ."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
+    tep_db_query("UPDATE " . TABLE_ORDERS . " SET orders_status = '". 1 ."' WHERE orders_id = '".makeSqlInteger($google_order['orders_id'])."'");
     send_ack();
   }
 

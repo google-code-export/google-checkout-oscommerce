@@ -202,10 +202,11 @@
 		          	unset($notify_comments);
 		          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
             }
+            // ** END GOOGLE CHECKOUT **
+
             $customer_notified = '1';
           }
-          // ** END GOOGLE CHECKOUT **
-          
+                    
           tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
 
           $order_updated = true;

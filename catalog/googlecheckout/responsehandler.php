@@ -626,7 +626,7 @@ function process_order_state_change_notification($root, $data, $message_log, $go
 				$update = true;
 				$orders_status_id = 3;
 				$comments = 'Time: ' . $data[$root]['timestamp']['VALUE']. "\n".'New state: '. $new_fulfillment_order ."\n".'Order was Delivered.'."\n";
-				$customer_notified = 0;
+				$customer_notified = 1;
         break;
       }
       case 'WILL_NOT_DELIVER': {

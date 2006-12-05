@@ -200,7 +200,7 @@ If you have other modules installed on your osCommerce installation, replacing y
     return $string;
   }
 
-// ** END GOOGLE CHECKOUT **  
+// ** END GOOGLE CHECKOUT **   
 
 
   ----------------------------------------------------------------------------
@@ -218,17 +218,20 @@ If you have other modules installed on your osCommerce installation, replacing y
 
 
   ----------------------------------------------------------------------------
-  2b. /catalog/admin/modules.php                                       LINE 56
+  2b. /catalog/admin/modules.php                                       LINE 45
   ============================================================================
   REPLACE:
 
-          while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
-             tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = '" . $value . "' where configuration_key = '" . $key . "'");
-          }
-          tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+      case 'save':
+        while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
+          tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = '" . $value . "' where configuration_key = '" . $key . "'");
+        }
+        tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+        break;
 
   WITH:
 
+      case 'save':
       // ** GOOGLE CHECKOUT **      
         // fix configuration no saving -
       	reset($HTTP_POST_VARS['configuration']);
@@ -243,10 +246,11 @@ If you have other modules installed on your osCommerce installation, replacing y
                 $value = ereg_replace (", --none--", "", $value);
               }
         // ** END GOOGLE CHECKOUT **
-      
-          tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . makeSqlString($value) . " where configuration_key = " . makeSqlString($key));
-          }
-          tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+	
+		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . makeSqlString($value) . " where configuration_key = " . makeSqlString($key));
+	    }
+	    tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+        break;
 
   ----------------------------------------------------------------------------
   3a. /catalog/admin/orders.php                                        LINE 14
@@ -383,7 +387,7 @@ If you have other modules installed on your osCommerce installation, replacing y
     if(isset($notify_comments)) {
       $postargs =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                    <send-buyer-message xmlns=\"http://checkout.google.com/schema/2\" google-order-number=\"". $google_order. "\">
-                   <message>". $notify_comments . "</message>
+                   <message>". strip_tags($notify_comments) . "</message>
                    </send-buyer-message>";    
       fwrite($message_log, sprintf("\r\n%s\n",$postargs));
       send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey,
@@ -395,14 +399,10 @@ If you have other modules installed on your osCommerce installation, replacing y
 
 
   ----------------------------------------------------------------------------
-  3b. /catalog/admin/orders.php                                        LINE 44
+  3b. /catalog/admin/orders.php                                        LINE 40
   ============================================================================
   REPLACE:
 
-        if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
-          tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
-
-          $customer_notified = '0';
           if (isset($HTTP_POST_VARS['notify']) && ($HTTP_POST_VARS['notify'] == 'on')) {
             $notify_comments = '';
             if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
@@ -416,18 +416,9 @@ If you have other modules installed on your osCommerce installation, replacing y
             $customer_notified = '1';
           }
 
-          tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
-
-          $order_updated = true;
-        }
-
 
   WITH:
 
-        if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
-          tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
-
-          $customer_notified = '0';
           if (isset($HTTP_POST_VARS['notify']) && ($HTTP_POST_VARS['notify'] == 'on')) {
             $notify_comments = '';
             if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
@@ -444,18 +435,15 @@ If you have other modules installed on your osCommerce installation, replacing y
             if($num_rows == 0) {
               $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
               tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+            }else {
+		          if($HTTP_POST_VARS['notify'] != 'on')
+		          	unset($notify_comments);
+		          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
             }
+            // ** END GOOGLE CHECKOUT **
+
             $customer_notified = '1';
           }
-          if($HTTP_POST_VARS['notify'] != 'on')
-          	unset($notify_comments);
-          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
-          // ** END GOOGLE CHECKOUT **
-          
-          tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
-
-          $order_updated = true;
-        }
 
 
   ----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.0.4 - 11/30/2006 
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.0.4 - 12/04/2006 
 
 INTRODUCTION
 ============
@@ -135,6 +135,6 @@ CHANGE LOG
            - Fixed modules not saving their settings
            - Fixed Notify Customer option
 
-11/30/2006 v1.0.4 (ropu)
-           - Add state change, Risk and charge notification into the Admin UI
+12/04/2006 v1.0.4 (ropu)
+           - Add order-state-change, risk-information and charge-amount notification into the Admin UI
            - Fix Shopping cart not obtained from session. See TROUBLE SHOOTING.

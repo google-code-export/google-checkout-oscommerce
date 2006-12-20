@@ -7,11 +7,11 @@ This will allow merchants using osCommerce to offer Google Checkout as an altern
 The plugin provides Level 2 integration of Google Checkout with osCommerce.
 
 Plugin features include:
-# Posting shopping carts to Google Checkout
-# Shipping support, now you can use Merchant Calculated Shipping Rates!
-# Tax support
-# User and order updates within osCommerce
-# Order processing using osCommerce Admin UI 
+  # Posting shopping carts to Google Checkout
+  # Shipping support, now you can use Merchant Calculated Shipping Rates!
+  # Tax support
+  # User and order updates within osCommerce
+  # Order processing using osCommerce Admin UI 
 
 
 ==REQUIREMENTS==

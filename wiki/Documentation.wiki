@@ -21,7 +21,7 @@ PHP3 or PHP4 or PHP5 with cURL(libcurl) installed and enabled
 
 ==Installation Notes==
 Follow instructions contained in the INSTALLATION file.
-register_globals can be either On or Off. 
+registerglobals can be either On or Off. 
 Verify the installation from the Admin site and selecting MODULES->PAYMENTS and checking if Google Checkout is listed as a payment option.
 
 

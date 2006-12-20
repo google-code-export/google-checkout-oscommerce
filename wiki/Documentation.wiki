@@ -28,13 +28,13 @@ Verify the installation from the Admin site and selecting MODULES->PAYMENTS and 
 ==SETUP ON ADMIN UI==
 Select and install the Google Checkout payment module. The following are some of the fields you can update:
 
-1. Enable/Disable: Enable this to use Google Checkout for your site.
-2. Merchant ID and Merchant Key:(Mandatory) If any of these are not set and the module is enabled, a disabled (gray) Checkout button appears on the Checkout page. 
+  # Enable/Disable: Enable this to use Google Checkout for your site.
+  # Merchant ID and Merchant Key:(Mandatory) If any of these are not set and the module is enabled, a disabled (gray) Checkout button appears on the Checkout page. 
    Set these values from your seller Google account under the Settings->Integration tab.
-3. Operation Mode: Test your site with Google Checkout's sandbox server before migrating to production. You will need it signup for a separate Google Checkout sandbox account at http://sandbox.google.com/sell. Your sandbox account will have a different Merchant ID and Merchant Key. When you are ready to run against the production server, remember to update your merchant ID and key when migrating.
-4. Merchant Calculation Mode of Operation: Sets Merchant calculation URL for Sandbox environment. Could be HTTP or HTTPS. (Checkout production environemnt always requires HTTPS.)
-5. Default Values for Real Time Shipping Rates: Set your default values for all merchant calculated shipping rates. This values will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price.
-6. In the checkout.google.com/sell settings->integration, set Callback method: XML and "Allow shopping carts with name/value pairs to be sent to Google." is indistinct if is checked or not.
+  # Operation Mode: Test your site with Google Checkout's sandbox server before migrating to production. You will need it signup for a separate Google Checkout sandbox account at http://sandbox.google.com/sell. Your sandbox account will have a different Merchant ID and Merchant Key. When you are ready to run against the production server, remember to update your merchant ID and key when migrating.
+  # Merchant Calculation Mode of Operation: Sets Merchant calculation URL for Sandbox environment. Could be HTTP or HTTPS. (Checkout production environemnt always requires HTTPS.)
+  # Default Values for Real Time Shipping Rates: Set your default values for all merchant calculated shipping rates. This values will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price.
+  # In the checkout.google.com/sell settings->integration, set Callback method: XML and "Allow shopping carts with name/value pairs to be sent to Google." is indistinct if is checked or not.
 Your Google Checkout setup page is correct if, upon viewing it, a non-disabled Google Checkout button appears.
 
 
@@ -71,28 +71,28 @@ To meet other developers and merchants who have integrated Google Checkout with 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ==MOST COMMON MISTAKES==
-1. Make sure you set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
-2. Set your Google callback url to https://<url-site-url>/googlecheckout/responsehandler.php
+  # Make sure you set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
+  # Set your Google callback url to https://<url-site-url>/googlecheckout/responsehandler.php
   In Sandbox, HTTPS is not required.
   In Production mode, HTTPS is required.
   Set the correct option in the Google Checkout Admin UI
-3. Make sure you are using the correct combination of Merchant ID and Merchant Key. Remember that Sandbox and Production Mode have different ones.
+  # Make sure you are using the correct combination of Merchant ID and Merchant Key. Remember that Sandbox and Production Mode have different ones.
   
 
 ==TROUBLE SHOOTING==
-1. Problem: /public_html/googlecheckout/response_message.log) [function.fopen]: failed to open stream: Permission denied.
+  # Problem: /public_html/googlecheckout/response_message.log) [function.fopen]: failed to open stream: Permission denied.
    Solution: Set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
-2. Problem: Test order shows up in Google but not admin.
+  # Problem: Test order shows up in Google but not admin.
    Solution: There is an error somewhere in the file /googlecheckout/responsehandler.php or you have set a worng API callback function in your seller Google account under the Settings->Integration tab.
-3. Problem: <error-message>Malformed URL component: expected id: (\d{10})|(\d{15}), but got 8***********4 </error-message>
+  # Problem: <error-message>Malformed URL component: expected id: (\d{10})|(\d{15}), but got 8***********4 </error-message>
    Solution: You have an extra space after your Google merchant id. Go to Admin->payment.  Edit Googlecheckout module.  Extra space will disappear. Click update button.
-4. Problem: <error-message>No seller found with id 7************8</error-message>
+  # Problem: <error-message>No seller found with id 7************8</error-message>
    Solution: Wrong merchant id.  Sandbox merchant id can only be use with sandbox accounts.  Sandbox and Live mode use different merchant id. 
-5. Problem: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderE xception: unable to find valid certification path to requested target
+  # Problem: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderE xception: unable to find valid certification path to requested target
    Solution: Your SSL certificate is not accepted by Google Checkout.
-6. Problem: <error-message>Bad Signature on Cart</error-message>
+  # Problem: <error-message>Bad Signature on Cart</error-message>
    Solution: Incorrect Merchant key.
-7. Problem: (/public_html/googlecheckout/response_error.log) Tue Nov 28 8:56:21 PST 2006:- Shopping cart not obtained from session. 
+  # Problem: (/public_html/googlecheckout/response_error.log) Tue Nov 28 8:56:21 PST 2006:- Shopping cart not obtained from session. 
    Solution: Set to False admin->configuration->session->Prevent Spider Sessions configuration (Thx dawnmariegifts, beta tester)
    Side effects: You'll see spiders as active users. Working on a permanent fix.
    

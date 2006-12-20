@@ -1,7 +1,7 @@
 #labels Featured
 GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.0.4 - 12/04/2006 
 
-==INTRODUCTION==
+==Introduction==
 The Google Checkout module for osCommerce adds Google Checkout as a Checkout Module within osCommerce.
 This will allow merchants using osCommerce to offer Google Checkout as an alternate checkout method.
 The plugin provides Level 2 integration of Google Checkout with osCommerce.
@@ -14,18 +14,18 @@ Plugin features include:
   # Order processing using osCommerce Admin UI 
 
 
-==REQUIREMENTS==
+==Requirements==
 osCommerce v2.2
 PHP3 or PHP4 or PHP5 with cURL(libcurl) installed and enabled
 
 
-==INSTALLATION NOTES==
+==Installation Notes==
 Follow instructions contained in the INSTALLATION file.
 register_globals can be either On or Off. 
 Verify the installation from the Admin site and selecting MODULES->PAYMENTS and checking if Google Checkout is listed as a payment option.
 
 
-==SETUP ON ADMIN UI==
+==Setup on Admin UI==
 Select and install the Google Checkout payment module. The following are some of the fields you can update:
 
   # Enable/Disable: Enable this to use Google Checkout for your site.
@@ -38,7 +38,7 @@ Select and install the Google Checkout payment module. The following are some of
 Your Google Checkout setup page is correct if, upon viewing it, a non-disabled Google Checkout button appears.
 
 
-==MERCHANT CALCULATED SHIPPING==
+==Merchant Calculated Shipping==
 In order to use this module you must have some Real Time Shipping provider, such as USPS or FedEx. This Module must be activated and configured in Modules->Shipping. For each enabled module you'll have to set the default values in the Google Checkout Admin UI.
 This Value will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price. 
 
@@ -46,7 +46,7 @@ The available shipping methods for each shipping provider must be configured in 
 Be aware that if you mix flat rate and real time rates, both will be taken as merchant-calculated-shipping. 
 
 
-==TRACKING USERS AND ORDERS==
+==Tracking Users and Orders==
 In order to provide this support (as required for Level 2 integration), update the API callback request field in the seller account to https://<url-site-url>/catalog/googlecheckout/responsehandler.php . Note that the production Checkout server requires an SSL callback site.
 The Sandbox server accepts non SSL callback URLs, http://<url-site-url>/catalog/googlecheckout/responsehandler.php
 
@@ -64,13 +64,13 @@ All request and response messages will be logged to the file catalog/googlecheck
 In case an order payment is declined or an order is cancelled(by Google or otherwise), you can add code to catalog/googlecheckout/responsehandler.php for any specific actions you need to take.
 
 
-==GROUP DISCUSSIONS==
+==Group Discussions==
 To meet other developers and merchants who have integrated Google Checkout with osCommerce and to discuss any topics related to integration of Google Checkout with osCommerce, go to http://forums.oscommerce.com/index.php?showtopic=229637
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-==MOST COMMON MISTAKES==
+==Most Common Mistakes==
   # Make sure you set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
   # Set your Google callback url to https://<url-site-url>/googlecheckout/responsehandler.php
   In Sandbox, HTTPS is not required.
@@ -79,7 +79,7 @@ To meet other developers and merchants who have integrated Google Checkout with 
   # Make sure you are using the correct combination of Merchant ID and Merchant Key. Remember that Sandbox and Production Mode have different ones.
   
 
-==TROUBLE SHOOTING==
+==Troubleshooting==
   # Problem: /public_html/googlecheckout/response_message.log) [function.fopen]: failed to open stream: Permission denied.
    Solution: Set the file attribute to 777 for /googlecheckout/response_error.log and /googlecheckout/response_message.log files.
   # Problem: Test order shows up in Google but not admin.
@@ -98,7 +98,7 @@ To meet other developers and merchants who have integrated Google Checkout with 
    
     
 
-==CHANGE LOG==
+==Change Log==
 09/26/2006 v1.0.0 (Google Checkout team)
            - Initial release. 
 

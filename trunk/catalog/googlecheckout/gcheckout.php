@@ -457,9 +457,4 @@ $gcheck->pop('checkout-shopping-cart');
         </form></p>
     </td></tr>
 </table>
-<xmp>
-<?
-echo $gcheck->getXml();
-?> 
-</xmp>
 <!-- ** END GOOGLE CHECKOUT ** -->

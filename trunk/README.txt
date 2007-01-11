@@ -19,9 +19,6 @@ For continued support, you may use either support area:
 http://forums.oscommerce.com/index.php?showtopic=229637
 http://www.ubercart.org/forum/14
 
-To contribute to continued development and support of this module, please use the following link to register for your Google Checkout Merchant Account:
-
-http://checkout.google.com/sell?promo=sevrefrigeration
 
 REQUIREMENTS
 ============
@@ -117,8 +114,12 @@ TROUBLE SHOOTING
    Solution: Incorrect Merchant key.
 7. Problem: (/public_html/googlecheckout/response_error.log) Tue Nov 28 8:56:21 PST 2006:- Shopping cart not obtained from session. 
    Solution: Set to False admin->configuration->session->Prevent Spider Sessions configuration (Thx dawnmariegifts, beta tester)
-   Side effects: You'll see spiders as active users. Working on a permanent fix.
-   
+      Side effects: You'll see spiders as active users.
+   Solution 2:	Remove any *jakarta* string form catalog/includes/spiders.txt
+8. Problem: On January 17, we're changing the Google Checkout sandbox URL to sandbox.google.com/checkout. The current URL, sandbox.google.com, will no longer work after this change takes place. The integration and testing process itself will be unaffected.
+   Solution: Unistall/Install Google Checkout Module in the Admin UI with v1.1.b3 or newer.
+   Solution 2 (Adv. users): Go to the Database and in the configuration Table update row with 'configuration_key' = MODULE_PAYMENT_GOOGLECHECKOUT_MODE, set `set_function` = "tep_cfg_select_option(array(''https://sandbox.google.com/checkout/'', ''https://checkout.google.com/''),"
+
     
 KNOWN BUGS - (Report bugs at http://forums.oscommerce.com/index.php?showtopic=229637)
 ==========

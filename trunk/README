@@ -46,7 +46,7 @@ MERCHANT CALCULATED SHIPPING
 In order to use this module you must have some Real Time Shipping provider, such as USPS or FedEx. This Module must be activated and configured in Modules->Shipping. For each enabled module you'll have to set the default values in the Google Checkout Admin UI.
 This Value will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price. 
 
-The available shipping methods for each shipping provider must be configured in catalog/includes/modules/payment/googlecheckout.php in the mc_shipping_methods parameter. If you want to disable one or more methods, just comment them out.
+The available shipping methods for each shipping provider must be configured in catalog/includes/modules/payment/googlecheckout.php in the mc_shipping_methods parameter and the mc_shipping_methods_names. If you want to disable one or more methods, just comment them out.
 Be aware that if you mix flat rate and real time rates, both will be taken as merchant-calculated-shipping. 
 
 

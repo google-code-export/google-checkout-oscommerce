@@ -63,6 +63,9 @@ If you have other modules installed on your osCommerce installation, replacing y
   5. /catalog/login.php
   6. /catalog/shopping_cart.php
 
+ III. Make the changes outlined in the file v-1-1-0b3.txt
+ -------------------------------------------------------
+
 * The LINE number indicates where the change would need to be made if the file was unchanged by other modules.
   ----------------------------------------------------------------------------
   1. /catalog/admin/includes/functions/general.php                    LINE 758
@@ -73,7 +76,7 @@ If you have other modules installed on your osCommerce installation, replacing y
 // Function to store configuration values(shipping options) using 
 // checkboxes in the Administration Tool 
 
-  function tep_cfg_select_multioption($select_array, $key_value, $key = '') {
+  function gc_cfg_select_multioption($select_array, $key_value, $key = '') {
 
     for ($i=0; $i<sizeof($select_array); $i++) {
       $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
@@ -88,7 +91,7 @@ If you have other modules installed on your osCommerce installation, replacing y
 
 	
 // Custom Function to store configuration values (shipping default values)  
-	function compare($key, $data)
+	function gc_compare($key, $data)
 	{
 		foreach($data as $value) {
 			list($key2, $valor) = explode("_VD:", $value);
@@ -98,7 +101,7 @@ If you have other modules installed on your osCommerce installation, replacing y
 		return '0';
 	}
 	// perhaps this function must be moved to googlecheckout class, is not too general
-  function tep_cfg_select_shipping($select_array, $key_value, $key = '') {
+  function gc_cfg_select_shipping($select_array, $key_value, $key = '') {
 
 	//add ropu
 	// i get all the shipping methods available!
@@ -182,19 +185,21 @@ If you have other modules installed on your osCommerce installation, replacing y
     
     foreach($select_array as $i => $value){
       if ( $select_array[$i]['status'] && !in_array($select_array[$i]['code'], $googlepayment->shipping_support) ) {
-	      $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
-	      $string .= "<br><b>" . $select_array[$i]['title'] . "</b>"."\n";
-	      foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
-		      $string .= '<br>';
-		      
-		      // default value 
-		      $value = compare($select_array[$i]['code'] . $method, $key_values);
-			  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
-		      $string .= '>';
-			  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
-	      	  $string .= '>'."\n";
-	      	  $string .= $method_name;
-	      }
+        $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
+        $string .= "<br><b>" . $select_array[$i]['title'] . "</b>"."\n";
+        if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'])) {
+          foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
+            $string .= '<br>';
+
+            // default value 
+            $value = gc_compare($select_array[$i]['code'] . $method, $key_values);
+            $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
+            $string .= '>';
+            $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
+            $string .= '>'."\n";
+            $string .= $method_name;
+          }
+        }
       }
     }
     return $string;
@@ -209,7 +214,7 @@ If you have other modules installed on your osCommerce installation, replacing y
   ADD:
 
   // ** GOOGLE CHECKOUT **
-  function makeSqlString($str) {
+  function gc_makeSqlString($str) {
     $single_quote = "'";
     $escaped_str = addcslashes(stripcslashes($str), "'\"\\\0..\37!@\177..\377");
     return ($single_quote.$escaped_str.$single_quote);
@@ -247,7 +252,7 @@ If you have other modules installed on your osCommerce installation, replacing y
               }
         // ** END GOOGLE CHECKOUT **
 	
-		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . makeSqlString($value) . " where configuration_key = " . makeSqlString($key));
+		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . gc_makeSqlString($value) . " where configuration_key = " . gc_makeSqlString($key));
 	    }
 	    tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
         break;

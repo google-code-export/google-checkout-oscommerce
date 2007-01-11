@@ -760,7 +760,7 @@
 // Function to store configuration values(shipping options) using 
 // checkboxes in the Administration Tool 
 
-  function tep_cfg_select_multioption($select_array, $key_value, $key = '') {
+  function gc_cfg_select_multioption($select_array, $key_value, $key = '') {
 
     for ($i=0; $i<sizeof($select_array); $i++) {
       $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
@@ -775,7 +775,7 @@
 
 	
 // Custom Function to store configuration values (shipping default values)  
-	function compare($key, $data)
+	function gc_compare($key, $data)
 	{
 		foreach($data as $value) {
 			list($key2, $valor) = explode("_VD:", $value);
@@ -785,7 +785,7 @@
 		return '0';
 	}
 	// perhaps this function must be moved to googlecheckout class, is not too general
-  function tep_cfg_select_shipping($select_array, $key_value, $key = '') {
+  function gc_cfg_select_shipping($select_array, $key_value, $key = '') {
 
 	//add ropu
 	// i get all the shipping methods available!
@@ -871,16 +871,19 @@
       if ( $select_array[$i]['status'] && !in_array($select_array[$i]['code'], $googlepayment->shipping_support) ) {
 	      $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
 	      $string .= "<br><b>" . $select_array[$i]['title'] . "</b>"."\n";
-	      foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
-		      $string .= '<br>';
+	      if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'])) {
 		      
-		      // default value 
-		      $value = compare($select_array[$i]['code'] . $method, $key_values);
-			  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
-		      $string .= '>';
-			  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
-	      	  $string .= '>'."\n";
-	      	  $string .= $method_name;
+		      foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
+			      $string .= '<br>';
+			      
+			      // default value 
+			      $value = gc_compare($select_array[$i]['code'] . $method, $key_values);
+				  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
+			      $string .= '>';
+				  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
+		      	  $string .= '>'."\n";
+		      	  $string .= $method_name;
+		      }
 	      }
       }
     }
@@ -1058,6 +1061,16 @@
     tep_db_query("delete from " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " where orders_id = '" . (int)$order_id . "'");
     tep_db_query("delete from " . TABLE_ORDERS_STATUS_HISTORY . " where orders_id = '" . (int)$order_id . "'");
     tep_db_query("delete from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "'");
+
+    $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
+    while ($status = tep_db_fetch_array($status_query)) {
+      $status_flag = $status['configuration_value'];	
+    }
+    if ($status_flag == 'True') {
+      require_once('../includes/modules/payment/googlecheckout.php');
+      $googlepayment = new googlecheckout();
+      tep_db_query("delete from " . $googlepayment->table_order . " where orders_id = '" . (int)$order_id . "'");
+    }
   }
 
   function tep_reset_cache_block($cache_block) {

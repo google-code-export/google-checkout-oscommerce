@@ -13,7 +13,7 @@
   require('includes/application_top.php');
 
   // ** GOOGLE CHECKOUT **
-  function makeSqlString($str) {
+  function gc_makeSqlString($str) {
     $single_quote = "'";
     $escaped_str = addcslashes(stripcslashes($str), "'\"\\\0..\37!@\177..\377");
     return ($single_quote.$escaped_str.$single_quote);
@@ -68,7 +68,7 @@
               }
         // ** END GOOGLE CHECKOUT **
 	
-		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . makeSqlString($value) . " where configuration_key = " . makeSqlString($key));
+		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . gc_makeSqlString($value) . " where configuration_key = " . gc_makeSqlString($key));
 	    }
 	    tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
         break;

@@ -4,6 +4,9 @@
 /*
   Copyright (C) 2006 Google Inc.
 
+  Bugfixed and improved by Ryan of http://www.ubercart.org
+
+
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
   as published by the Free Software Foundation; either version 2
@@ -31,80 +34,84 @@
  * shipping tax tables or some dont use tax tables
  */
 
-require_once ('admin/includes/configure.php');
-require_once ('includes/languages/' . $language . '/' . 'modules/payment/googlecheckout.php');
-require_once ('includes/modules/payment/googlecheckout.php');
+require_once('admin/includes/configure.php');
+require_once('includes/languages/'. $language .'/modules/payment/googlecheckout.php');
+require_once('includes/modules/payment/googlecheckout.php');
 
-// Function which returns the current URL  
-function selfURL() {
-	$s = empty ($_SERVER["HTTPS"]) ? '' : ($_SERVER["HTTPS"] == "on") ? "s" : "";
-	$protocol = strleft(strtolower($_SERVER["SERVER_PROTOCOL"]), "/") . $s;
-	$port = ($_SERVER["SERVER_PORT"] == "80") ? "" : (":" . $_SERVER["SERVER_PORT"]);
-	return $protocol . "://" . $_SERVER['SERVER_NAME'] .
-	$port . $_SERVER['REQUEST_URI'];
+// Function which returns the current URL.
+function gc_selfURL() {
+	$s = empty($_SERVER['HTTPS']) ? '' : ($_SERVER['HTTPS'] == 'on') ? 's' : '';
+	$protocol = gc_strleft(strtolower($_SERVER['SERVER_PROTOCOL']), '/') . $s;
+	$port = ($_SERVER['SERVER_PORT'] == '80') ? '' : (':'. $_SERVER['SERVER_PORT']);
+	return $protocol . '://' . $_SERVER['SERVER_NAME'] . $port . $_SERVER['REQUEST_URI'];
 }
-// Used by selfURL 
-function strleft($s1, $s2) {
+
+// Used by selfURL.
+function gc_strleft($s1, $s2) {
 	return substr($s1, 0, strpos($s1, $s2));
 }
 
-//Functions used to prevent SQL injection attacks
-function makeSqlString($str) {
+// Functions used to prevent SQL injection attacks.
+function gc_makeSqlString($str) {
 	return addcslashes(stripcslashes($str), "\"'\\\0..\37!@\@\177..\377");
 }
 
-function makeSqlInteger($val) {
+function gc_makeSqlInteger($val) {
 	return ((settype($val, 'integer')) ? ($val) : 0);
 }
 
-function makeSqlFloat($val) {
+function gc_makeSqlFloat($val) {
 	return ((settype($val, 'float')) ? ($val) : 0);
+}
+
+// Compare name:value and returns value for configurations parameters.
+function gc_compare($key, $data)
+{
+	foreach($data as $value) {
+		list($key2, $valor) = explode("_VD:", $value);
+		if($key == $key2)		
+			return $valor;
+	}
+	return '0';
 }
 
 $googlepayment = new googlecheckout();
 $current_checkout_url = $googlepayment->checkout_url;
 
 if (($googlepayment->merchantid == '') || ($googlepayment->merchantkey == '')) {
-	$googlepayment->variant = "disabled";
-	$current_checkout_url = selfURL();
+	$googlepayment->variant = 'disabled';
+	$current_checkout_url = gc_selfURL();
 }
 
-//Create a cart and add items to it  
-require ('googlecheckout/xmlbuilder.php');
-$gcheck = new XmlBuilder();
+// Create a cart and add items to it.
+require('googlecheckout/gcxmlbuilder.php');
 
-$gcheck->push('checkout-shopping-cart', array (
-	'xmlns' => "http://checkout.google.com/schema/2"
-));
+$gcheck = new gcXmlBuilder();
+$gcheck->push('checkout-shopping-cart', array('xmlns' => 'http://checkout.google.com/schema/2'));
 $gcheck->push('shopping-cart');
 $gcheck->push('items');
 
-$products = $cart->get_products();
-$tax_array = array ();
-$tax_name_aray = array ();
+$tax_array = array();
+$tax_name_array = array();
 
+$products = $cart->get_products();
 if (sizeof($products) == 0) {
-	$googlepayment->variant = "disabled";
-	$current_checkout_url = selfURL();
+	$googlepayment->variant = 'disabled';
+	$current_checkout_url = gc_selfURL();
 }
 
 for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
-
-	if (isset ($products[$i]['attributes']) && is_array($products[$i]['attributes'])) {
-		while (list ($option, $value) = each($products[$i]['attributes'])) {
-			$attributes = tep_db_query("select popt.products_options_name, 
-									                                    poval.products_options_values_name, 
-									                                    pa.options_values_price, pa.price_prefix
-									                                    from " . TABLE_PRODUCTS_OPTIONS . " popt, 
-									                                         " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval,  
-																			 " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-									                                    where pa.products_id = '" . makeSqlInteger($products[$i]['id']) . "'
-									                                    and pa.options_id = '" . makeSqlString($option) . "'
-									                                    and pa.options_id = popt.products_options_id
-									                                    and pa.options_values_id = '" . makeSqlString($value) . "'
-									                                    and pa.options_values_id = poval.products_options_values_id
-									                                    and popt.language_id = '" . $languages_id . "'
-									                                    and poval.language_id = '" . $languages_id . "'");
+	if (isset($products[$i]['attributes']) && is_array($products[$i]['attributes'])) {
+		while (list($option, $value) = each($products[$i]['attributes'])) {
+			$attributes = tep_db_query("select popt.products_options_name, poval.products_options_values_name, "
+									              ."pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS
+                                ." popt, ". TABLE_PRODUCTS_OPTIONS_VALUES ." poval, ". TABLE_PRODUCTS_ATTRIBUTES
+                                ." pa where pa.products_id = '" . gc_makeSqlInteger($products[$i]['id']) . "' "
+									              ."and pa.options_id = '" . gc_makeSqlString($option) . "' and pa.options_id = "
+                                ."popt.products_options_id and pa.options_values_id = '" . gc_makeSqlString($value) . "' "
+									              ."and pa.options_values_id = poval.products_options_values_id and "
+                                ."popt.language_id = '" . $languages_id . "' and poval.language_id = '" 
+                                . $languages_id . "'");
 			$attributes_values = tep_db_fetch_array($attributes);
 			$attr_value = $attributes_values['products_options_values_name'];
 			$products[$i][$option]['products_options_name'] = $attributes_values['products_options_name'];
@@ -115,15 +122,12 @@ for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
 		}
 	}
 	$products_name = $products[$i]['name'];
-	$products_description = tep_db_fetch_array(tep_db_query("select products_description from " .
-	TABLE_PRODUCTS_DESCRIPTION . " 
-			                             where products_id = '" . $products[$i]['id'] . "' 
-			                             and language_id = '" . $languages_id . "'"));
+	$products_description = tep_db_fetch_array(tep_db_query("select products_description from "
+	                          . TABLE_PRODUCTS_DESCRIPTION . " where products_id = '" . $products[$i]['id']
+                             ."' and language_id = '" . $languages_id . "'"));
 	$products_description = $products_description['products_description'];
-	$tax_result = tep_db_query("select tax_class_title 
-			                                from " . TABLE_TAX_CLASS . " 
-			                                where tax_class_id = " .
-	makeSqlInteger($products[$i]['tax_class_id']));
+	$tax_result = tep_db_query("select tax_class_title from ". TABLE_TAX_CLASS 
+                            ." where tax_class_id = ". gc_makeSqlInteger($products[$i]['tax_class_id']));
 	$tax = tep_db_fetch_array($tax_result);
 	$tt = $tax['tax_class_title'];
 	if (!in_array($products[$i]['tax_class_id'], $tax_array)) {
@@ -132,28 +136,25 @@ for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
 	}
 	if (isset ($products[$i]['attributes']) && is_array($products[$i]['attributes'])) {
 		reset($products[$i]['attributes']);
-		while (list ($option, $value) = each($products[$i]['attributes'])) {
-			$products_name .= "\n" . '- ' .
-			$products[$i][$option]['products_options_name'] . ' ' .
-			$products[$i][$option]['products_options_values_name'] . '';
+		while (list($option, $value) = each($products[$i]['attributes'])) {
+			$products_name .= "\n- ". $products[$i][$option]['products_options_name'] .' '
+			                . $products[$i][$option]['products_options_values_name'];
 		}
 	}
 	$gcheck->push('item');
 	$gcheck->element('item-name', $products_name);
 	$gcheck->element('item-description', $products_description);
-	$gcheck->element('unit-price', $products[$i]['final_price'], array (
-		'currency' => 'USD'
-	));
+	$gcheck->element('unit-price', $products[$i]['final_price'], array ('currency' => 'USD'));
 	$gcheck->element('quantity', $products[$i]['quantity']);
 	$gcheck->element('tax-table-selector', $tt);
 	$gcheck->pop('item');
 }
 $gcheck->pop('items');
 
-$private_data = tep_session_id() . ';' . tep_session_name();
+$private_data = tep_session_id() .';'. tep_session_name();
 $product_list = '';
 for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
-	$product_list .= ";" . (int) $products[$i]['id'];
+	$product_list .= ";". (int)$products[$i]['id'];
 }
 $gcheck->push('merchant-private-data');
 $gcheck->element('session-data', $private_data);
@@ -162,42 +163,30 @@ $gcheck->pop('merchant-private-data');
 
 $gcheck->pop('shopping-cart');
 
-//Add the starting index file as the return url for the buyer.
-// This can be added as an option during the module installation
-$cont_shopping_cart = tep_href_link(FILENAME_DEFAULT);
-
-// add ropu -- temporal because firewall restrictions
-$cont_shopping_cart = $cont_shopping_cart;
-
-
 $gcheck->push('checkout-flow-support');
 $gcheck->push('merchant-checkout-flow-support');
-$gcheck->element('continue-shopping-url', $cont_shopping_cart);
+
+$gcheck->element('edit-cart-url', tep_href_link('shopping_cart.php'));
+$gcheck->element('continue-shopping-url', tep_href_link($googlepayment->continue_url));
 
 //Shipping options
 $gcheck->push('shipping-methods');
-$check_query = tep_db_query("select configuration_value 
-                               from " . TABLE_CONFIGURATION . " 
-                               where configuration_key = 
-                               'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING' ");
-$shipping_array = tep_db_fetch_array($check_query);
-$ship = $shipping_array['configuration_value'];
-
 
 $tax_class = array ();
 $shipping_arr = array ();
 $tax_class_unique = array ();
-//Add each shipping option to the options array
-$options = explode(", ", $ship);
 
-// i get the properties of the shipping methods
+$shipping_array = tep_db_fetch_array(tep_db_query("select configuration_value from " . TABLE_CONFIGURATION 
+                                    ." where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING'"));
+$options = explode(", ", $shipping_array['configuration_value']);
+
+// Get the properties of the shipping methods.
 $module_directory = DIR_FS_CATALOG_MODULES . 'shipping/';
 
 $file_extension = substr($PHP_SELF, strrpos($PHP_SELF, '.'));
-$directory_array = array ();
+$directory_array = array();
 if ($dir = @ dir($module_directory)) {
 	while ($file = $dir->read()) {
-
 		if (!is_dir($module_directory . $file)) {
 			if (substr($file, strrpos($file, '.')) == $file_extension) {
 				$directory_array[] = $file;
@@ -208,7 +197,7 @@ if ($dir = @ dir($module_directory)) {
 	$dir->close();
 }
 
-$module_info = array ();
+$module_info = array();
 for ($i = 0, $n = sizeof($directory_array); $i < $n; $i++) {
 	$file = $directory_array[$i];
 
@@ -217,53 +206,31 @@ for ($i = 0, $n = sizeof($directory_array); $i < $n; $i++) {
 
 	$class = substr($file, 0, strrpos($file, '.'));
 	$module = new $class;
-	if ($module->check() > 0) {
-		$module_info[$module->code] = array (
-			'code' => $module->code,
+	if ($module->enabled == true) {
+		$module_info[$module->code] = array(
+      'code' => $module->code,
 			'title' => $module->title,
 			'description' => $module->description,
 			'status' => $module->check());
-
 	}
 }
-// check if there is a shipping module activated that is not flat rate
-// to enable Merchan Calculations
-// if there are flat and MC, both will be MC
-$ship_calcualtion_mode = (count(array_keys($module_info)) > count(array_intersect($googlepayment->shipping_support, array_keys($module_info)))) ? true : false;
 
-// campare name:vale and returns value for configurations parameters
-function compare($key, $data)
-{
-	foreach($data as $value) {
-		list($key2, $valor) = explode("_VD:", $value);
-		if($key == $key2)		
-			return $valor;
-	}
-	return '0';
-}
-
-
-$check_query = tep_db_query("select configuration_value 
-                             from " . TABLE_CONFIGURATION . " 
-                             where configuration_key = 
-                             'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING' ");
+// Check if there is a shipping module activated that is not flat rate.
+// To enable Merchant Calculations, if there are flat and MC both will be MC.
+$ship_calculation_mode = (count(array_keys($module_info)) > count(array_intersect($googlepayment->shipping_support, array_keys($module_info)))) ? true : false;
                              
-                             
-$calculations_array = tep_db_fetch_array($check_query);
-$key_values = explode( ", ", $calculations_array['configuration_value']);
-
+$calculations_array = tep_db_fetch_array(tep_db_query("select configuration_value from " . TABLE_CONFIGURATION
+                                        ." where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING'"));
+$key_values = explode(", ", $calculations_array['configuration_value']);
 
 foreach ($module_info as $key => $value) {
-	// check if the shipping method is activated
-
+	// Check if the shipping method is activated.
 	$module_name = $module_info[$key]['code'];
 	$curr_ship = strtoupper($module_name);
-	$check_query = tep_db_query("select configuration_key,configuration_value 
-								                                   from " . TABLE_CONFIGURATION . "
-								                                   where configuration_key LIKE
-								                                   'MODULE_SHIPPING_" . $curr_ship . "_%' ");
+	$check_query = tep_db_query("select configuration_key,configuration_value from " . TABLE_CONFIGURATION
+                             ." where configuration_key LIKE 'MODULE_SHIPPING_" . $curr_ship . "_%' ");
 	$num_rows = tep_db_num_rows($check_query);
-	$data_arr = array ();
+	$data_arr = array();
 	$handling = 0;
 	$table_mode = '';
 
@@ -271,29 +238,26 @@ foreach ($module_info as $key => $value) {
 		$flat_array = tep_db_fetch_array($check_query);
 		$data_arr[$flat_array['configuration_key']] = $flat_array['configuration_value'];
 	}
-	$common_string = "MODULE_SHIPPING_" . $curr_ship . "_";
-	$zone = $data_arr[$common_string . "ZONE"];
-	$enable = $data_arr[$common_string . "STATUS"];
-	$curr_tax_class = $data_arr[$common_string . "TAX_CLASS"];
-	$price = $data_arr[$common_string . "COST"];
-	$handling = $data_arr[$common_string . "HANDLING"];
-	$table_mode = $data_arr[$common_string . "MODE"];
+	$common_string = 'MODULE_SHIPPING_'. $curr_ship .'_';
+	$zone = $data_arr[$common_string .'ZONE'];
+	$enable = $data_arr[$common_string .'STATUS'];
+	$curr_tax_class = $data_arr[$common_string .'TAX_CLASS'];
+	$price = $data_arr[$common_string .'COST'];
+	$handling = $data_arr[$common_string .'HANDLING'];
+	$table_mode = $data_arr[$common_string .'MODE'];
 	if ($zone != '') {
-		$zone_result = tep_db_query("select countries_name, zone_code 
-											                                   from " . TABLE_GEO_ZONES . " as gz ,
-											                                   " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz,
-											                                   " . TABLE_ZONES . " as z, 
-											                                   " . TABLE_COUNTRIES . " as c 
-											                                   where gz.geo_zone_id = " . $zone . " 
-											                                   and gz.geo_zone_id = ztgz.geo_zone_id 
-											                                   and ztgz.zone_id = z.zone_id 
-											                                   and z.zone_country_id = c.countries_id ");
+		$zone_result = tep_db_query("select countries_name, zone_code from " . TABLE_GEO_ZONES
+                               ." as gz, ". TABLE_ZONES_TO_GEO_ZONES ." as ztgz, ". TABLE_ZONES
+                               ." as z, ". TABLE_COUNTRIES ." as c where gz.geo_zone_id = ". $zone
+                               ." and gz.geo_zone_id = ztgz.geo_zone_id and ztgz.zone_id = z.zone_id"
+                               ." and z.zone_country_id = c.countries_id ");
 		$allowed_restriction_state = $allowed_restriction_country = array();
-		// i get all the alowed shipping zones
-		while($zone_answer = tep_db_fetch_array($zone_result)){
+		// Get all the allowed shipping zones.
+		while($zone_answer = tep_db_fetch_array($zone_result)) {
 			$allowed_restriction_state[] = $zone_answer['zone_code'];
-			$allowed_restriction_country[] = $zone_answer['countries_name'];
+			$allowed_restriction_country[] = array($zone_answer['countries_name'], $zone_answer['countries_iso_code_2']);
 		}
+
 	}
 	
 	if ($curr_tax_class != 0 && $curr_tax_class != '') {
@@ -303,101 +267,89 @@ foreach ($module_info as $key => $value) {
 	}
 
 	if ($enable == "True") {
-		foreach($googlepayment->mc_shipping_methods[$key]['domestic_types'] as $method => $name){
-
-		// merchant calculated shipping
-			if ($ship_calcualtion_mode == 'True') {
-					$gcheck->push('merchant-calculated-shipping', array ('name' => $googlepayment->mc_shipping_methods_names[$module_info[$key]['code']] . ': ' . $name));
-			} 
-		// flat rate shipping 
-			else {
-				$gcheck->push('flat-rate-shipping', array ('name' => $module_info[$key]['title']));
-			}	
-			if(!in_array($module_info[$key]['code'], $googlepayment->shipping_support)) {
-		
-				$gcheck->element('price', compare($module_info[$key]['code'].$method ,$key_values), array ('currency' => 'USD'));
-				// 8245366
-			}
-			// flat rate shipping
-			else {
-				$price = $googlepayment->getShippingPrice($module_name, $cart, $price, $handling, $table_mode);
-				$gcheck->element('price', $price, array ('currency' => 'USD'));
-			}
-				
-			$gcheck->push('shipping-restrictions');
-			$gcheck->push('allowed-areas');
-			if(!empty($allowed_restriction_country)){
-				foreach($allowed_restriction_state as $state_key => $state) {
-					$gcheck->push('us-state-area');
-					$gcheck->element('state', $state);
-					$gcheck->pop('us-state-area');
-				}
-			}
-			else {
-				$gcheck->element('us-country-area', '', array ('country-area' => 'ALL'));
-			}
+		foreach($googlepayment->mc_shipping_methods[$key] as $shipping_type){
+			foreach($shipping_type as $method => $name){
 			
-			$gcheck->pop('allowed-areas');
-			$gcheck->pop('shipping-restrictions');
-		
-			if ($ship_calcualtion_mode == 'True') {
-				$gcheck->pop('merchant-calculated-shipping');
-			} 
-			else {
-				$gcheck->pop('flat-rate-shipping');
+//	['domestic_types']
+			// merchant calculated shipping
+				if ($ship_calculation_mode == 'True') {
+						$gcheck->push('merchant-calculated-shipping', array ('name' => $googlepayment->mc_shipping_methods_names[$module_info[$key]['code']] . ': ' . $name));
+				} 
+			// flat rate shipping 
+				else {
+					$gcheck->push('flat-rate-shipping', array ('name' => $module_info[$key]['title']));
+				}	
+				if(!in_array($module_info[$key]['code'], $googlepayment->shipping_support)) {
+			
+					$gcheck->element('price', gc_compare($module_info[$key]['code'].$method ,$key_values), array ('currency' => 'USD'));
+					// 8245366
+				}
+				// flat rate shipping
+				else {
+					$price = $googlepayment->getShippingPrice($module_name, $cart, $price, $handling, $table_mode);
+					$gcheck->element('price', $price, array ('currency' => 'USD'));
+				}
+					
+				$gcheck->push('shipping-restrictions');
+				$gcheck->push('allowed-areas');
+				if(!empty($allowed_restriction_country)){
+					foreach($allowed_restriction_state as $state_key => $state) {
+						if($allowed_restriction_country[$state_key][1] == 'US') {
+							$gcheck->push('us-state-area');
+							$gcheck->element('state', $state);
+							$gcheck->pop('us-state-area');
+						}
+						else {
+							$gcheck->push('postal-area');
+								$gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
+								$gcheck->element('region', $state);
+							$gcheck->pop('postal-area');
+						}
+					}
+				}
+				else {
+					$gcheck->element('us-country-area', '', array ('country-area' => 'ALL'));
+					$gcheck->element('world-area', '');
+				}
+				
+				$gcheck->pop('allowed-areas');
+				$gcheck->pop('shipping-restrictions');
+			
+				if ($ship_calculation_mode == 'True') {
+					$gcheck->pop('merchant-calculated-shipping');
+				} 
+				else {
+					$gcheck->pop('flat-rate-shipping');
+				}
 			}
 		}
 	}
 }
 
 $gcheck->pop('shipping-methods');
-// end shipping methods
- 
-//$gcheck->element('edit-cart-url',  HTTP_SERVER . DIR_WS_CATALOG .'shopping_cart.php?' .  tep_session_name() . "=" . tep_session_id());
+$gcheck->element('request-buyer-phone-number', 'true');
 
-// add ropu 
-// buyer phone request - done //-- always true
-/*$check_query = tep_db_query("select configuration_value 
-                               from " . TABLE_CONFIGURATION . " 
-                               where configuration_key = 
-                               'MODULE_PAYMENT_GOOGLECHECKOUT_BUYER_PHONE' ");
-$calculations_array = tep_db_fetch_array($check_query);
-$phone = $calculations_array['configuration_value'];
-if ($phone == 'True') {
-*/
-	$gcheck->element('request-buyer-phone-number', 'true');
-//}
-// end add ropu
-
-// add ropu 
-// merchant calculation url  
-if($ship_calcualtion_mode == 'True') {
-
-	$check_query = tep_db_query("select configuration_value 
-                               from " . TABLE_CONFIGURATION . " 
-                               where configuration_key = 
-                               'MODULE_PAYMENT_GOOGLECHECKOUT_MODE' ");
-	$calculations_array = tep_db_fetch_array($check_query);
+if($ship_calculation_mode == 'True') {
+	$calculations_array = tep_db_fetch_array(tep_db_query("select configuration_value from " . TABLE_CONFIGURATION
+                                          ." where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_MODE'"));
 	$srv_mode = $calculations_array['configuration_value'];
 
-	$check_query = tep_db_query("select configuration_value 
-                               from " . TABLE_CONFIGURATION . " 
-                               where configuration_key = 
-                               'MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE' ");
-	$calculations_array = tep_db_fetch_array($check_query);
+	$calculations_array = tep_db_fetch_array(tep_db_query("select configuration_value from " . TABLE_CONFIGURATION
+                                          ." where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE' "));
 	$http_mode = $calculations_array['configuration_value'];
-	
-	if ($srv_mode == 'https://sandbox.google.com/' && $http_mode == 'http') {
-		$url = HTTP_SERVER . DIR_WS_CATALOG . 'googlecheckout/responsehandler.php';
-	} else {
-		$url = HTTPS_SERVER . DIR_WS_CATALOG . 'googlecheckout/responsehandler.php';
+
+  if ($srv_mode == 'https://sandbox.google.com/' && $http_mode == 'http') {
+    $url = HTTP_SERVER . DIR_WS_CATALOG .'googlecheckout/responsehandler.php';
+  }
+  else {
+    $url = HTTPS_SERVER . DIR_WS_CATALOG .'googlecheckout/responsehandler.php';
 	}
-	
+	$url = 'http://atx.globant.com:10010/~brunor/osc_test/catalog/googlecheckout/responsehandler.php';
+
 	$gcheck->push('merchant-calculations');
-		$gcheck->element('merchant-calculations-url', $url);
+	$gcheck->element('merchant-calculations-url', $url);
 	$gcheck->pop('merchant-calculations');
 }
-// end add ropu
 
 //Tax options	
 $gcheck->push('tax-tables');
@@ -405,17 +357,13 @@ $gcheck->push('default-tax-table');
 $gcheck->push('tax-rules');
 
 if (sizeof($tax_class_unique) == 1 && sizeof($options) == sizeof($tax_class)) {
-	$tax_rates_result = tep_db_query("select countries_name, zone_code, tax_rate 
-			                                       from " . TABLE_TAX_RATES . " as tr, 
-			                                       " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz, 
-			                                       " . TABLE_ZONES . " as z, 
-			                                       " . TABLE_COUNTRIES . " as c 
-			                                       where tr.tax_class_id = 
-			                                         " . $tax_class_unique[0] . " and tr.tax_zone_id = ztgz.geo_zone_id 
-			                                       and ztgz.zone_id=z.zone_id 
-			                                       and ztgz.zone_country_id = c.countries_id");
+  $tax_rates_result = tep_db_query("select countries_name, zone_code, tax_rate from ". TABLE_TAX_RATES
+                                  ." as tr, ". TABLE_ZONES_TO_GEO_ZONES ." as ztgz, ". TABLE_ZONES
+                                  ." as z, ". TABLE_COUNTRIES ." as c where tr.tax_class_id = "
+                                  . $tax_class_unique[0] ." and tr.tax_zone_id = ztgz.geo_zone_id "
+                                  ."and ztgz.zone_id = z.zone_id and ztgz.zone_country_id = c.countries_id");
 	$num_rows = tep_db_num_rows($tax_rates_result);
-	$tax_rule = array ();
+	$tax_rule = array();
 
 	for ($j = 0; $j < $num_rows; $j++) {
 		$tax_result = tep_db_fetch_array($tax_rates_result);
@@ -431,13 +379,12 @@ if (sizeof($tax_class_unique) == 1 && sizeof($options) == sizeof($tax_class)) {
 		$gcheck->pop('tax-area');
 		$gcheck->pop('default-tax-rule');
 	}
-} else {
+}
+else {
 	$gcheck->push('default-tax-rule');
 	$gcheck->element('rate', 0);
 	$gcheck->push('tax-area');
-	$gcheck->element('us-country-area', '', array (
-		'country-area' => 'ALL'
-	));
+	$gcheck->element('us-country-area', '', array ('country-area' => 'ALL'));
 	$gcheck->pop('tax-area');
 	$gcheck->pop('default-tax-rule');
 }
@@ -446,7 +393,7 @@ $gcheck->pop('default-tax-table');
 
 if (sizeof($tax_class_unique) > 1 || (sizeof($tax_class_unique) == 1 && sizeof($options) != sizeof($tax_class))) {
 	$googlepayment->variant = "disabled";
-	$current_checkout_url = selfURL();
+	$current_checkout_url = gc_selfURL();
 }
 
 $i = 0;
@@ -492,6 +439,12 @@ $gcheck->pop('tax-tables');
 $gcheck->pop('merchant-checkout-flow-support');
 $gcheck->pop('checkout-flow-support');
 $gcheck->pop('checkout-shopping-cart');
+
+//if ($debug = fopen('googlecheckout/sent_message.log', 'w')) {
+//  fwrite($debug, 'Cart compiled '. date("D M j G:i:s T Y") ."\n\n");
+//  fwrite($debug, $gcheck->getXml() ."\n\n");
+//}
+
 ?>
 <table border="0" width="98%" cellspacing="1" cellpadding ="1"> 
 <tr><br>
@@ -513,4 +466,9 @@ $gcheck->pop('checkout-shopping-cart');
         </form></p>
     </td></tr>
 </table>
+<xmp>
+<?
+echo $gcheck->getXml();
+?> 
+</xmp>
 <!-- ** END GOOGLE CHECKOUT ** -->

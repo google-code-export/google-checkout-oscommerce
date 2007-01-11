@@ -1,4 +1,4 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.0.4 - 12/04/2006 
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.1.0b3 - 1/10/2006 
 
 INTRODUCTION
 ============
@@ -9,10 +9,19 @@ The plugin provides Level 2 integration of Google Checkout with osCommerce.
 Plugin features include:
 1. Posting shopping carts to Google Checkout
 2. Shipping support, now you can use Merchant Calculated Shipping Rates!
+   - Tested to work with FedEx and UPS XML.
 3. Tax support
 4. User and order updates within osCommerce
 5. Order processing using osCommerce Admin UI 
 
+For continued support, you may use either support area:
+
+http://forums.oscommerce.com/index.php?showtopic=229637
+http://www.ubercart.org/forum/14
+
+To contribute to continued development and support of this module, please use the following link to register for your Google Checkout Merchant Account:
+
+http://checkout.google.com/sell?promo=sevrefrigeration
 
 REQUIREMENTS
 ============
@@ -37,7 +46,8 @@ Select and install the Google Checkout payment module. The following are some of
 3. Operation Mode: Test your site with Google Checkout's sandbox server before migrating to production. You will need it signup for a separate Google Checkout sandbox account at http://sandbox.google.com/sell. Your sandbox account will have a different Merchant ID and Merchant Key. When you are ready to run against the production server, remember to update your merchant ID and key when migrating.
 4. Merchant Calculation Mode of Operation: Sets Merchant calculation URL for Sandbox environment. Could be HTTP or HTTPS. (Checkout production environemnt always requires HTTPS.)
 5. Default Values for Real Time Shipping Rates: Set your default values for all merchant calculated shipping rates. This values will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price.
-6. In the checkout.google.com/sell settings->integration, set Callback method: XML and "Allow shopping carts with name/value pairs to be sent to Google." is indistinct if is checked or not.
+6. Continue shopping URL: The URL customers will be redirected to if they follow the link back to your site after checkout.
+
 Your Google Checkout setup page is correct if, upon viewing it, a non-disabled Google Checkout button appears.
 
 
@@ -46,7 +56,7 @@ MERCHANT CALCULATED SHIPPING
 In order to use this module you must have some Real Time Shipping provider, such as USPS or FedEx. This Module must be activated and configured in Modules->Shipping. For each enabled module you'll have to set the default values in the Google Checkout Admin UI.
 This Value will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price. 
 
-The available shipping methods for each shipping provider must be configured in catalog/includes/modules/payment/googlecheckout.php in the mc_shipping_methods parameter and the mc_shipping_methods_names. If you want to disable one or more methods, just comment them out.
+The available shipping methods for each shipping provider must be configured in catalog/includes/modules/payment/googlecheckout.php in the mc_shipping_methods parameter. If you want to disable one or more methods, just comment them out.
 Be aware that if you mix flat rate and real time rates, both will be taken as merchant-calculated-shipping. 
 
 
@@ -137,6 +147,10 @@ CHANGE LOG
            - Fixed modules not saving their settings
            - Fixed Notify Customer option
 
-11/30/2006 v1.0.4 (ropu)
-           - Add state change, Risk and charge notification into the Admin UI
+12/04/2006 v1.0.4 (ropu)
+           - Add order-state-change, risk-information and charge-amount notification into the Admin UI
            - Fix Shopping cart not obtained from session. See TROUBLE SHOOTING.
+
+01/10/2007 v1.1.0b3 (rszrama)
+           - Bugfix compilation so people stop downloading the old code till 1.1.0 comes out!
+           - Read v1-1-0b2.txt for more information.

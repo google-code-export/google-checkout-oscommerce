@@ -235,10 +235,9 @@
   function process_checkout_redirect($root, $data, $message_log) {
   }
   function process_merchant_calculation_callback($root, $data, $message_log) {
-	global $cart, $googlepayment, $order;
-
+	global $cart, $googlepayment, $order, $total_weight, $total_count;
 	// i get all the enabled shipping methods  
-	require(DIR_WS_CLASSES . 'shipping.php');
+	require_once(DIR_WS_CLASSES . 'shipping.php');
 	$shipping_modules = new shipping;
 	// i get an hash-array with the description of each shipping method 
 	$methods_hash = $googlepayment->getMethods();
@@ -309,10 +308,11 @@
 			        //print_r($order);
 		            $quotes = $shipping_modules->quote($methods_hash[$method_name][0], $methods_hash[$method_name][2]);
 		            //print_r($quotes);
-		            $price = $quotes[0]['methods'][0]['cost'];
+								$quote_id = count($quotes[0]['methods'])-1;
+		            $price = $quotes[0]['methods'][$quote_id]['cost'];
 		            $shippable = "true";
 		            //if there is a problem with the method, i mark it as non-shippable
-		            if(!isset($quotes[0]['methods'][0]['cost']) || isset($quotes[0]['error'])) {
+		            if(!isset($quotes[0]['methods'][$quote_id]['cost']) || isset($quotes[0]['error'])) {
 		            	$shippable = "false";
 		            	$price = "0";
 		            }

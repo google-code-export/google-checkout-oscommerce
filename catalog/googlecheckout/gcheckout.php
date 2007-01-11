@@ -299,19 +299,11 @@ foreach ($module_info as $key => $value) {
 							$gcheck->element('state', $state);
 							$gcheck->pop('us-state-area');
 						}
-						else {
-							$gcheck->push('postal-area');
-								$gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
-								$gcheck->element('region', $state);
-							$gcheck->pop('postal-area');
-						}
 					}
 				}
 				else {
 					$gcheck->element('us-country-area', '', array ('country-area' => 'ALL'));
-					$gcheck->element('world-area', '');
 				}
-				
 				$gcheck->pop('allowed-areas');
 				$gcheck->pop('shipping-restrictions');
 			
@@ -338,13 +330,12 @@ if($ship_calculation_mode == 'True') {
                                           ." where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE' "));
 	$http_mode = $calculations_array['configuration_value'];
 
-  if ($srv_mode == 'https://sandbox.google.com/' && $http_mode == 'http') {
+  if ($srv_mode == 'https://sandbox.google.com/checkout/' && $http_mode == 'http') {
     $url = HTTP_SERVER . DIR_WS_CATALOG .'googlecheckout/responsehandler.php';
   }
   else {
     $url = HTTPS_SERVER . DIR_WS_CATALOG .'googlecheckout/responsehandler.php';
 	}
-	$url = 'http://atx.globant.com:10010/~brunor/osc_test/catalog/googlecheckout/responsehandler.php';
 
 	$gcheck->push('merchant-calculations');
 	$gcheck->element('merchant-calculations-url', $url);

@@ -66,7 +66,7 @@
   * XmlParser returns an empty params array if it encounters 
   * any error during parsing 
   */
-  class XmlParser {
+  class gcXmlParser {
 
     var $params= array(); //Stores the object representation of XML data
     var $root;
@@ -75,7 +75,7 @@
    /* Constructor for the class
     * Takes in XML data as input( do not include the <xml> tag
     */
-    function XmlParser($input) {
+    function gcXmlParser($input) {
       $xmlp = xml_parser_create();
       xml_parse_into_struct($xmlp, $input, $vals, $index);
       xml_parser_free($xmlp);

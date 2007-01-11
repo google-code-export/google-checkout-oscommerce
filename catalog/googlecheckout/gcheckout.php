@@ -405,7 +405,7 @@ foreach ($tax_array as $tax_table) {
 	$tax_rule = array ();
 
 	$gcheck->push('alternate-tax-table', array (
-		'name' => $tax_name_array[$i]
+		'name' => (!empty($tax_name_array[$i])?$tax_name_array[$i]:'none')
 	));
 	$gcheck->push('alternate-tax-rules');
 	for ($j = 0; $j < $num_rows; $j++) {

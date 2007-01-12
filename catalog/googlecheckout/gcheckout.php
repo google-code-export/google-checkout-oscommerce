@@ -129,7 +129,7 @@ for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
 	$tax_result = tep_db_query("select tax_class_title from ". TABLE_TAX_CLASS 
                             ." where tax_class_id = ". gc_makeSqlInteger($products[$i]['tax_class_id']));
 	$tax = tep_db_fetch_array($tax_result);
-	$tt = (!empty($tax['tax_class_title'])?$tax['tax_class_title']:'none');
+    $tt = (!empty($tax['tax_class_title'])?$tax['tax_class_title']:'none');
 	if (!in_array($products[$i]['tax_class_id'], $tax_array)) {
 		$tax_array[] = $products[$i]['tax_class_id'];
 		$tax_name_array[] = $tt;

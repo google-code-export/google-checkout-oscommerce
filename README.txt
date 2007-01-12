@@ -1,4 +1,4 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.1.0b3 - 1/10/2006 
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.1.0b4 - 1/12/2006 
 
 INTRODUCTION
 ============
@@ -17,8 +17,6 @@ Plugin features include:
 For continued support, you may use either support area:
 
 http://forums.oscommerce.com/index.php?showtopic=229637
-http://www.ubercart.org/forum/14
-
 
 REQUIREMENTS
 ============
@@ -114,12 +112,8 @@ TROUBLE SHOOTING
    Solution: Incorrect Merchant key.
 7. Problem: (/public_html/googlecheckout/response_error.log) Tue Nov 28 8:56:21 PST 2006:- Shopping cart not obtained from session. 
    Solution: Set to False admin->configuration->session->Prevent Spider Sessions configuration (Thx dawnmariegifts, beta tester)
-      Side effects: You'll see spiders as active users.
-   Solution 2:	Remove any *jakarta* string form catalog/includes/spiders.txt
-8. Problem: On January 17, we're changing the Google Checkout sandbox URL to sandbox.google.com/checkout. The current URL, sandbox.google.com, will no longer work after this change takes place. The integration and testing process itself will be unaffected.
-   Solution: Unistall/Install Google Checkout Module in the Admin UI with v1.1.b3 or newer.
-   Solution 2 (Adv. users): Go to the Database and in the configuration Table update row with 'configuration_key' = MODULE_PAYMENT_GOOGLECHECKOUT_MODE, set `set_function` = "tep_cfg_select_option(array(''https://sandbox.google.com/checkout/'', ''https://checkout.google.com/''),"
-
+   Side effects: You'll see spiders as active users. Working on a permanent fix.
+   
     
 KNOWN BUGS - (Report bugs at http://forums.oscommerce.com/index.php?showtopic=229637)
 ==========
@@ -155,3 +149,5 @@ CHANGE LOG
 01/10/2007 v1.1.0b3 (rszrama)
            - Bugfix compilation so people stop downloading the old code till 1.1.0 comes out!
            - Read v1-1-0b2.txt for more information.
+01/12/2007 v1.1.0b4 (ropu)
+           - Fix <tax-table-selector> strict validation.

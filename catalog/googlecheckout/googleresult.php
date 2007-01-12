@@ -3,6 +3,8 @@
 /**
  * Copyright (C) 2006 Google Inc.
  *
+ * Bugfixed and improved by Ryan of http://www.ubercart.org
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at

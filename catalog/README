@@ -1,0 +1,12 @@
+Special Version joined with Discount Coupon Contribution http://www.oscommerce.com/community/contributions,4269
+
+
+Fixed Link to Manual in Coupon Admin Page  	swopedesign  	25 Sep 2006  	
+After installing this contribution, my client clicked on the link to view the online help manual for this contribution from the admin page. He got a 404 error! The link is to coupons_manual.php, but the file is .html. I have changed the extension to .php for this file. This upload contains the full package for v 2.1, including reporting feature added recently.
+
+
+See Doc dir for more info
+
+Both packages are installed and merged. Just need to upgrade a flat OSC intall
+
+ropu

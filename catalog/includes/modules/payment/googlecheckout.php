@@ -24,7 +24,7 @@
 
 /* GOOGLE CHECKOUT
  * Class provided in modules dir to add googlecheckout as a payment option
- * Member variables refer to currently set parameter values from the database
+ * Member variables refer to currently set paramter values from the database
  */
 
 class googlecheckout {
@@ -92,11 +92,6 @@ class googlecheckout {
           '06' => 'International First',
           '90' => 'International Home Delivery',
           '92' => 'International Ground Service')),
-      // Comment out or remove the above fedex1 section and uncomment/add to the upsxml section below for UPS.
-      // Just so you know, international_types aren't supported since Google Checkout is U.S. only for now.
-      /*'upsxml' => array(
-        'domestic_types' => array(
-          'UPS Ground' => 'UPS Ground')),*/
       'zones' => array('domestic_types' => array('zones' => 'Zones Rates')), 
 
       // Flat methods.
@@ -109,8 +104,6 @@ class googlecheckout {
 	  $this->mc_shipping_methods_names = array(
       'usps' => 'USPS',
 			'fedex1' => 'FedEx',
-      // Comment out the above line and uncomment the line below for UPS.
-      //'upsxml' => 'UPS',
       'zones' => 'Zones', 
       'flat' => 'Flat Rate',
       'item' => 'Item',
@@ -162,7 +155,15 @@ class googlecheckout {
     $key = str_pad($key, $blocksize, chr(0x00));
     $ipad = str_repeat(chr(0x36), $blocksize);
     $opad = str_repeat(chr(0x5c), $blocksize);
-    $hmac = pack('H*', $hashfunc(($key ^ $opad) . pack('H*', $hashfunc(($key ^ $ipad) . $data))));
+    $hmac = pack(
+                    'H*', $hashfunc(
+                            ($key^$opad).pack(
+                                    'H*', $hashfunc(
+                                            ($key^$ipad).$data
+                                    )
+                            )
+                    )
+                );
     return $hmac; 
   }
 		
@@ -304,5 +305,5 @@ class googlecheckout {
                  'MODULE_PAYMENT_GOOGLECHECKOUT_CONTINUE_URL');
   }
 }
-
+// ** END GOOGLE CHECKOUT **
 ?>

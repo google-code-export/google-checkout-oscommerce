@@ -342,6 +342,35 @@ function rowOutEffect(object) {
       <tr>
         <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
       </tr>
+<?php
+/* kgt - discount coupons */
+	if( MODULE_ORDER_TOTAL_DISCOUNT_COUPON_STATUS == 'true' ) {
+?>
+      <tr>
+        <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
+          <tr>
+            <td class="main"><b><?php echo TABLE_HEADING_COUPON; ?></b></td>
+          </tr>
+        </table></td>
+      </tr>
+      <tr>
+        <td><table border="0" width="100%" cellspacing="1" cellpadding="2" class="infoBox">
+          <tr class="infoBoxContents">
+            <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
+              <tr>
+                <td class="main"><?php echo ENTRY_DISCOUNT_COUPON.' '.tep_draw_input_field('coupon', '', 'size="32"'); ?></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table></td>
+      </tr>
+      <tr>
+        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
+      </tr>
+<?php
+	}
+/* end kgt - discount coupons */
+?>      
       <tr>
         <td><table border="0" width="100%" cellspacing="1" cellpadding="2" class="infoBox">
           <tr class="infoBoxContents">

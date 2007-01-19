@@ -1,0 +1,97 @@
+Release 1.1 June 7, 2006
+
+Bugs Fixed:
+
+* The Max Use field would not stop a code from being used more than max_use
+times if the Min Order was not set (set to unlimited).
+* The coupon session variable was not destroyed after the checkout processing.
+* Some orders with no coupon codes were being entered into the
+discount_coupons_to_orders table.
+
+Other changes:
+* Added a "New Coupon" button to replace the "New Product" button.
+* Added an index to the discount_coupons_to_orders table.
+
+
+Release 1.2 June 9, 2006
+
+Bug Fixes:
+* Fix for empty coupon order variable that required a refresh before coupon 
+could be displayed.
+* Fix for empty variables in coupon INSERT statement.
+
+Other changes:
+* Added random code generator contributed by Cubez to coupon code admin.  
+* Added configure for the length of randomly generated codes in the order 
+total module admin.
+* Changed coupon code text box to be uneditable when editing a discount coupon.
+
+
+Release 1.3 June 12, 2006
+
+Bug Fixes:
+* Fix for hardcoded customer id in query that checks for number of times code
+has been used.
+
+Other changes:
+* Changed dates to accept current admin date format, and to always display
+using current admin date format.
+* Added index to orders table on customers_id to make lookup faster when
+testing against Max Use.
+
+
+Release 1.4 June 27, 2006
+
+Bug Fixes:
+* If "Display Subtotal with Applied Discount" is set to true and min order is
+set, customer may be incorrectly told that the order subtotal is too low.
+This happens when the discount is enough to bring the order subtotal below the
+min order amount.
+* Date limit on coupons was non-inclusive.  Discounts with ending dates would
+be expired at 11:59:59 the night before the set end date.
+
+Other Changes:
+* Added ability to set global number of discount coupons available.
+
+
+Release 2.0 August 24, 2006
+
+Bug Fixes:
+* If free shipping is used, do not allow free shipping if discount brings
+order total below the minimum for free shipping.
+
+Other Changes:
+* Added ability to set maximum order amount to apply the discount.  This also
+allows for using either fixed amount discounts or percentage discounts.
+* Updated the manual to include information for the Max Order and Number
+Available fields.
+* Updated manual to be HTML page accessible from coupons admin screen.
+* Added discount coupons class to clean up some code in
+checkout_confirmation.php and order.php.
+* Added ability to configure how the discount order total line displays in the
+order confirmation screen, invoices, etc.
+* Added configuration option to choose whether discount order total lines for
+each tax group should be added and displayed as one line.
+
+
+Release 2.1 September 18, 2006
+
+Bug Fixes:
+* Replaced tep_db_prepare_input() with tep_db_input() in
+includes/classes/discount_coupon.php to correctly sanitize string for database
+query.
+* Max_use, min_order, number_available checks did not work with update to 2.0
+because of a missing line.
+* Error message for max_use would not display because it was not being saved
+as a object variable.
+* Global currencies variable was not declared in function to check min_order
+so resulted in an error.
+* If discount is more than min_order, do not allow applied discount to exceed
+the products price to prevent negative order totals.
+* Unregister the coupon session variable when logging off.
+
+Other changes:
+* Added configuration option to select whether to use language files for order
+total line display or to use the module configuration field.  This is needed
+for shops using multiple languages that wish to display the order total line
+formatted for each language.

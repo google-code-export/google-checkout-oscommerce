@@ -1,5 +1,6 @@
 <?php
 
+
 /*
   Copyright (C) 2006 Google Inc.
 
@@ -128,6 +129,7 @@ for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
 	$tax_result = tep_db_query("select tax_class_title from ". TABLE_TAX_CLASS 
                             ." where tax_class_id = ". gc_makeSqlInteger($products[$i]['tax_class_id']));
 	$tax = tep_db_fetch_array($tax_result);
+//	$tt = (!empty($tax['tax_class_title'])?$tax['tax_class_title']:'none');
 	$tt = $tax['tax_class_title'];
 	if (!empty($tt) && !in_array($products[$i]['tax_class_id'], $tax_array)) {
 		$tax_array[] = $products[$i]['tax_class_id'];
@@ -145,8 +147,7 @@ for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
 	$gcheck->element('item-description', $products_description);
 	$gcheck->element('unit-price', $products[$i]['final_price'], array ('currency' => 'USD'));
 	$gcheck->element('quantity', $products[$i]['quantity']);
-	if(!empty($tt))
-		$gcheck->element('tax-table-selector', $tt);
+	$gcheck->element('tax-table-selector', $tt);
 	$gcheck->pop('item');
 }
 $gcheck->pop('items');
@@ -241,9 +242,6 @@ foreach ($module_info as $key => $value) {
 	$common_string = 'MODULE_SHIPPING_'. $curr_ship .'_';
 	$zone = $data_arr[$common_string .'ZONE'];
 	$enable = $data_arr[$common_string .'STATUS'];
-  if ($key == 'upsxml') {
-    $enable = $data_arr[$common_string .'RATES_STATUS'];
-  }
 	$curr_tax_class = $data_arr[$common_string .'TAX_CLASS'];
 	$price = $data_arr[$common_string .'COST'];
 	$handling = $data_arr[$common_string .'HANDLING'];
@@ -258,8 +256,9 @@ foreach ($module_info as $key => $value) {
 		// Get all the allowed shipping zones.
 		while($zone_answer = tep_db_fetch_array($zone_result)) {
 			$allowed_restriction_state[] = $zone_answer['zone_code'];
-			$allowed_restriction_country[] = $zone_answer['countries_name'];
+			$allowed_restriction_country[] = array($zone_answer['countries_name'], $zone_answer['countries_iso_code_2']);
 		}
+
 	}
 	
 	if ($curr_tax_class != 0 && $curr_tax_class != '') {
@@ -268,47 +267,53 @@ foreach ($module_info as $key => $value) {
 			$tax_class_unique[] = $curr_tax_class;
 	}
 
-	if ($enable == "True" && is_array($googlepayment->mc_shipping_methods[$key]['domestic_types'])) {
-		foreach($googlepayment->mc_shipping_methods[$key]['domestic_types'] as $method => $name) {
-      // Merchant calculated shipping.
-			if ($ship_calculation_mode == 'True') {
-        $gcheck->push('merchant-calculated-shipping', array ('name' => $googlepayment->mc_shipping_methods_names[$module_info[$key]['code']] .': '. $name));
-			} 
-      // Flat rate shipping.
-			else {
-				$gcheck->push('flat-rate-shipping', array ('name' => $module_info[$key]['title']));
-			}	
-
-			if(!in_array($module_info[$key]['code'], $googlepayment->shipping_support)) {
-				$gcheck->element('price', gc_compare($module_info[$key]['code'] . $method, $key_values), array('currency' => 'USD'));
-			}
-			// Flat rate shipping
-			else {
-				$price = $googlepayment->getShippingPrice($module_name, $cart, $price, $handling, $table_mode);
-				$gcheck->element('price', $price, array ('currency' => 'USD'));
-			}
-
-			$gcheck->push('shipping-restrictions');
-			$gcheck->push('allowed-areas');
-			if(!empty($allowed_restriction_country)){
-				foreach($allowed_restriction_state as $state_key => $state) {
-					$gcheck->push('us-state-area');
-					$gcheck->element('state', $state);
-					$gcheck->pop('us-state-area');
+	if ($enable == "True") {
+		foreach($googlepayment->mc_shipping_methods[$key] as $shipping_type){
+			foreach($shipping_type as $method => $name){
+			
+//	['domestic_types']
+			// merchant calculated shipping
+				if ($ship_calculation_mode == 'True') {
+						$gcheck->push('merchant-calculated-shipping', array ('name' => $googlepayment->mc_shipping_methods_names[$module_info[$key]['code']] . ': ' . $name));
+				} 
+			// flat rate shipping 
+				else {
+					$gcheck->push('flat-rate-shipping', array ('name' => $module_info[$key]['title']));
+				}	
+				if(!in_array($module_info[$key]['code'], $googlepayment->shipping_support)) {
+			
+					$gcheck->element('price', gc_compare($module_info[$key]['code'].$method ,$key_values), array ('currency' => 'USD'));
+					// 8245366
 				}
-			}
-			else {
-				$gcheck->element('us-country-area', '', array('country-area' => 'ALL'));
-			}
-
-			$gcheck->pop('allowed-areas');
-			$gcheck->pop('shipping-restrictions');
-
-			if ($ship_calculation_mode == 'True') {
-				$gcheck->pop('merchant-calculated-shipping');
-			} 
-			else {
-				$gcheck->pop('flat-rate-shipping');
+				// flat rate shipping
+				else {
+					$price = $googlepayment->getShippingPrice($module_name, $cart, $price, $handling, $table_mode);
+					$gcheck->element('price', $price, array ('currency' => 'USD'));
+				}
+					
+				$gcheck->push('shipping-restrictions');
+				$gcheck->push('allowed-areas');
+				if(!empty($allowed_restriction_country)){
+					foreach($allowed_restriction_state as $state_key => $state) {
+						if($allowed_restriction_country[$state_key][1] == 'US') {
+							$gcheck->push('us-state-area');
+							$gcheck->element('state', $state);
+							$gcheck->pop('us-state-area');
+						}
+					}
+				}
+				else {
+					$gcheck->element('us-country-area', '', array ('country-area' => 'ALL'));
+				}
+				$gcheck->pop('allowed-areas');
+				$gcheck->pop('shipping-restrictions');
+			
+				if ($ship_calculation_mode == 'True') {
+					$gcheck->pop('merchant-calculated-shipping');
+				} 
+				else {
+					$gcheck->pop('flat-rate-shipping');
+				}
 			}
 		}
 	}
@@ -332,9 +337,10 @@ if($ship_calculation_mode == 'True') {
   else {
     $url = HTTPS_SERVER . DIR_WS_CATALOG .'googlecheckout/responsehandler.php';
 	}
-
+	
 	$gcheck->push('merchant-calculations');
 	$gcheck->element('merchant-calculations-url', $url);
+	$gcheck->element('accept-merchant-coupons', 'true');
 	$gcheck->pop('merchant-calculations');
 }
 
@@ -399,9 +405,13 @@ foreach ($tax_array as $tax_table) {
 			                                      and ztgz.zone_country_id = c.countries_id");
 	$num_rows = tep_db_num_rows($tax_rates_result);
 	$tax_rule = array ();
+	if(empty($tax_name_array[$i])){
+		$i++;		
+		continue;
+	}
 
 	$gcheck->push('alternate-tax-table', array (
-		'name' => $tax_name_array[$i]
+		'name' => (!empty($tax_name_array[$i])?$tax_name_array[$i]:'none')
 	));
 	$gcheck->push('alternate-tax-rules');
 	for ($j = 0; $j < $num_rows; $j++) {
@@ -427,10 +437,10 @@ $gcheck->pop('merchant-checkout-flow-support');
 $gcheck->pop('checkout-flow-support');
 $gcheck->pop('checkout-shopping-cart');
 
-/*if ($debug = fopen('googlecheckout/sent_message.log', 'w')) {
-  fwrite($debug, 'Cart compiled '. date("D M j G:i:s T Y") ."\n\n");
-  fwrite($debug, $gcheck->getXml() ."\n\n");
-}*/
+//if ($debug = fopen('googlecheckout/sent_message.log', 'w')) {
+//  fwrite($debug, 'Cart compiled '. date("D M j G:i:s T Y") ."\n\n");
+//  fwrite($debug, $gcheck->getXml() ."\n\n");
+//}
 
 ?>
 <table border="0" width="98%" cellspacing="1" cellpadding ="1"> 

@@ -1,0 +1,400 @@
+Released under the GNU General Public License.
+
+
+**************** STEP 1 ****************
+Upload files
+
+The following files need to be uploaded to your site.  If you have made any
+changes to code or installed any other contributions, you should manually
+edit the existing files.  If you need to manually edit these files, go to 
+Step 1A at the end of this file.
+
+New files:
+
+catalog/includes/classes/discount_coupon.php
+catalog/includes/modules/order_total/ot_discount_coupon.php
+catalog/includes/languages/english/modules/order_total/ot_discount_coupon.php
+admin/coupons.php
+admin/includes/languages/english/coupons.php
+admin/includes/languages/english/coupons_manual.html
+admin/includes/languages/english/images/buttons/button_new_coupon.gif
+
+Existing files:
+
+admin/includes/boxes/catalog.php
+admin/includes/database_tables.php
+admin/includes/filenames.php
+admin/includes/languages/english.php
+catalog/checkout_confirmation.php
+catalog/checkout_process.php
+catalog/checkout_payment.php
+catalog/logoff.php
+catalog/includes/classes/order.php
+catalog/includes/database_tables.php
+catalog/includes/languages/english.php
+catalog/includes/languages/english/checkout_payment.php
+
+
+**************** STEP 2 ****************
+Create the database tables
+
+Run these statements via the SQL tab in phpMyAdmin.
+
+
+CREATE TABLE discount_coupons (
+  coupons_id VARCHAR(32) NOT NULL DEFAULT '',
+  coupons_description VARCHAR(64) NOT NULL DEFAULT '',
+  coupons_discount_percent DECIMAL(7,4) DEFAULT NULL,
+  coupons_date_start DATETIME DEFAULT NULL,
+  coupons_date_end DATETIME DEFAULT NULL,
+  coupons_max_use INT(3) NOT NULL DEFAULT 0,
+  coupons_min_order DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+  coupons_max_order DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+  coupons_number_available INT(3) DEFAULT 0 NOT NULL,
+  PRIMARY KEY  (coupons_id)
+);
+
+CREATE TABLE discount_coupons_to_orders (
+  discount_coupons_to_orders_id INT(11) NOT NULL AUTO_INCREMENT,
+  coupons_id VARCHAR(32) DEFAULT NULL,
+  orders_id INT(11) DEFAULT '0',
+  PRIMARY KEY  (discount_coupons_to_orders_id),
+  KEY coupons_id (coupons_id)
+);
+  
+  
+**************** STEP 3 ****************
+Install the Discount Coupon order total module
+
+Log into your admin section and go to Modules > Order Total.  Select the 
+Discount Coupons module and click the Install button in the box on the right.  
+Ensure the module is enabled.  See coupons_manual.html for detailed
+instructions on how to configure the discount coupons module.
+
+The installation should now be complete.
+
+
+**************** STEP 1A ****************
+Instructions to manually edit existing files
+
+Make the changes outlined below for each file.  Approximate line numbers are 
+given where applicable.  If there is no line number provided, the code may be 
+added at any location within the file.
+
+
+admin/includes/boxes/catalog.php ----------------------------------------------
+
+	line 29
+	replace
+	
+		'<a href="' . tep_href_link(FILENAME_PRODUCTS_EXPECTED, '', 'NONSSL') . '" class="menuBoxContentLink">' . BOX_CATALOG_PRODUCTS_EXPECTED . '</a>' );
+
+	with
+	
+		//kgt - discount coupons
+    '<a href="' . tep_href_link(FILENAME_PRODUCTS_EXPECTED, '', 'NONSSL') . '" class="menuBoxContentLink">' . BOX_CATALOG_PRODUCTS_EXPECTED . '</a><br>'.
+    '<a href="' . tep_href_link(FILENAME_DISCOUNT_COUPONS, '', 'NONSSL') . '" class="menuBoxContentLink">' . BOX_CATALOG_DISCOUNT_COUPONS . '</a>' );
+    //end kgt - discount coupons
+        
+        
+admin/includes/database_tables.php --------------------------------------------
+
+	add
+
+		//kgt - discount coupons
+	  define('TABLE_DISCOUNT_COUPONS', 'discount_coupons');
+	  define('TABLE_DISCOUNT_COUPONS_TO_ORDERS', 'discount_coupons_to_orders');
+	  //end kgt - discount coupons
+
+	  	
+admin/includes/filenames.php --------------------------------------------------
+
+	add
+
+		//kgt - discount coupons
+		define('FILENAME_DISCOUNT_COUPONS','coupons.php');
+		define('FILENAME_DISCOUNT_COUPONS_MANUAL', 'coupons_manual.php');
+		//end kgt - discount coupons	  
+
+		
+admin/includes/languages/english.php ------------------------------------------
+
+	add
+		
+		//kgt - discount coupons
+		define('BOX_CATALOG_DISCOUNT_COUPONS', 'Discount Coupons');
+		//end kgt - discount coupons	
+
+
+catalog/checkout_confirmation.php ---------------------------------------------
+
+	line 46
+	after
+	
+		if (!tep_session_is_registered('comments')) tep_session_register('comments');
+	    if (tep_not_null($HTTP_POST_VARS['comments'])) {
+	      $comments = tep_db_prepare_input($HTTP_POST_VARS['comments']);
+	    }
+	
+	add
+	
+		//kgt - discount coupons
+	  if (!tep_session_is_registered('coupon')) tep_session_register('coupon');
+	  if (tep_not_null($HTTP_POST_VARS['coupon'])) {
+	  	//this needs to be set before the order object is created, but we must process it after
+	    $coupon = tep_db_prepare_input($HTTP_POST_VARS['coupon']);
+	  }
+	  //end kgt - discount coupons
+
+
+	line 63
+	after
+	
+		if (is_array($payment_modules->modules)) {
+    	$payment_modules->pre_confirmation_check();
+  	}
+
+	add
+	
+    //kgt - discount coupons
+	  if( tep_not_null( $HTTP_POST_VARS['coupon'] ) ) { //if they have entered something in the coupon field
+	    $this_coupon = new discount_coupon( tep_db_prepare_input( $HTTP_POST_VARS['coupon'] ) );
+	    $this_coupon->verify_code();
+	    //print_r( $this_coupon ); //use this to debug coupon object problems
+			if( !$this_coupon->is_errors() ) { //if we have passed all tests (no error message), make sure we still meet free shipping requirements, if any
+				if( $this_coupon->is_recalc_shipping() ) tep_redirect( tep_href_link( FILENAME_CHECKOUT_SHIPPING, 'error_message=' . urlencode( ENTRY_DISCOUNT_COUPON_FREE_SHIPPING_ERROR ), 'SSL' ) ); //redirect to the shipping page to reselect the shipping method
+			} else {
+				if( tep_session_is_registered('coupon') ) tep_session_unregister('coupon'); //remove the coupon from the session
+				tep_redirect( tep_href_link( FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode( implode( ' ', $this_coupon->error_message ) ), 'SSL' ) ); //redirect to the payment page
+			}
+		} else { //if the coupon field is empty, unregister the coupon from the session
+			if( tep_session_is_registered('coupon') ) tep_session_unregister('coupon');
+		}
+		//end kgt - discount coupons
+
+	  	
+catalog/checkout_process.php ---------------------------------------------
+
+	line 166
+	after
+	
+		$sql_data_array = array('orders_id' => $insert_id, 
+	                          'orders_status_id' => $order->info['order_status'], 
+	                          'date_added' => 'now()', 
+	                          'customer_notified' => $customer_notification,
+	                          'comments' => $order->info['comments']);
+		tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+	
+	add
+	
+		//kgt - discount coupons
+		if( tep_session_is_registered( 'coupon' ) && $order->info['coupon'] != '' ) {
+		  $sql_data_array = array( 'coupons_id' => $order->info['coupon'],
+		  						 'orders_id' => $insert_id );
+		  tep_db_perform( TABLE_DISCOUNT_COUPONS_TO_ORDERS, $sql_data_array );
+	  }
+		//end kgt - discount coupons	 
+		
+	
+	line 276
+	after
+		// unregister session variables used during checkout
+	  tep_session_unregister('sendto');
+		tep_session_unregister('billto');
+		tep_session_unregister('shipping');
+		tep_session_unregister('payment');
+		tep_session_unregister('comments');
+		
+	add
+		//kgt - discount coupons
+	  tep_session_unregister('coupon');
+		//end kgt - discount coupons   	
+
+		
+catalog/checkout_payment.php  ------------------------------------------------
+
+	line 336
+	after
+
+					<tr>
+					  <td><table border="0" width="100%" cellspacing="1" cellpadding="2" class="infoBox">
+					    <tr class="infoBoxContents">
+					      <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
+					        <tr>
+					          <td><?php echo tep_draw_textarea_field('comments', 'soft', '60', '5'); ?></td>
+					        </tr>
+					      </table></td>
+					    </tr>
+					  </table></td>
+					</tr>
+					<tr>
+					  <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
+					</tr>
+
+	add
+	
+		<?php
+		/* kgt - discount coupons */
+		?>
+		      <tr>
+		        <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
+		          <tr>
+		            <td class="main"><b><?php echo TABLE_HEADING_COUPON; ?></b></td>
+		          </tr>
+		        </table></td>
+		      </tr>
+		      <tr>
+		        <td><table border="0" width="100%" cellspacing="1" cellpadding="2" class="infoBox">
+		          <tr class="infoBoxContents">
+		            <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
+		              <tr>
+		                <td class="main"><?php echo ENTRY_DISCOUNT_COUPON.' '.tep_draw_input_field('coupon', '', 'size="32"'); ?></td>
+		              </tr>
+		            </table></td>
+		          </tr>
+		        </table></td>
+		      </tr>
+		      <tr>
+		        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
+		      </tr>
+		<?php
+		/* end kgt - discount coupons */
+		?>
+
+
+catalog/logoff.php  -----------------------------------------------------------
+
+	line 25
+	after
+
+		tep_session_unregister('comments');
+
+	add
+
+	  //kgt - discount coupons
+		tep_session_unregister('coupon');
+	  //end kgt - discount coupons
+
+
+catalog/includes/classes/order.php --------------------------------------------
+
+	line 162
+	after
+
+		$this->info = array('order_status' => DEFAULT_ORDERS_STATUS_ID,
+                          'currency' => $currency,
+                          'currency_value' => $currencies->currencies[$currency]['value'],
+                          'payment_method' => $payment,
+                          'cc_type' => (isset($GLOBALS['cc_type']) ? $GLOBALS['cc_type'] : ''),
+                          'cc_owner' => (isset($GLOBALS['cc_owner']) ? $GLOBALS['cc_owner'] : ''),
+                          'cc_number' => (isset($GLOBALS['cc_number']) ? $GLOBALS['cc_number'] : ''),
+                          'cc_expires' => (isset($GLOBALS['cc_expires']) ? $GLOBALS['cc_expires'] : ''),
+                          'shipping_method' => $shipping['title'],
+                          'shipping_cost' => $shipping['cost'],
+                          'subtotal' => 0,
+                          'tax' => 0,
+                          'tax_groups' => array(),
+	
+	add
+	
+						  						//kgt - discount coupons
+								          'coupon' => (isset($GLOBALS['coupon']) ? $GLOBALS['coupon'] : ''),
+								          'applied_discount' => array(),
+								          //end kgt - discount coupons
+				          
+				          
+	line 244
+	replace
+	
+		$shown_price = tep_add_tax($this->products[$index]['final_price'], $this->products[$index]['tax']) * $this->products[$index]['qty']; 
+    $this->info['subtotal'] += $shown_price;
+
+  with
+
+    //kgt - discount coupon
+		if( !empty( $this->info['coupon'] ) ) {
+			if( !isset( $this_coupon ) ) {
+        require_once( DIR_WS_CLASSES . 'discount_coupon.php' );
+    		$this_coupon = new discount_coupon( $this->info['coupon'] );
+			}
+			$applied_discount = $this_coupon->calculate_discount( $this->products[$index], $n );
+		  if( isset( $this->info['applied_discount'][$this->products[$index]['tax_description']] ) ) {
+      	$this->info['applied_discount'][$this->products[$index]['tax_description']] += $applied_discount;
+			} else {
+    		$this->info['applied_discount'][$this->products[$index]['tax_description']] = $applied_discount;
+    	}
+    	$this_actual_shown_price = null;
+    	if( MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_SUBTOTAL == 'false' ) {
+    		//we don't want to display the subtotal with the discount applied, so apply the discount then set the applied_discount variable to zero so that it's not added into the order subtotal, but is still used to correctly calculate tax
+    		$this_actual_shown_price = ( tep_add_tax( $this->products[$index]['final_price'], $this->products[$index]['tax'] ) * $this->products[$index]['qty'] ) - $applied_discount;
+    		$applied_discount = 0;
+    	}
+		}
+		$shown_price = ( tep_add_tax( $this->products[$index]['final_price'], $this->products[$index]['tax'] ) * $this->products[$index]['qty'] ) - $applied_discount;
+		$this->info['subtotal'] += $shown_price;
+		//if we need to display the subtotal without the discount applied, then add the shown price to the subtotal, then change shown price to the price with the applied discount in order to properly calculate taxes
+		if( isset( $this_actual_shown_price ) ) $shown_price = $this_actual_shown_price;
+		//end kgt - discount coupon
+
+
+	line 272
+	after
+	
+		if (DISPLAY_PRICE_WITH_TAX == 'true') {
+		  $this->info['total'] = $this->info['subtotal'] + $this->info['shipping_cost'];
+		} else {
+		  $this->info['total'] = $this->info['subtotal'] + $this->info['tax'] + $this->info['shipping_cost'];
+		}
+		
+	add
+	
+		//kgt - discount coupon
+    if( !empty( $this->info['coupon'] ) && MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_SUBTOTAL == 'false' ) {
+      foreach( $this->info['applied_discount'] as $discount ){
+		    $this->info['total'] -= $discount;
+		  }
+    }
+    //end kgt - discount coupon
+
+        
+catalog/includes/database_tables.php ------------------------------------------
+
+	add
+
+		//kgt - discount coupons
+	  define('TABLE_DISCOUNT_COUPONS', 'discount_coupons');
+	  define('TABLE_DISCOUNT_COUPONS_TO_ORDERS', 'discount_coupons_to_orders');
+	  //end kgt - discount coupons
+  		
+  		
+catalog/includes/languages/english.php ----------------------------------------
+
+	add
+
+    //kgt - discount coupons
+		define('ENTRY_DISCOUNT_COUPON_ERROR', 'The coupon code you have entered is not valid.');
+		define('ENTRY_DISCOUNT_COUPON_AVAILABLE_ERROR', 'The coupon code you have entered is no longer valid.');
+		define('ENTRY_DISCOUNT_COUPON_USE_ERROR', 'Our records show that you have used this coupon %s time(s).  You may not use this code more than %s time(s).');
+		define('ENTRY_DISCOUNT_COUPON_MIN_ERROR', 'The minimum order total for this coupon is %s');
+		define('ENTRY_DISCOUNT_COUPON', 'Coupon Code:');
+		define('ENTRY_DISCOUNT_COUPON_FREE_SHIPPING_ERROR', 'Your order total is now below the free shipping minimum.');
+		//end kgt - discount coupons
+
+		
+catalog/includes/languages/english/checkout_payment.php ----------------------
+
+	add
+	
+		//kgt - discount coupons
+		define('TABLE_HEADING_COUPON', 'Do you have a promotional code or discount coupon?' );
+		//end kgt - discount coupons				
+		
+		
+		
+
+
+
+
+This module was created and contributed by Allegro and our highly responsive 
+team of PHP and mySQL experts. Visit www.AllegroConsultants.com or call 
+(800) 597-0518.		

@@ -1,0 +1,266 @@
+These instructions assume you have already installed one of the following
+packages:
+
+Discount Coupon Codes 2.0, posted 24 Aug 2006 with Discount Coupon Codes 2.0
+coupon class file bugfix, posted 25 Aug 2006
+
+
+**************** STEP 1 ****************
+Upload files
+
+The following files need to be uploaded to your site.  If you have made any
+changes to existing code or installed any other contributions, you should manually
+edit the existing files.  If you need to manually edit these files, go to
+Step 1A at the end of this file.
+
+New files:
+
+admin/includes/languages/english/coupons_manual.html (replace existing)
+
+Existing files:
+
+catalog/checkout_confirmation.php
+catalog/logoff.php
+catalog/includes/classes/discount_coupon.php
+catalog/includes/modules/order_total/ot_discount_coupon.php
+catalog/includes/languages/english/modules/order_total/ot_discount_coupon.php
+
+
+**************** STEP 2 ****************
+Re-install the Discount Coupon order total module
+
+Log into your admin section and go to Modules > Order Total.  Select the
+Discount Coupons module and click the Remove button in the box on the right.
+Once the module is uninstalled, click the Install button to Re-install it.
+Ensure the module is enabled.
+
+The installation should now be complete.
+
+
+**************** STEP 1A ****************
+Instructions to manually edit existing files
+
+
+catalog/checkout_confirmation.php  --------------------------------------------
+
+	line 71-87
+	replace
+
+	  //kgt - discount coupons
+	  if( tep_not_null( $HTTP_POST_VARS['coupon'] ) ) { //if they have entered something in the coupon field
+	    $this_coupon = new discount_coupon( $HTTP_POST_VARS['coupon'] );
+	    $this_coupon->verify_code();
+	    //print_r( $this_coupon ); //use this to debug coupon object problems
+			if( !$this_coupon->is_errors() ) { //if we have passed all tests (no error message), register the coupon in the session
+				if( !tep_session_is_registered('coupon') ) tep_session_register( 'coupon' );
+				$coupon = tep_db_prepare_input( $HTTP_POST_VARS['coupon'] );
+				if( $this_coupon->is_recalc_shipping() ) tep_redirect( tep_href_link( FILENAME_CHECKOUT_SHIPPING, 'error_message=' . urlencode( ENTRY_DISCOUNT_COUPON_FREE_SHIPPING_ERROR ), 'SSL' ) ); //redirect to the shipping page to reselect the shipping method
+			} else {
+				if( tep_session_is_registered('coupon') ) tep_session_unregister('coupon'); //remove the coupon from the session
+				tep_redirect( tep_href_link( FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode( implode( ' ', $this_coupon->error_message ) ), 'SSL' ) ); //redirect to the payment page
+			}
+		} else { //if the coupon field is empty, unregister the coupon from the session
+			if( tep_session_is_registered('coupon') ) tep_session_unregister('coupon');
+		}
+		//end kgt - discount coupons
+
+	with
+
+    //kgt - discount coupons
+	  if( tep_not_null( $HTTP_POST_VARS['coupon'] ) ) { //if they have entered something in the coupon field
+	    $this_coupon = new discount_coupon( tep_db_prepare_input( $HTTP_POST_VARS['coupon'] ) );
+	    $this_coupon->verify_code();
+	    //print_r( $this_coupon ); //use this to debug coupon object problems
+			if( !$this_coupon->is_errors() ) { //if we have passed all tests (no error message), make sure we still meet free shipping requirements, if any
+				if( $this_coupon->is_recalc_shipping() ) tep_redirect( tep_href_link( FILENAME_CHECKOUT_SHIPPING, 'error_message=' . urlencode( ENTRY_DISCOUNT_COUPON_FREE_SHIPPING_ERROR ), 'SSL' ) ); //redirect to the shipping page to reselect the shipping method
+			} else {
+				if( tep_session_is_registered('coupon') ) tep_session_unregister('coupon'); //remove the coupon from the session
+				tep_redirect( tep_href_link( FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode( implode( ' ', $this_coupon->error_message ) ), 'SSL' ) ); //redirect to the payment page
+			}
+		} else { //if the coupon field is empty, unregister the coupon from the session
+			if( tep_session_is_registered('coupon') ) tep_session_unregister('coupon');
+		}
+		//end kgt - discount coupons
+
+
+
+catalog/logoff.php  -----------------------------------------------------------
+
+	line 25
+	after
+
+		tep_session_unregister('comments');
+
+	add
+
+	  //kgt - discount coupons
+		tep_session_unregister('coupon');
+	  //end kgt - discount coupons
+
+
+
+catalog/includes/classes/discount_coupon.php ----------------------------------
+
+	line 41-45
+	replace
+
+    $check_code_query = tep_db_query( $sql = "SELECT coupons_discount_percent, coupons_description, coupons_max_use, coupons_min_order, coupons_max_order, coupons_number_available
+	  																					FROM " . TABLE_DISCOUNT_COUPONS . "
+	  																					WHERE coupons_id = '" . tep_db_prepare_input( $this->code ) . "'
+	  																						AND ( coupons_date_start <= CURDATE() OR coupons_date_start IS NULL )
+	  																						AND ( coupons_date_end >= CURDATE() OR coupons_date_end IS NULL )" );
+
+	with
+
+    $check_code_query = tep_db_query( $sql = "SELECT coupons_discount_percent, coupons_description, coupons_max_use, coupons_min_order, coupons_max_order, coupons_number_available
+	  																					FROM " . TABLE_DISCOUNT_COUPONS . "
+	  																					WHERE coupons_id = '" . tep_db_input( $this->code ) . "'
+	  																						AND ( coupons_date_start <= CURDATE() OR coupons_date_start IS NULL )
+	  																						AND ( coupons_date_end >= CURDATE() OR coupons_date_end IS NULL )" );
+
+	  																						
+  line 55
+  replace
+
+  	global $order;
+
+  with
+
+  	global $order, $currencies;
+
+
+	line 71-76
+	replace
+
+    $check_use_query = tep_db_query($sql = "SELECT COUNT(*) AS cnt
+      																			FROM ".TABLE_ORDERS." AS o
+      																			INNER JOIN ".TABLE_DISCOUNT_COUPONS_TO_ORDERS." dc2o
+      																				ON dc2o.orders_id=o.orders_id
+      																				AND o.customers_id = '".(int)$customer_id."'
+      																				AND dc2o.coupons_id='".tep_db_prepare_input( $this->code )."'");
+
+	with
+
+    $check_use_query = tep_db_query($sql = "SELECT COUNT(*) AS cnt
+      																			FROM ".TABLE_ORDERS." AS o
+      																			INNER JOIN ".TABLE_DISCOUNT_COUPONS_TO_ORDERS." dc2o
+      																				ON dc2o.orders_id=o.orders_id
+      																				AND o.customers_id = '".(int)$customer_id."'
+      																				AND dc2o.coupons_id='".tep_db_input( $this->code )."'");
+
+
+	line 84-86
+	replace
+
+		$check_use_query = tep_db_query( $sql = 'SELECT COUNT(*) AS cnt
+																						 FROM '.TABLE_DISCOUNT_COUPONS_TO_ORDERS.'
+																						 WHERE coupons_id="'.tep_db_prepare_input( $this->code ).'"' );
+
+	with
+
+    $check_use_query = tep_db_query( $sql = 'SELECT COUNT(*) AS cnt
+																						 FROM '.TABLE_DISCOUNT_COUPONS_TO_ORDERS.'
+																						 WHERE coupons_id="'.tep_db_input( $this->code ).'"' );
+
+
+	line 114
+	after
+
+		$max_applied_percentage = ( $this->coupon['coupons_max_order'] == 0 ? '1.00' : $this->coupon['coupons_max_order'] / ( tep_add_tax( $product['final_price'] * $product['qty'], $product['tax'] ) * $product_count ) );
+		$applied_discount = tep_add_tax( $product['final_price'] * $max_applied_percentage * $this->coupon['coupons_discount_percent'], $product['tax'] ) * $product['qty'];
+
+	add
+
+    //don't allow the discount amount to be more than the product price
+		if( $applied_discount > ( tep_add_tax( $product['final_price'], $product['tax'] ) * $product['qty'] ) ) $applied_discount = tep_add_tax( $product['final_price'], $product['tax'] ) * $product['qty'];
+
+
+
+catalog/includes/modules/order_total/ot_discount_coupon.php -------------------
+
+	line 31-32
+	replace
+
+    reset($order->info['applied_discount']);
+	  //print_r( $order ); //kgt - use this to debug order object contents
+
+	with
+
+    //print_r( $order ); //kgt - use this to debug order object contents
+	  //print_r( $this->coupon ); //kgt - use this to debug coupon object contents
+	  //if the order total lines for multiple tax groups should be displayed as one, add them all together
+
+
+	line 48
+	replace
+
+		$display = MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_FORMAT;
+
+	with
+
+    //if using multiple languages, get the language format string from the proper language file, otherwise, use the module configuration field
+    $display = ( MODULE_ORDER_TOTAL_DISCOUNT_COUPON_USE_LANGUAGE_FILE == 'true' ? MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY : MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_FORMAT );
+    //replace the variables with their proper values:
+
+
+  line 68
+  replace
+
+  	return array('MODULE_ORDER_TOTAL_DISCOUNT_COUPON_STATUS', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_SORT_ORDER', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_TYPE', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_SUBTOTAL', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_RANDOM_CODE_LENGTH', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_FORMAT', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_LINES');
+
+  with
+
+  	return array('MODULE_ORDER_TOTAL_DISCOUNT_COUPON_STATUS', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_SORT_ORDER', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_TYPE', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_SUBTOTAL', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_RANDOM_CODE_LENGTH', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_LINES', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_USE_LANGUAGE_FILE', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_FORMAT');
+
+
+ 	line 73
+ 	replace
+
+ 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort Order', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_SORT_ORDER', '0', 'Sort order of display.', '615', '2', now())");
+
+ 	with
+
+ 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort Order', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_SORT_ORDER', '0', 'Order in which the discount coupon code order total line will be displayed on order confirmation, invoice, etc.', '615', '2', now())");
+
+
+ 	line 78
+ 	replace
+
+ 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Display Format for Order Total Line', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_FORMAT', 'Discount Coupon [code] applied', 'Display format for the discount coupon code order total line.<br><br>Variables:<br>[code]<br>[coupon_desc]<br>[percent_discount]<br>[coupons_min_order]<br>[coupons_number_available]<br>[tax_desc]', '615', '7', now())");
+
+ 	with
+
+    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Use the language file to format display string?', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_USE_LANGUAGE_FILE', 'false', '<b>true</b> - use the format found in language file (used for when you have multiple languages and want the order total line to format display depending on language choice)<br><b>false</b> - use the format and language below', '615', '7', 'tep_cfg_select_option(array(\'true\', \'false\'), ', now())");
+    tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Display Format for Order Total Line', 'MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY_FORMAT', 'Discount Coupon [code] applied', 'Display format for the discount coupon code order total line.<br><br>Variables:<br>[code]<br>[coupon_desc]<br>[percent_discount]<br>[coupons_min_order]<br>[coupons_number_available]<br>[tax_desc]', '615', '8', now())");
+
+
+
+catalog/includes/languages/english/modules/order_total/ot_discount_coupon.php -
+
+	line 14
+	replace
+
+		define('MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY', 'Discount Coupon %s applied');
+
+	with
+
+    /*
+		Use this to define how the order total line will display on the order confirmation, invoice, etc.
+		You can insert variables to have dynamic data display.
+		Variables:
+		[code]
+		[coupon_desc]
+		[percent_discount]
+		[coupons_min_order]
+		[coupons_number_available]
+		[tax_desc]
+		*/
+  	define('MODULE_ORDER_TOTAL_DISCOUNT_COUPON_DISPLAY', 'Discount Coupon [code] applied');
+
+
+
+
+
+This module was created and contributed by Allegro and our highly responsive
+team of PHP and mySQL experts. Visit www.AllegroConsultants.com or call
+(800) 597-0518.

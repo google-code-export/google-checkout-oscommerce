@@ -1,0 +1,58 @@
+Problem:
+Discount coupon does not display in order subtotal during checkout 
+confirmation.
+
+Solution:
+Ensure the discount coupon has a unique sort order.  Set this in 
+Modules > Order Total.
+
+
+
+Problem:
+Warning: include(***file1***) [function.include]: failed to open stream: No 
+such file or directory in ***file2*** on line ***line#***
+
+Solution:
+Ensure that you have uploaded ***file1*** to the correct directory.
+
+
+
+Problem:
+"Discount Coupon" does not appear in the list of Order Total modules under 
+Modules > Order Total in the admin section.
+
+Solution:
+Ensure that you have uploaded the module files contained in the contribution 
+package:
+catalog/includes/modules/order_total/ot_discount_coupon.php
+catalog/includes/languages/english/modules/order_total/ot_discount_coupon.php
+
+
+
+Problem:
+The Discount Applied order total line shows an incorrect discount amount for 
+the order subtotal.  (Only happens on some orders and amount is off by no more 
+than a few cents.)
+
+Solution:
+There isn't really one.  The discount is applied before tax, and OSC allows 
+for multiple tax groups in each order.  This means the discount percentage 
+must be applied to each line item in the order, taking into account the tax 
+rate for that item.  Rounding can then cause the Discount Applied line to be a 
+few cents off of the actual discount percentage for the Sub-Total line.
+
+The discount is not actually taken from the order Sub-Total, even though it 
+may appear as though it is.  If you have configured your store to display 
+prices with taxes or you have configured your Discount Coupon Codes module to 
+display the order Sub-total without the discount applied, then your likelihood 
+of running into this situation is slightly higher.
+
+
+
+Problem:
+Fatal error: Cannot redeclare class discount_coupon in
+***path to shop***/includes/classes/discount_coupon.php on line 14.
+
+Solution:
+Edit the file includes/classes/discount_coupon.php and comment out the line
+require_once( DIR_FS_CATALOG.DIR_WS_CLASSES.'discount_coupon.php' );

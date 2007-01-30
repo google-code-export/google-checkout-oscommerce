@@ -140,8 +140,12 @@
     }
     
     if(isset($notify_comments)) {
+      $send_mail = "false";
+      if($cust_notify == 1) 
+        $send_mail = "true";
       $postargs =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                    <send-buyer-message xmlns=\"http://checkout.google.com/schema/2\" google-order-number=\"". $google_order. "\">
+                   <send-email> " . $send_mail . "</send-email>
                    <message>". strip_tags($notify_comments) . "</message>
                    </send-buyer-message>";    
       fwrite($message_log, sprintf("\r\n%s\n",$postargs));
@@ -185,6 +189,7 @@
             $notify_comments = '';
             if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
               $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
+	            $customer_notified = '1';
             }
             
             // ** GOOGLE CHECKOUT **
@@ -204,7 +209,6 @@
             }
             // ** END GOOGLE CHECKOUT **
 
-            $customer_notified = '1';
           }
                     
           tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");

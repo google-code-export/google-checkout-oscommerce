@@ -147,7 +147,8 @@ for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
 	$gcheck->element('item-description', $products_description);
 	$gcheck->element('unit-price', $products[$i]['final_price'], array ('currency' => 'USD'));
 	$gcheck->element('quantity', $products[$i]['quantity']);
-	$gcheck->element('tax-table-selector', $tt);
+	if(!empty($tt))
+		$gcheck->element('tax-table-selector', $tt);
 	$gcheck->pop('item');
 }
 $gcheck->pop('items');

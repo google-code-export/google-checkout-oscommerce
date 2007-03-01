@@ -342,6 +342,7 @@ if($ship_calculation_mode == 'True') {
 
 	$gcheck->push('merchant-calculations');
 	$gcheck->element('merchant-calculations-url', $url);
+	$gcheck->element('calculation-mode', 'SINGLE');
 	$gcheck->pop('merchant-calculations');
 }
 

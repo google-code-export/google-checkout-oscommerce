@@ -90,8 +90,6 @@ class googlecheckout {
           '92' => 'International Ground Service')),
 			'upsxml' => array(
         'domestic_types' => array(
-          '03' => 'Ground',
-          '12' => '3 Day Select',
           '1DAL' => 'Next Day Air Letter',
           '1DAPI' => 'Next Day Air Intra (Puerto Rico)',
           '1DP' => 'Next Day Air Saver',

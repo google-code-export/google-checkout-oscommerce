@@ -1,10 +1,6 @@
 <?php
-
 /*
   Copyright (C) 2006 Google Inc.
-
-  Bugfixed and improved by Ryan of http://www.ubercart.org
-
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -38,15 +34,15 @@ class googlecheckout {
     global $order;
     global $language;
     
-    require_once(DIR_FS_CATALOG .'includes/languages/'. $language .'/modules/payment/googlecheckout.php');
+    require_once(DIR_FS_CATALOG .'/includes/languages/'. $language .'/modules/payment/googlecheckout.php');
     
     $this->code = 'googlecheckout';
     $this->title = MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
     $this->description = MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_DESCRIPTION;
     $this->sort_order = MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER;
     $this->mode = MODULE_PAYMENT_GOOGLECHECKOUT_STATUS;
-    $this->merchantid = MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID;
-    $this->merchantkey = MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY;
+    $this->merchantid = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID);
+    $this->merchantkey = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY);
     $this->mode = MODULE_PAYMENT_GOOGLECHECKOUT_MODE;
     $this->enabled = (MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') ? true : false;
     $this->continue_url = MODULE_PAYMENT_GOOGLECHECKOUT_CONTINUE_URL;
@@ -92,25 +88,40 @@ class googlecheckout {
           '06' => 'International First',
           '90' => 'International Home Delivery',
           '92' => 'International Ground Service')),
-      // Comment out or remove the above fedex1 section and uncomment/add to the upsxml section below for UPS.
-      // Just so you know, international_types aren't supported since Google Checkout is U.S. only for now.
-      /*'upsxml' => array(
+			'upsxml' => array(
         'domestic_types' => array(
-          'UPS Ground' => 'UPS Ground')),*/
+          '03' => 'Ground',
+          '12' => '3 Day Select',
+          '1DAL' => 'Next Day Air Letter',
+          '1DAPI' => 'Next Day Air Intra (Puerto Rico)',
+          '1DP' => 'Next Day Air Saver',
+          '1DPL' => 'Next Day Air Saver Letter',
+          '2DM' => '2nd Day Air AM',
+          '2DML' => '2nd Day Air AM Letter',
+          '2DA' => '2nd Day Air',
+          '2DAL' => '2nd Day Air Letter',
+          '3DS' => '3 Day Select',
+          'GND' => 'Ground',
+          'GNDCOM' => 'Ground Commercial',
+          'GNDRES' => 'Ground Residential',
+          'STD' => 'Canada Standard',
+          'XPR' => 'Worldwide Express',
+          'XPRL' => 'worldwide Express Letter',
+          'XDM' => 'Worldwide Express Plus',
+          'XDML' => 'Worldwide Express Plus Letter',
+          'XPD' => 'Worldwide Expedited')),
       'zones' => array('domestic_types' => array('zones' => 'Zones Rates')), 
-
       // Flat methods.
       'flat' => array('domestic_types' => array('flat' => GOOGLECHECKOUT_FLAT_RATE_SHIPPING)),
       'item' => array('domestic_types' => array('item' => GOOGLECHECKOUT_ITEM_RATE_SHIPPING)),
-      'table' => array('domestic_types' => array('table' => GOOGLECHECKOUT_TABLE_RATE_SHIPPING)) 
+      'table' => array('domestic_types' => array('table' => 'Table')) 
     );
 
     // Used to change the shipping provider's name (ie. USPS intead if 'United States Postal Service')
 	  $this->mc_shipping_methods_names = array(
       'usps' => 'USPS',
 			'fedex1' => 'FedEx',
-      // Comment out the above line and uncomment the line below for UPS.
-      //'upsxml' => 'UPS',
+      'upsxml' => 'Ups',
       'zones' => 'Zones', 
       'flat' => 'Flat Rate',
       'item' => 'Item',
@@ -162,7 +173,15 @@ class googlecheckout {
     $key = str_pad($key, $blocksize, chr(0x00));
     $ipad = str_repeat(chr(0x36), $blocksize);
     $opad = str_repeat(chr(0x5c), $blocksize);
-    $hmac = pack('H*', $hashfunc(($key ^ $opad) . pack('H*', $hashfunc(($key ^ $ipad) . $data))));
+    $hmac = pack(
+                    'H*', $hashfunc(
+                            ($key^$opad).pack(
+                                    'H*', $hashfunc(
+                                            ($key^$ipad).$data
+                                    )
+                            )
+                    )
+                );
     return $hmac; 
   }
 		
@@ -275,11 +294,14 @@ class googlecheckout {
     $shipping_list = substr($shipping_list, 0, strlen($shipping_list) - 1);
     $shipping_list .= ")";
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable GoogleCheckout Module', 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS', 'True', 'Accepts payments through Google Checkout on your site', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
+	tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('.htaccess Basic Authentication Mode with PHP over CGI?', 'MODULE_PAYMENT_GOOGLECHECKOUT_CGI', 'False', 'This configuration will <b>disable</b> PHP Basic Authentication in the responsehandler.php to validate Google Checkout messages.<br />If setted True you MUST configure your .htaccess files <a href=\"htaccess.php\" target=\"_OUT\">here</a>.', '6', '4', 'tep_cfg_select_option(array(\'False\', \'True\'),',now())");	
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant ID', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID', '', 'Your merchant ID is listed on the \"Integration\" page under the \"Settings\" tab', '6', '1', now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant Key', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY', '', 'Your merchant key is also listed on the \"Integration\" page under the \"Settings\" tab', '6', '2', now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Select Mode of Operation', 'MODULE_PAYMENT_GOOGLECHECKOUT_MODE', 'https://sandbox.google.com/checkout/', 'Select either the Developer\'s Sandbox or live Production environment', '6', '3', 'tep_cfg_select_option(array(\'https://sandbox.google.com/checkout/\', \'https://checkout.google.com/\'),',now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Select Merchant Calculation Mode of Operation', 'MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE', 'https', 'Merchant calculation URL for Sandbox environment. (Checkout production environment always requires HTTPS.)', '6', '4', 'tep_cfg_select_option(array(\'http\', \'https\'),',now())");
+	tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('MultiSocket Shipping Quotes Retrieval', 'MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET', 'False', 'This configuration will enable a multisocket feature to parallelize Shipping Providers quotes. This should reduce the time this call take and avoid GC Merchant Calculation TimeOut. <a href=\"multisock.html\" target=\"_OUT\">More Info</a>.(Alfa)', '6', '4', 'tep_cfg_select_option(array(\'True\', \'False\'),',now())");	
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Default Values for Real Time Shipping Rates', 'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING', '', 'Default values for real time rates in case the webservice call fails.', '6', '5',\"gc_cfg_select_shipping($shipping_list, \",now())");
+    tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Google Analytics Id', 'MODULE_PAYMENT_GOOGLECHECKOUT_ANALYTICS', 'NONE', 'Do you want to integrate the module with Google Analytics? Add your GA Id (UA-XXXXXX-X), NONE to disable. <br/> More info <a href=\'http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html\'>here</a>', '6', '1', now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '6', '0', now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Continue shopping URL.', 'MODULE_PAYMENT_GOOGLECHECKOUT_CONTINUE_URL', 'index.php', 'Specify the page customers will be directed to if they choose to continue shopping after checkout.', '6', '8', now())");
     tep_db_query("create table if not exists ". $this->table_name ." (customers_id int(11), buyer_id bigint(20))");
@@ -295,14 +317,17 @@ class googlecheckout {
 
   function keys() {
     return array('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS',
+    					   'MODULE_PAYMENT_GOOGLECHECKOUT_CGI', 
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_MODE',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE',
+					       'MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING',
+					       'MODULE_PAYMENT_GOOGLECHECKOUT_ANALYTICS',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER',
                  'MODULE_PAYMENT_GOOGLECHECKOUT_CONTINUE_URL');
   }
 }
-
+// ** END GOOGLE CHECKOUT **
 ?>

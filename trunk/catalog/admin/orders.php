@@ -30,10 +30,10 @@
     $session = curl_init($url);
 
     $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
-    $header_string_2 = "Content-Type: application/xml";	
-    $header_string_3 = "Accept: application/xml";
+    $header_string_2 = "Content-Type: application/xml;charset=UTF-8";	
+    $header_string_3 = "Accept: application/xml;charset=UTF-8";
 	
-    fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
+//    fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
     // Set the POST options.
     curl_setopt($session, CURLOPT_POST, true);
     curl_setopt($session, CURLOPT_HTTPHEADER, array($header_string_1, $header_string_2, $header_string_3));

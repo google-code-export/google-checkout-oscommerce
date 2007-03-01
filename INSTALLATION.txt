@@ -1,6 +1,29 @@
-HOW TO INSTALL GOOGLE CHECKOUT MODULE FOR OSCOMMERCE
+HOW TO INSTALL GOOGLE CHECKOUT MODULE FOR OSCOMMERCE (v1.2)
 
 If you haven't read the README file yet, please read it first.
+
+UPDATE from v1.1.*
+================
+
+New Files:
+/catalog/admin/images/*
+/catalog/admin/includes/htaccess.php
+/catalog/admin/includes/multisock.html
+/catalog/googlecheckout/multisocket.php
+
+Modified Files:
+  1. /catalog/admin/includes/functions/general.php
+  2. /catalog/admin/orders.php
+  3. /catalog/googlecheckout/gcheckout.php
+  4. /catalog/googlecheckout/gcxmlbuilder.php
+  5. /catalog/googlecheckout/googleresult.php
+  6. /catalog/googlecheckout/responsehandler.php
+  7. /catalog/includes/modules/payment/googlecheckout.php
+
+IMPORTANT: Uninstall and re install the module. If not, many new configuration will not be enabled.
+
+FRESH INSTALL
+=============
 
 There are two installation options you need to choose from, so please read carefully to determine which option is right for you.
 
@@ -14,8 +37,8 @@ If you have the basic osCommerce installation without any other modules or add-o
    2. /catalog/googlecheckout/responsehandler.php
    3. /catalog/googlecheckout/response_error.log
    4. /catalog/googlecheckout/response_message.log
-   5. /catalog/googlecheckout/xmlbuilder.php
-   6. /catalog/googlecheckout/xmlparser.php
+   5. /catalog/googlecheckout/gcxmlbuilder.php
+   6. /catalog/googlecheckout/gcxmlparser.php
    7. /catalog/googlecheckout/googlemerchantcalculations.php
    8. /catalog/googlecheckout/googleresult.php
    9. /catalog/includes/languages/english/modules/payment/googlecheckout.php
@@ -28,9 +51,12 @@ If you have the basic osCommerce installation without any other modules or add-o
   16. /catalog/checkout_payment.php
   17. /catalog/login.php
   18. /catalog/shopping_cart.php
+  19. /catalog/admin/images/*
+  20. /catalog/admin/includes/htaccess.php
+  21. /catalog/admin/includes/multisock.html
+  22. /catalog/googlecheckout/multisocket.php
 
 * Note: If you applied a patch or manually modified the files to disable register_globals, go for Option B.
-
 
 OPTION B:
 =========
@@ -53,6 +79,10 @@ If you have other modules installed on your osCommerce installation, replacing y
   10. /catalog/includes/languages/espanol/modules/payment/googlecheckout.php
   11. /catalog/includes/languages/german/modules/payment/googlecheckout.php
   12. /catalog/includes/modules/payment/googlecheckout.php
+  13. /catalog/admin/images/*
+  14. /catalog/admin/includes/htaccess.php
+  15. /catalog/admin/includes/multisock.html
+  16. /catalog/googlecheckout/multisocket.php
 
  II. Manually edit the following files from your system as instructed below:
  ---------------------------------------------------------------------------
@@ -280,8 +310,8 @@ If you have other modules installed on your osCommerce installation, replacing y
     $session = curl_init($url);
 
     $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
-    $header_string_2 = "Content-Type: application/xml";	
-    $header_string_3 = "Accept: application/xml";
+    $header_string_2 = "Content-Type: application/xml;charset=UTF-8";	
+    $header_string_3 = "Accept: application/xml;charset=UTF-8";
 	
     fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
     // Set the POST options.

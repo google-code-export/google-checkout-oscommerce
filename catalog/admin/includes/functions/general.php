@@ -871,19 +871,20 @@
       if ( $select_array[$i]['status'] && !in_array($select_array[$i]['code'], $googlepayment->shipping_support) ) {
 	      $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
 	      $string .= "<br><b>" . $select_array[$i]['title'] . "</b>"."\n";
-        if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'])) {
-	        foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
-  		      $string .= '<br>';
+	      if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'])) {
 		      
-	  	      // default value 
-		        $value = gc_compare($select_array[$i]['code'] . $method, $key_values);
-  			    $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
-		        $string .= '>';
-			      $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
-	      	  $string .= '>'."\n";
-	      	  $string .= $method_name;
-  	      }
-        }
+		      foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
+			      $string .= '<br>';
+			      
+			      // default value 
+			      $value = gc_compare($select_array[$i]['code'] . $method, $key_values);
+				  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
+			      $string .= '>';
+				  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
+		      	  $string .= '>'."\n";
+		      	  $string .= $method_name;
+		      }
+	      }
       }
     }
     return $string;

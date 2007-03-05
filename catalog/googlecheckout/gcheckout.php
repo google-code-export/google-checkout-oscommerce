@@ -351,7 +351,7 @@ $gcheck->push('tax-tables');
 $gcheck->push('default-tax-table');
 $gcheck->push('tax-rules');
 
-if (sizeof($tax_class_unique) == 1 && sizeof($options) == sizeof($tax_class)) {
+if (sizeof($tax_class_unique) == 1 && sizeof($module_info) == sizeof($tax_class)) {
   $tax_rates_result = tep_db_query("select countries_name, zone_code, tax_rate from ". TABLE_TAX_RATES
                                   ." as tr, ". TABLE_ZONES_TO_GEO_ZONES ." as ztgz, ". TABLE_ZONES
                                   ." as z, ". TABLE_COUNTRIES ." as c where tr.tax_class_id = "
@@ -386,7 +386,7 @@ else {
 $gcheck->pop('tax-rules');
 $gcheck->pop('default-tax-table');
 
-if (sizeof($tax_class_unique) > 1 || (sizeof($tax_class_unique) == 1 && sizeof($options) != sizeof($tax_class))) {
+if (sizeof($tax_class_unique) > 1 || (sizeof($tax_class_unique) == 1 && sizeof($module_info) != sizeof($tax_class))) {
 	$googlepayment->variant = "disabled";
 	$current_checkout_url = gc_selfURL();
 }

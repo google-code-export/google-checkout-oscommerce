@@ -468,7 +468,7 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                                 'customers_default_address_id' => 0,
                                 'customers_telephone' => gc_makeSqlString($data[$root]['buyer-billing-address']['phone']['VALUE']),
                                 'customers_fax' => gc_makeSqlString($data[$root]['buyer-shipping-address']['fax']['VALUE']),
-                                'customers_password' => tep_encrypt_password(makeSqlString($data[$root]['buyer-id']['VALUE'])), 
+                                'customers_password' => tep_encrypt_password(gc_makeSqlString($data[$root]['buyer-id']['VALUE'])), 
                                 'customers_newsletter' => '');
         tep_db_perform(TABLE_CUSTOMERS, $sql_data_array);
         $cust_id = tep_db_insert_id();

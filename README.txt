@@ -249,3 +249,7 @@ CHANGE LOG
            - Add user and password for Google Checkout buyers
            - Items retrieved from Merchant-private-item-data instead of session.
            - Many bug fixes
+
+03/05/2007 v1.2 RC3 (ropu)
+   - Fix gray button when Tax Class selected bug (Thx BlessIsaacola)
+           

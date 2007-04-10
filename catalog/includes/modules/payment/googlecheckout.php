@@ -105,29 +105,19 @@ class googlecheckout {
                         'upsxml' => array(
                                     'domestic_types' =>
                                       array(
-                                          '1DAL' => 'Next Day Air Letter',
-                                          '1DAPI' => 'Next Day Air Intra (Puerto Rico)',
-                                          '1DP' => 'Next Day Air Saver',
-                                          '1DPL' => 'Next Day Air Saver Letter',
-                                          '2DM' => '2nd Day Air AM',
-                                          '2DML' => '2nd Day Air AM Letter',
-                                          '2DA' => '2nd Day Air',
-                                          '2DAL' => '2nd Day Air Letter',
-                                          '3DS' => '3 Day Select',
-                                          'GND' => 'Ground',
-                                          'GNDCOM' => 'Ground Commercial',
-                                          'GNDRES' => 'Ground Residential',
-                                          'STD' => 'Canada Standard',
-                                          'XPR' => 'Worldwide Express',
-                                          'XPRL' => 'worldwide Express Letter',
-                                          'XDM' => 'Worldwide Express Plus',
-                                          'XDML' => 'Worldwide Express Plus Letter',
-                                          'XPD' => 'Worldwide Expedited'
+                                          'UPS Ground' => 'UPS Ground, ',
+                                          'UPS 3 Day Select' => 'UPS 3 Day Select, ',
+                                          'UPS 2nd Day Air A.M.' => 'UPS 2nd Day Air A.M., ',
+                                          'UPS 2nd Day Air' => 'UPS 2nd Day Air, ',
+                                          'UPS Next Day Air Saver' => 'UPS Next Day Air Saver, ',
+                                          'UPS Next Day Air Early A.M.' => 'UPS Next Day Air Early A.M., ',
+                                          'UPS Next Day Air' => 'UPS Next Day Air, '
                                            ),
 
                                     'international_types' =>
                                       array(
-
+                                          'UPS Worldwide Expedited' => 'UPS Worldwide Expedited, 2007-04-18',
+                                          'UPS Saver' => 'UPS Saver'
                                            ),
                                         ),
                         'zones' => array(

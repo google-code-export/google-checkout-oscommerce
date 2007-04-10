@@ -81,6 +81,7 @@
     // If status update is from Pending -> Processing on the Admin UI
     // this invokes the processing-order and charge-order commands
     // 1->Pending, 2-> Processing
+    global $carrier_select, $tracking_number;
 
       define('API_CALLBACK_MESSAGE_LOG', DIR_FS_CATALOG . "/googlecheckout/response_message.log");
       define('API_CALLBACK_ERROR_LOG', DIR_FS_CATALOG. "/googlecheckout/response_error.log");
@@ -101,7 +102,7 @@
       if($google_order != '') {					
         $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                     <charge-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\">
-                    <amount currency=\"USD\">" . $amt . "</amount>
+                    <amount currency=\"" . DEFAULT_CURRENCY . "\">" . $amt . "</amount>
                     </charge-order>";
         fwrite($message_log, sprintf("\r\n%s\n",$postargs));
         send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
@@ -125,8 +126,16 @@
       if($google_order != '') {					
         $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                      <deliver-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"> 
-                     <send-email> " . $send_mail . "</send-email>
-                     </deliver-order> ";
+                     	 <send-email> " . $send_mail . "</send-email>";
+        if(isset($carrier_select) &&  ($carrier_select != 'select') && isset($tracking_number) && !empty($tracking_number)) {
+					$postargs .=	"<tracking-data>
+									        <carrier>" . $carrier_select . "</carrier>
+									        <tracking-number>" . $tracking_number . "</tracking-number>
+									    	 </tracking-data>";
+					$comments = "Shipping Tracking Data:\n Carrier: " . $carrier_select . "\n Tracking Number: " . $tracking_number . "";
+					tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($cust_notify) . "', '" . tep_db_input($comments)  . "')");
+        }
+				$postargs .=  "</deliver-order> ";
         fwrite($message_log, sprintf("\r\n%s\n",$postargs));
         send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
 	              $postargs, $message_log); 
@@ -471,6 +480,62 @@
               </tr>
             </table></td>
             <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+<!-- googlecheckout Tracking Number -->
+<?php 
+// orders_status == STATE_PROCESSING -> Processing before delivery
+	if($order->info['payment_method'] == 'Google Checkout' && $order->info['orders_status'] == STATE_PROCESSING){
+			echo '<td><table border="0" cellpadding="3" cellspacing="0" width="100%">   
+				<tbody>
+					<tr>  
+						<td style="border-top: 2px solid rgb(255, 255, 255); border-right: 2px solid rgb(255, 255, 255);" nowrap="nowrap" colspan="2">
+								<b>Shipping Information</b>  
+						</td>  
+					</tr>
+					<tr>  
+						<td nowrap="nowrap" valign="middle" width="1%">  
+							<font size="2">  
+								<b>Tracking:</b>  
+							</font>  
+						</td>  
+						<td style="border-right: 2px solid rgb(255, 255, 255); border-bottom: 2px solid rgb(255, 255, 255);" nowrap="nowrap">   
+							<input name="tracking_number" style="color: rgb(0, 0, 0);" id="trackingBox" size="20" type="text">   
+						</td>  
+					</tr>  
+					<tr>  
+						<td nowrap="nowrap" valign="middle" width="1%">  
+							<font size="2">  
+								<b>Carrier:</b>  
+							</font>  
+						</td>  
+						<td style="border-right: 2px solid rgb(255, 255, 255);" nowrap="nowrap">  
+							<select name="carrier_select" style="color: rgb(0, 0, 0);" id="carrierSelect">  
+								<option value="select" selected="selected">
+								 Select ...  
+								</option>   
+								<option value="USPS">
+								 USPS  
+								</option>   
+								<option value="DHL">
+								 DHL  
+								</option>   
+								<option value="UPS">
+								 UPS  
+								</option>   
+								<option value="Other">
+								 Other  
+								</option>   
+								<option value="FedEx">
+								 FedEx  
+								</option>   
+							</select>  
+						</td>  
+					</tr>     
+				</tbody> 
+			</table></td>';
+	  
+	}
+?>
+<!-- end googlecheckout Tracking Number -->
           </tr>
         </table></td>
       </form></tr>

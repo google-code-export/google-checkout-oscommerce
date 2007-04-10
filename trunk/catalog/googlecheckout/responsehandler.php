@@ -1,6 +1,6 @@
 <?php
 /*
-  Copyright (C) 2006 Google Inc.
+  Copyright (C) 2007 Google Inc.
 
   Bugfixed and improved by Ryan of http://www.ubercart.org
 
@@ -19,7 +19,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-/* **GOOGLE CHECKOUT ** v1.2
+/* **GOOGLE CHECKOUT ** v1.3
  * Script invoked for any callback notfications from the Checkout server
  * Can be used to process new order notifications, order state changes and risk notifications
  */
@@ -28,7 +28,11 @@
 // 2. Parse the http header to verify the source
 // 3. Parse the XML message
 // 4. Trasfer control to appropriate function
-error_reporting(0);
+error_reporting(E_ALL);
+
+// temporal disable of multisocket 
+  define('MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET', 'False');
+
 
 chdir('./..');
 $curr_dir = getcwd();
@@ -176,7 +180,7 @@ switch ($root) {
     $order->info['shipping_method'] = $shipping;
     $order->info['shipping_cost'] = $ship_cost;
     $order->info['tax_groups']['tax'] = $tax_amt ;  
-    $order->info['currency'] = 'USD';
+    $order->info['currency'] = $currency;
     $order->info['currency_value'] = 1;
     require(DIR_WS_CLASSES . 'order_total.php');
     $order_total_modules = new order_total;
@@ -255,7 +259,7 @@ function process_checkout_redirect($root, $data, $message_log) {
 }
 
 function process_merchant_calculation_callback_single($root, $data, $message_log) {
-  global $cart, $googlepayment, $order, $total_weight, $total_count;
+  global $cart, $googlepayment, $order, $total_weight, $total_count, $currency;
 
 //  $debug = fopen(API_SENT_MESSAGE_LOG, 'a');
 //  fwrite($debug, 'Message received '. date("D M j G:i:s T Y") ."\n\n");
@@ -266,6 +270,8 @@ function process_merchant_calculation_callback_single($root, $data, $message_log
 
 	require(DIR_WS_CLASSES .'order.php');
 	$order = new order;
+	require_once(DIR_WS_CLASSES .'currencies.php');
+	$currencies = new currencies();
 
   // Register a random ID in the session to check throughout the checkout procedure
   // against alterations in the shopping cart contents.
@@ -284,7 +290,6 @@ function process_merchant_calculation_callback_single($root, $data, $message_log
   $addresses = gc_get_arr_result($data[$root]['calculate']['addresses']['anonymous-address']);
 	// Get all the enabled shipping methods.
   require(DIR_WS_CLASSES .'shipping.php');
-	$shipping_modules = new shipping();
 	
   // Required for some shipping methods (ie. USPS).
   require_once('includes/classes/http_client.php');
@@ -310,6 +315,8 @@ function process_merchant_calculation_callback_single($root, $data, $message_log
 
     $order->delivery['city'] = $city;
     $order->delivery['postcode'] = $postal_code;
+//    print_r($order);
+		$shipping_modules = new shipping();
 	
     // Loop through each shipping method to see if merchant-calculated shipping support is to be provided.
 			if(isset($data[$root]['calculate']['shipping'])) {
@@ -380,27 +387,26 @@ function process_merchant_calculation_callback_single($root, $data, $message_log
 //	            print_r($quotes);
 	            //if there is a problem with the method, i mark it as non-shippable
 	            if( isset($quotes[$quote_povider]['error']) || !isset($quotes[$quote_povider]['methods'][$quote_method]['cost'])) {
-	            	$price = "9999.99";
+	            	$price = "9999.09";
 	            	$shippable = "false";
 	            }
 	            else {
 	            	$price = $quotes[$quote_povider]['methods'][$quote_method]['cost'];
 	            	$shippable = "true";
 	            }
-	            
 	            $merchant_result = new GoogleResult($curr_id);
-	            $merchant_result->SetShippingDetails($name, $price, "USD", $shippable);
+	            $merchant_result->SetShippingDetails($name,  $currencies->get_value($currency) * $price, $currency, $shippable);
 	
 	            if($data[$root]['calculate']['tax']['VALUE'] == "true") {
 	              //Compute tax for this address id and shipping type
 	              $amount = 15; // Modify this to the actual tax value
-	              $merchant_result->SetTaxDetails($amount, "USD");
+	              $merchant_result->SetTaxDetails($currencies->get_value($currency) * $amount, $currency);
 	            }
 	
 	            $codes = gc_get_arr_result($data[$root]['calculate']['merchant-code-strings']['merchant-code-string']);
 	            foreach($codes as $curr_code) {
 	              //Update this data as required to set whether the coupon is valid, the code and the amount
-	              $coupons = new GoogleCoupons("true", $curr_code['code'], 5, "USD", "test2");
+	              $coupons = new GoogleCoupons("true", $curr_code['code'], $currencies->get_value($currency) * 5, $currency, "test2");
 	              $merchant_result->AddCoupons($coupons);
 	            }
 	            $merchant_calc->AddResult($merchant_result);
@@ -411,12 +417,12 @@ function process_merchant_calculation_callback_single($root, $data, $message_log
       if($data[$root]['calculate']['tax']['VALUE'] == 'true') {
         // Compute tax for this shipping type and address ID.
         $amount = 15; // Modify this to the actual tax value
-        $merchant_result->SetTaxDetails($amount, 'USD');
+        $merchant_result->SetTaxDetails($currencies->get_value($currency) * $amount, $currency);
       }
       $codes = gc_get_arr_result($data[$root]['calculate']['merchant-code-strings']['merchant-code-string']);
       foreach($codes as $curr_code) {
         // Update this data as required to set whether the coupon is valid, the code, and the amount.
-        $coupons = new GoogleCoupons("true", $curr_code['code'], 5, "USD", "test2");
+        $coupons = new GoogleCoupons("true", $curr_code['code'], $currencies->get_value($currency) * 5, $currency, "test2");
         $merchant_result->AddCoupons($coupons);
 		  }
 		  $merchant_calc->AddResult($merchant_result);
@@ -440,6 +446,11 @@ function process_merchant_calculation_callback_single($root, $data, $message_log
  */
 function process_new_order_notification($root, $data, $googlepayment, $cart, $customer_id, $languages_id, $message_log) {
   // If buyer has logged in, use their customer ID for the order.
+  global $currency;
+  require_once(DIR_WS_CLASSES .'currencies.php');
+	$currencies = new currencies();
+  
+  
   if(isset($customer_id) && $customer_id != '') {
     $cust_id = $customer_id;
     $oper = 'update';
@@ -447,7 +458,7 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
   }
   else {
     // Else check if buyer is a new user from Google Checkout
-    $customer_info = tep_db_fetch_array(tep_db_query("select customers_id from ". $googlepayment->table_name ." where buyer_id = ". gc_makeSqlString($data[$root]['buyer-id']['VALUE'])));
+    $customer_info = tep_db_fetch_array(tep_db_query("select customers_id from ". $googlepayment->table_name ." where buyer_id = '". gc_makeSqlString($data[$root]['buyer-id']['VALUE']) ."'") );
     if ($customer_info['customers_id'] == '')  {
       // If the user does not exist in google_checkout, see if we can find an existing user account.
       $customer_info = tep_db_fetch_array(tep_db_query("select customers_id from ". TABLE_CUSTOMERS ." where customers_email_address = '". gc_makeSqlString($data[$root]['buyer-shipping-address']['email']['VALUE']) ."'"));
@@ -555,7 +566,7 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                           'cc_expires' => '', 
                           'date_purchased' => gc_makeSqlString($data[$root]['timestamp']['VALUE']), 
                           'orders_status' => 1, 
-                          'currency' => 'USD',
+                          'currency' => $currency,
                           'currency_value' => 1);
   tep_db_perform(TABLE_ORDERS, $sql_data_array);
 
@@ -578,8 +589,8 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                             'products_id' => gc_makeSqlInteger($products[$i]['id']),
                             'products_model' => gc_makeSqlString($products[$i]['model']),
                             'products_name' => gc_makeSqlString($products[$i]['name']),
-                            'products_price' => gc_makeSqlFloat($products[$i]['price']),
-                            'final_price' => gc_makeSqlFloat($products[$i]['final_price']),
+                            'products_price' => gc_makeSqlFloat( $currencies->get_value($currency) * $products[$i]['price']),
+                            'final_price' => gc_makeSqlFloat( $currencies->get_value($currency) * $products[$i]['final_price']),
                             'products_tax' => gc_makeSqlFloat($products_tax), 
                             'products_quantity' => gc_makeSqlInteger($products[$i]['quantity'])); 
     tep_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);	
@@ -600,7 +611,7 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                                 'orders_products_id' => $orders_products_id,
                                 'products_options' => gc_makeSqlString($attributes['products_options_name']),
                                 'products_options_values' => gc_makeSqlString($attributes['products_options_values_name']),
-                                'options_values_price' => gc_makeSqlFloat($attributes['options_values_price']),
+                                'options_values_price' => gc_makeSqlFloat( $currencies->get_value($currency) * $attributes['options_values_price']),
                                 'price_prefix' => gc_makeSqlString($attributes['price_prefix'])); 
         tep_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);	
       }		
@@ -724,7 +735,7 @@ function process_order_state_change_notification($root, $data, $message_log, $go
       case 'DELIVERED':
 				$update = true;
 				$orders_status_id = 3;
-				$comments = 'Time: '. $data[$root]['timestamp']['VALUE'] ."\nNew state: ". $new_fulfillment_order ."\nOrder was Delivered.\n";
+				$comments = 'Time: '. $data[$root]['timestamp']['VALUE'] ."\nNew state: ". $new_fulfillment_order ."\nOrder was shipped.\n";
 				$customer_notified = 1;
         break;
 
@@ -804,7 +815,8 @@ function gc_send_ack() {
 
 //Functions to prevent SQL injection attacks
 function gc_makeSqlString($str) {
-  return addcslashes(stripcslashes($str), "'\"\\\0..\37!@\@\177..\377");
+  return tep_db_input($str);
+//  return addcslashes(stripcslashes($str), "'\"\\\0..\37!@\@\177..\377");
 }
 
 function gc_makeSqlInteger($val) {

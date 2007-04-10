@@ -105,18 +105,18 @@ class googlecheckout {
                         'upsxml' => array(
                                     'domestic_types' =>
                                       array(
-                                          'UPS Ground' => 'UPS Ground, ',
-                                          'UPS 3 Day Select' => 'UPS 3 Day Select, ',
-                                          'UPS 2nd Day Air A.M.' => 'UPS 2nd Day Air A.M., ',
-                                          'UPS 2nd Day Air' => 'UPS 2nd Day Air, ',
-                                          'UPS Next Day Air Saver' => 'UPS Next Day Air Saver, ',
-                                          'UPS Next Day Air Early A.M.' => 'UPS Next Day Air Early A.M., ',
-                                          'UPS Next Day Air' => 'UPS Next Day Air, '
+                                          'UPS Ground' => 'UPS Ground',
+                                          'UPS 3 Day Select' => 'UPS 3 Day Select',
+                                          'UPS 2nd Day Air A.M.' => 'UPS 2nd Day Air A.M.',
+                                          'UPS 2nd Day Air' => 'UPS 2nd Day Air',
+                                          'UPS Next Day Air Saver' => 'UPS Next Day Air Saver',
+                                          'UPS Next Day Air Early A.M.' => 'UPS Next Day Air Early A.M.',
+                                          'UPS Next Day Air' => 'UPS Next Day Air'
                                            ),
 
                                     'international_types' =>
                                       array(
-                                          'UPS Worldwide Expedited' => 'UPS Worldwide Expedited, 2007-04-18',
+                                          'UPS Worldwide Expedited' => 'UPS Worldwide Expedited',
                                           'UPS Saver' => 'UPS Saver'
                                            ),
                                         ),

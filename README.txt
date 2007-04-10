@@ -1,4 +1,4 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.2 RC1 - 02/26/2007
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.3 RC1 - 04/10/2007
 
 INTRODUCTION
 ============
@@ -42,9 +42,10 @@ of the fields you can update:
 1. Enable/Disable: Enable this to use Google Checkout for your site.
 2. .htaccess Basic Authentication Mode with PHP over CGI? If your site is 
    installed on a PHP CGI you must disable Basic Authentication over PHP. 
-   To avoid spoofed messages reaching responsehandler.php, set the .htaccess file 
-   with the script linked (http://your-site/catalog/admin/includes/htaccess.php). 
-   Set permission 777 for http://your-site/catalog/googlecheckout/ before running 
+   To avoid spoofed messages (only if this feature is enabled) reaching 
+   responsehandler.php, set the .htaccess file with the script linked 
+   (http://your-site/admin/htaccess.php). 
+   Set permission 777 for http://your-site/googlecheckout/ before running 
    the script. Remember to turn back permissions after creating the files.
 3. Merchant ID and Merchant Key:(Mandatory) If any of these are not set and the 
    module is enabled, a disabled (gray) Checkout button appears on the Checkout 
@@ -59,26 +60,29 @@ of the fields you can update:
 5. Merchant Calculation Mode of Operation: Sets Merchant calculation URL for 
    Sandbox environment. Could be HTTP or HTTPS. (Checkout production environment 
    always requires HTTPS.)
-6. MultiSocket Shipping Quotes Retrieval: This configuration will enable a 
-   multisocket feature to parallelize Shipping Providers quotes. This should 
-   reduce the time this call take and avoid GC Merchant Calculation TimeOut. Is 
-   still in development status, this feature could use many hardware resources,
-   because uses many HTTP connections to split Shipping Providers Web Services 
-   calls. Is recommended to test the integration with the 
-   responsehandler_test.php file.
-   http://google-checkout-oscommerce.googlecode.com/files/reponsehandler_test.php
-   More Info http://your-site/catalog/admin/includes/multisock.html
+6. Disable Google Checkout for Virtual Goods?: This configuration is enabled and
+    there is any virtual good in the cart the Google Checkout button will be
+    shown disabled.
+    (double check http://checkout.google.com/seller/policies.html#4)
+    
+7. Allow US PO BOX shipping. Setted to false, you won't ship to any PO address
+    in the US.
 
-7. Default Values for Real Time Shipping Rates: Set your default values for 
+8. Default Values for Real Time Shipping Rates: Set your default values for 
    all merchant calculated shipping rates. This values will be used if for any 
    reason Google Checkout cannot reach your API callback to calculate the 
    shipping price.
 
-8. Google Analytics Id: Add google analytics to your e-commerce. Now there is a 
+9. Rounding Policy Mode and Rounding Policy Rule: Determines how Google Checkout
+    will do rounding in prices.
+    More info:
+    http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html
+
+10. Google Analytics Id: Add google analytics to your e-commerce. Now there is a 
    feature in GA to integrate easily with any e-commerce with GoogleCheckout.
    More info: See below "Enabling E-Commerce Reporting for Google Analytics".
    
-9. Continue shopping URL: The URL customers will be redirected to if they 
+11. Continue shopping URL: The URL customers will be redirected to if they 
    follow the link back to your site after checkout.
 
 Your Google Checkout setup page is correct if, upon viewing it, a non-disabled 
@@ -114,6 +118,10 @@ parameter. If you want to disable one or more methods, just comment them out.
 Be aware that if you mix flat rate and real time rates, both will be taken as 
 merchant-calculated-shipping. 
 
+Script to create new shipping methods
+http://demo.globant.com/~brovagnati/tools -> Shipping Method Generator
+
+
 
 TRACKING USERS AND ORDERS
 =========================
@@ -132,6 +140,10 @@ will be sent out to the Checkout server for order processing.
 | Original State | New State  | Action                         |  Customer Notification    |
 | PENDING        | PROCESSING | charging the order             |  Processing order message |
 | PROCESSING     | DELIVERED  | marking the order for delivery |  Shipped order message    |
+
+You can add a Tracking Number in the state change from PROCESSING to DELIVERED. 
+A text field and a combo with the shipping providers will be show when the order
+is in the PROCESSING state.
 
 Any comments added during state change will be sent to the buyer account page if
 you have selected the Notify Customer option.
@@ -167,6 +179,9 @@ MOST COMMON MISTAKES
    In Sandbox, HTTPS is not required.
    In Production mode, HTTPS is required.
    Set the correct option in the Google Checkout Admin UI
+   Links for supported SSL certificates:
+    http://www.google.com/checkout/ssl-certificates
+    http://checkout.google.com/support/sell/bin/answer.py?answer=57856
 3. Make sure you are using the correct combination of Merchant ID and 
    Merchant Key. Remember that Sandbox and Production Mode have different ones.
   
@@ -193,6 +208,9 @@ TROUBLE SHOOTING
     failed: sun.security.provider.certpath.SunCertPathBuilderE xception: unable 
     to find valid certification path to requested target
    Solution: Your SSL certificate is not accepted by Google Checkout.
+   Links for supported SSL certificates:
+    http://www.google.com/checkout/ssl-certificates
+    http://checkout.google.com/support/sell/bin/answer.py?answer=57856
 6. Problem: <error-message>Bad Signature on Cart</error-message>
    Solution: Incorrect Merchant key.
 7. Problem: (/public_html/googlecheckout/response_error.log) 
@@ -201,6 +219,17 @@ TROUBLE SHOOTING
     configuration (Thx dawnmariegifts, beta tester)
    Side effects: You'll see spiders as active users.
    Solution 2 (Recommended): Remove any string like 'jakarta' in the includes/spider.txt
+8. Problem:
+    Warning: main(admin/includes/configure.php) [function.main]: failed to open 
+     stream: No such file or directory in /public_html/googlecheckout/gcheckout.php
+     on line 34
+		Fatal error: main() [function.require]: Failed opening required 
+     'admin/includes/configure.php' (include_path='.:/usr/lib/php:/usr/local/lib/php')
+     in /public_html/googlecheckout/gcheckout.php on line 33
+   Solution:
+			Change googlecheckout/gcheckout.php Line 34 'admin' for the modified admin
+			 directory
+      require_once('admin/includes/configure.php');      
     
 KNOWN BUGS - (Report bugs at http://forums.oscommerce.com/index.php?showtopic=229637)
 ==========
@@ -252,4 +281,17 @@ CHANGE LOG
 
 03/05/2007 v1.2 RC3 (ropu)
    - Fix gray button when Tax Class selected bug (Thx BlessIsaacola)
-           
+   
+04/10/2007 v1.3RC1 (ropu)
+   - Add tracking data to the Admin UI Orders
+   - Fixed SSL issue with Google Analytics feature
+   - International Shipping Features
+   - Restricting Shipping Options for Post Office (P.O.) Box Addresses feature
+   - International Tax Features
+   - Selecting a Rounding Policy for Tax Calculations
+   - Fixed Tax for zones
+   - Fixed Tax for products
+   - Added support for All Areas Zones
+   - Add a configuration to disable Google Checkout Button when are virtual good in the cart
+   		(double check http://checkout.google.com/seller/policies.html#4)
+   - Disable multisocket Option :(   

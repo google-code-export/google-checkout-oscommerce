@@ -871,20 +871,27 @@
       if ( $select_array[$i]['status'] && !in_array($select_array[$i]['code'], $googlepayment->shipping_support) ) {
 	      $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
 	      $string .= "<br><b>" . $select_array[$i]['title'] . "</b>"."\n";
-	      if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'])) {
-		      
-		      foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
-			      $string .= '<br>';
-			      
-			      // default value 
-			      $value = gc_compare($select_array[$i]['code'] . $method, $key_values);
-				  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
-			      $string .= '>';
-				  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
-		      	  $string .= '>'."\n";
-		      	  $string .= $method_name;
-		      }
-	      }
+	      if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']])) {
+          foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']] as $type => $methods) {
+            if (is_array($methods) && !empty($methods)) {
+              $string .= '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>'. $type .'</b>';            
+  		        foreach($methods as $method => $method_name) {
+    			      $string .= '<br>';
+    			      
+    			      // default value 
+    			      $value = gc_compare($select_array[$i]['code'] . $method. $type , $key_values);
+    				  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . $type . '\', \'hid_' . $select_array[$i]['code'] . $method . $type . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . $type . '\' , \'hid_' . $select_array[$i]['code'] . $method . $type .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
+    			      $string .= '>';
+    				  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . $type . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . $type . '_VD:' . $value . '"';		  
+    		      	  $string .= '>'."\n";
+    		      	  $string .= $method_name;
+    		      }
+            }
+  	      }
+        }
+        else {
+          $string .= $select_array[$i]['code'] ." not configured!<br />";
+        }
       }
     }
     return $string;

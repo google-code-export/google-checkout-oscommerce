@@ -7,8 +7,8 @@ UPDATE from v1.1.*
 
 New Files:
 /catalog/admin/images/*
-/catalog/admin/includes/htaccess.php
-/catalog/admin/includes/multisock.html
+/catalog/admin/htaccess.php
+/catalog/admin/multisock.html
 /catalog/googlecheckout/multisocket.php
 
 Modified Files:
@@ -215,20 +215,28 @@ If you have other modules installed on your osCommerce installation, replacing y
     
     foreach($select_array as $i => $value){
       if ( $select_array[$i]['status'] && !in_array($select_array[$i]['code'], $googlepayment->shipping_support) ) {
-        $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
-        $string .= "<br><b>" . $select_array[$i]['title'] . "</b>"."\n";
-        if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'])) {
-          foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']]['domestic_types'] as $method => $method_name) {
-            $string .= '<br>';
-
-            // default value 
-            $value = gc_compare($select_array[$i]['code'] . $method, $key_values);
-            $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
-            $string .= '>';
-            $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
-            $string .= '>'."\n";
-            $string .= $method_name;
-          }
+	      $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
+	      $string .= "<br><b>" . $select_array[$i]['title'] . "</b>"."\n";
+	      if (is_array($googlepayment->mc_shipping_methods[$select_array[$i]['code']])) {
+          foreach($googlepayment->mc_shipping_methods[$select_array[$i]['code']] as $type => $methods) {
+            if (is_array($methods) && !empty($methods)) {
+              $string .= $type . '<br>';            
+  		        foreach($methods as $method => $method_name) {
+    			      $string .= '<br>';
+    			      
+    			      // default value 
+    			      $value = gc_compare($select_array[$i]['code'] . $method, $key_values);
+    				  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . '\', \'hid_' . $select_array[$i]['code'] . $method . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . '\' , \'hid_' . $select_array[$i]['code'] . $method .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
+    			      $string .= '>';
+    				  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . '_VD:' . $value . '"';		  
+    		      	  $string .= '>'."\n";
+    		      	  $string .= $method_name;
+    		      }
+            }
+  	      }
+        }
+        else {
+          $string .= $select_array[$i]['code'] ." not configured!<br />";
         }
       }
     }
@@ -313,7 +321,7 @@ If you have other modules installed on your osCommerce installation, replacing y
     $header_string_2 = "Content-Type: application/xml;charset=UTF-8";	
     $header_string_3 = "Accept: application/xml;charset=UTF-8";
 	
-    fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
+//    fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
     // Set the POST options.
     curl_setopt($session, CURLOPT_POST, true);
     curl_setopt($session, CURLOPT_HTTPHEADER, array($header_string_1, $header_string_2, $header_string_3));
@@ -361,6 +369,7 @@ If you have other modules installed on your osCommerce installation, replacing y
     // If status update is from Pending -> Processing on the Admin UI
     // this invokes the processing-order and charge-order commands
     // 1->Pending, 2-> Processing
+    global $carrier_select, $tracking_number;
 
       define('API_CALLBACK_MESSAGE_LOG', DIR_FS_CATALOG . "/googlecheckout/response_message.log");
       define('API_CALLBACK_ERROR_LOG', DIR_FS_CATALOG. "/googlecheckout/response_error.log");
@@ -381,7 +390,7 @@ If you have other modules installed on your osCommerce installation, replacing y
       if($google_order != '') {					
         $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                     <charge-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\">
-                    <amount currency=\"USD\">" . $amt . "</amount>
+                    <amount currency=\"" . DEFAULT_CURRENCY . "\">" . $amt . "</amount>
                     </charge-order>";
         fwrite($message_log, sprintf("\r\n%s\n",$postargs));
         send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
@@ -405,8 +414,16 @@ If you have other modules installed on your osCommerce installation, replacing y
       if($google_order != '') {					
         $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                      <deliver-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"> 
-                     <send-email> " . $send_mail . "</send-email>
-                     </deliver-order> ";
+                     	 <send-email> " . $send_mail . "</send-email>";
+        if(isset($carrier_select) &&  ($carrier_select != 'select') && isset($tracking_number) && !empty($tracking_number)) {
+					$postargs .=	"<tracking-data>
+									        <carrier>" . $carrier_select . "</carrier>
+									        <tracking-number>" . $tracking_number . "</tracking-number>
+									    	 </tracking-data>";
+					$comments = "Shipping Tracking Data:\n Carrier: " . $carrier_select . "\n Tracking Number: " . $tracking_number . "";
+					tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($cust_notify) . "', '" . tep_db_input($comments)  . "')");
+        }
+				$postargs .=  "</deliver-order> ";
         fwrite($message_log, sprintf("\r\n%s\n",$postargs));
         send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
 	              $postargs, $message_log); 
@@ -420,8 +437,12 @@ If you have other modules installed on your osCommerce installation, replacing y
     }
     
     if(isset($notify_comments)) {
+      $send_mail = "false";
+      if($cust_notify == 1) 
+        $send_mail = "true";
       $postargs =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                    <send-buyer-message xmlns=\"http://checkout.google.com/schema/2\" google-order-number=\"". $google_order. "\">
+                   <send-email> " . $send_mail . "</send-email>
                    <message>". strip_tags($notify_comments) . "</message>
                    </send-buyer-message>";    
       fwrite($message_log, sprintf("\r\n%s\n",$postargs));
@@ -458,6 +479,7 @@ If you have other modules installed on your osCommerce installation, replacing y
             $notify_comments = '';
             if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
               $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
+	            $customer_notified = '1';
             }
             
             // ** GOOGLE CHECKOUT **
@@ -477,8 +499,80 @@ If you have other modules installed on your osCommerce installation, replacing y
             }
             // ** END GOOGLE CHECKOUT **
 
-            $customer_notified = '1';
           }
+
+
+  ----------------------------------------------------------------------------
+  3b. /catalog/admin/orders.php                                       LINE 317
+  ============================================================================
+  REPLACE:
+            </table></td>
+            <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+          </tr>
+        </table></td>
+  WITH:
+            </table></td>
+            <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+  
+<!-- googlecheckout Tracking Number -->
+<?php 
+// orders_status == STATE_PROCESSING -> Processing before delivery
+	if($order->info['payment_method'] == 'Google Checkout' && $order->info['orders_status'] == STATE_PROCESSING){
+			echo '<td><table border="0" cellpadding="3" cellspacing="0" width="100%">   
+				<tbody>
+					<tr>  
+						<td style="border-top: 2px solid rgb(255, 255, 255); border-right: 2px solid rgb(255, 255, 255);" nowrap="nowrap" colspan="2">
+								<b>Shipping Information</b>  
+						</td>  
+					</tr>
+					<tr>  
+						<td nowrap="nowrap" valign="middle" width="1%">  
+							<font size="2">  
+								<b>Tracking:</b>  
+							</font>  
+						</td>  
+						<td style="border-right: 2px solid rgb(255, 255, 255); border-bottom: 2px solid rgb(255, 255, 255);" nowrap="nowrap">   
+							<input name="tracking_number" style="color: rgb(0, 0, 0);" id="trackingBox" size="20" type="text">   
+						</td>  
+					</tr>  
+					<tr>  
+						<td nowrap="nowrap" valign="middle" width="1%">  
+							<font size="2">  
+								<b>Carrier:</b>  
+							</font>  
+						</td>  
+						<td style="border-right: 2px solid rgb(255, 255, 255);" nowrap="nowrap">  
+							<select name="carrier_select" style="color: rgb(0, 0, 0);" id="carrierSelect">  
+								<option value="select" selected="selected">
+								 Select ...  
+								</option>   
+								<option value="USPS">
+								 USPS  
+								</option>   
+								<option value="DHL">
+								 DHL  
+								</option>   
+								<option value="UPS">
+								 UPS  
+								</option>   
+								<option value="Other">
+								 Other  
+								</option>   
+								<option value="FedEx">
+								 FedEx  
+								</option>   
+							</select>  
+						</td>  
+					</tr>     
+				</tbody> 
+			</table></td>';
+	  
+	}
+?>
+<!-- end googlecheckout Tracking Number -->
+          </tr>
+        </table></td>
+
 
 
   ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 <?php
 /*
-  Copyright (C) 2006 Google Inc.
+  Copyright (C) 2007 Google Inc.
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -55,75 +55,136 @@ class googlecheckout {
  	  // These are all the available methods for each shipping provider, 
     // see that you must set flat methods too!}
     // CONSTRAINT: Method's names MUST be UNIQUE
-	  $this->mc_shipping_methods = array(
-      'usps' => array(
-        'domestic_types' => array(
-          'Express' => 'Express Mail',
-          'First Class' => 'First-Class Mail',
-          'Priority' => 'Priority Mail',
-          'Parcel' => 'Parcel Post'),
-        'international_types' => array(
-          'GXG Document' => 'Global Express Guaranteed Document Service',
-          'GXG Non-Document' => 'Global Express Guaranteed Non-Document Service',
-          'Express' => 'Global Express Mail (EMS)',
-          'Priority Lg' => 'Global Priority Mail - Flat-rate Envelope (large)',
-          'Priority Sm' => 'Global Priority Mail - Flat-rate Envelope (small)',
-          'Priority Var' => 'Global Priority Mail - Variable Weight Envelope (single)',
-          'Airmail Letter' => 'Airmail Letter Post',
-          'Airmail Parcel' => 'Airmail Parcel Post',
-          'Surface Letter' => 'Economy (Surface) Letter Post',
-          'Surface Post' => 'Economy (Surface) Parcel Post')),
-      'fedex1' => array(
-        'domestic_types' => array(
-          '01' => 'Priority (by 10:30AM, later for rural)',
-          '03' => '2 Day Air',
-          '05' => 'Standard Overnight (by 3PM, later for rural)',
-          '06' => 'First Overnight', 
-          '20' => 'Express Saver (3 Day)',
-          '90' => 'Home Delivery',
-          '92' => 'Ground Service'),
-        'international_types' => array(
-          '01' => 'International Priority (1-3 Days)',
-          '03' => 'International Economy (4-5 Days)',
-          '06' => 'International First',
-          '90' => 'International Home Delivery',
-          '92' => 'International Ground Service')),
-			'upsxml' => array(
-        'domestic_types' => array(
-          '1DAL' => 'Next Day Air Letter',
-          '1DAPI' => 'Next Day Air Intra (Puerto Rico)',
-          '1DP' => 'Next Day Air Saver',
-          '1DPL' => 'Next Day Air Saver Letter',
-          '2DM' => '2nd Day Air AM',
-          '2DML' => '2nd Day Air AM Letter',
-          '2DA' => '2nd Day Air',
-          '2DAL' => '2nd Day Air Letter',
-          '3DS' => '3 Day Select',
-          'GND' => 'Ground',
-          'GNDCOM' => 'Ground Commercial',
-          'GNDRES' => 'Ground Residential',
-          'STD' => 'Canada Standard',
-          'XPR' => 'Worldwide Express',
-          'XPRL' => 'worldwide Express Letter',
-          'XDM' => 'Worldwide Express Plus',
-          'XDML' => 'Worldwide Express Plus Letter',
-          'XPD' => 'Worldwide Expedited')),
-      'zones' => array('domestic_types' => array('zones' => 'Zones Rates')), 
-      // Flat methods.
-      'flat' => array('domestic_types' => array('flat' => GOOGLECHECKOUT_FLAT_RATE_SHIPPING)),
-      'item' => array('domestic_types' => array('item' => GOOGLECHECKOUT_ITEM_RATE_SHIPPING)),
-      'table' => array('domestic_types' => array('table' => 'Table')) 
-    );
+	// Script to create new shipping methods
+	// http://demo.globant.com/~brovagnati/tools -> Shipping Method Generator
+  $this->mc_shipping_methods = array(
+                        'usps' => array(
+                                    'domestic_types' =>
+                                      array(
+                                          'Express' => 'Express Mail',
+                                          'First Class' => 'First-Class Mail',
+                                          'Priority' => 'Priority Mail',
+                                          'Parcel' => 'Parcel Post'
+                                           ),
 
-    // Used to change the shipping provider's name (ie. USPS intead if 'United States Postal Service')
-	  $this->mc_shipping_methods_names = array(
-      'usps' => 'USPS',
-			'fedex1' => 'FedEx',
-      'upsxml' => 'Ups',
-      'zones' => 'Zones', 
-      'flat' => 'Flat Rate',
-      'item' => 'Item',
-      'table' => 'Table');
+                                    'international_types' =>
+                                      array(
+                                          'GXG Document' => 'Global Express Guaranteed Document Service',
+                                          'GXG Non-Document' => 'Global Express Guaranteed Non-Document Service',
+                                          'Express' => 'Global Express Mail (EMS)',
+                                          'Priority Lg' => 'Global Priority Mail - Flat-rate Envelope (large)',
+                                          'Priority Sm' => 'Global Priority Mail - Flat-rate Envelope (small)',
+                                          'Priority Var' => 'Global Priority Mail - Variable Weight Envelope (single)',
+                                          'Airmail Letter' => 'Airmail Letter Post',
+                                          'Airmail Parcel' => 'Airmail Parcel Post',
+                                          'Surface Letter' => 'Economy (Surface) Letter Post',
+                                          'Surface Post' => 'Economy (Surface) Parcel Post'
+                                           ),
+                                        ),
+                        'fedex1' => array(
+                                    'domestic_types' =>
+                                      array(
+                                          '01' => 'Priority (by 10:30AM, later for rural)',
+                                          '03' => '2 Day Air',
+                                          '05' => 'Standard Overnight (by 3PM, later for rural)',
+                                          '06' => 'First Overnight',
+                                          '20' => 'Express Saver (3 Day)',
+                                          '90' => 'Home Delivery',
+                                          '92' => 'Ground Service'
+                                           ),
+
+                                    'international_types' =>
+                                      array(
+                                          '01' => 'International Priority (1-3 Days)',
+                                          '03' => 'International Economy (4-5 Days)',
+                                          '06' => 'International First',
+                                          '90' => 'International Home Delivery',
+                                          '92' => 'International Ground Service'
+                                           ),
+                                        ),
+                        'upsxml' => array(
+                                    'domestic_types' =>
+                                      array(
+                                          '1DAL' => 'Next Day Air Letter',
+                                          '1DAPI' => 'Next Day Air Intra (Puerto Rico)',
+                                          '1DP' => 'Next Day Air Saver',
+                                          '1DPL' => 'Next Day Air Saver Letter',
+                                          '2DM' => '2nd Day Air AM',
+                                          '2DML' => '2nd Day Air AM Letter',
+                                          '2DA' => '2nd Day Air',
+                                          '2DAL' => '2nd Day Air Letter',
+                                          '3DS' => '3 Day Select',
+                                          'GND' => 'Ground',
+                                          'GNDCOM' => 'Ground Commercial',
+                                          'GNDRES' => 'Ground Residential',
+                                          'STD' => 'Canada Standard',
+                                          'XPR' => 'Worldwide Express',
+                                          'XPRL' => 'worldwide Express Letter',
+                                          'XDM' => 'Worldwide Express Plus',
+                                          'XDML' => 'Worldwide Express Plus Letter',
+                                          'XPD' => 'Worldwide Expedited'
+                                           ),
+
+                                    'international_types' =>
+                                      array(
+
+                                           ),
+                                        ),
+                        'zones' => array(
+                                    'domestic_types' =>
+                                      array(
+                                          'zones' => 'Zones Rates'
+                                           ),
+
+                                    'international_types' =>
+                                      array(
+                                          'zones' => 'Zones Rates intl'
+                                           ),
+                                        ),
+                        'flat' => array(
+                                    'domestic_types' =>
+                                      array(
+                                          'flat' => 'Flat Rate Per Order'
+                                           ),
+
+                                    'international_types' =>
+                                      array(
+                                          'flat' => 'Flat Rate Per Order intl'
+                                           ),
+                                        ),
+                        'item' => array(
+                                    'domestic_types' =>
+                                      array(
+                                          'item' => 'Flat Rate Per Item'
+                                           ),
+
+                                    'international_types' =>
+                                      array(
+                                          'item' => 'Flat Rate Per Item intl'
+                                           ),
+                                        ),
+                        'table' => array(
+                                    'domestic_types' =>
+                                      array(
+                                          'table' => 'Table'
+                                           ),
+
+                                    'international_types' =>
+                                      array(
+                                          'table' => 'Table intl'
+                                           ),
+                                        ),
+                                  );
+
+  $this->mc_shipping_methods_names = array(
+                                         'usps' => 'USPS',
+                                         'fedex1' => 'FedEx',
+                                         'upsxml' => 'Ups',
+                                         'zones' => 'Zones',
+                                         'flat' => 'Flat Rate',
+                                         'item' => 'Item',
+                                         'table' => 'Table',
+                                        );
 
     $this->hash = NULL;
     $this->ship_flat_ui = 'Standard flat-rate shipping';
@@ -291,17 +352,23 @@ class googlecheckout {
     }
     $shipping_list = substr($shipping_list, 0, strlen($shipping_list) - 1);
     $shipping_list .= ")";
+    tep_db_query("ALTER TABLE ". TABLE_CONFIGURATION ." CHANGE `configuration_value` `configuration_value` TEXT NOT NULL");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable GoogleCheckout Module', 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS', 'True', 'Accepts payments through Google Checkout on your site', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
-	tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('.htaccess Basic Authentication Mode with PHP over CGI?', 'MODULE_PAYMENT_GOOGLECHECKOUT_CGI', 'False', 'This configuration will <b>disable</b> PHP Basic Authentication in the responsehandler.php to validate Google Checkout messages.<br />If setted True you MUST configure your .htaccess files <a href=\"htaccess.php\" target=\"_OUT\">here</a>.', '6', '4', 'tep_cfg_select_option(array(\'False\', \'True\'),',now())");	
+	  tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('.htaccess Basic Authentication Mode with PHP over CGI?', 'MODULE_PAYMENT_GOOGLECHECKOUT_CGI', 'False', 'This configuration will <b>disable</b> PHP Basic Authentication in the responsehandler.php to validate Google Checkout messages.<br />If setted True you MUST configure your .htaccess files <a href=\"htaccess.php\" target=\"_OUT\">here</a>.', '6', '4', 'tep_cfg_select_option(array(\'False\', \'True\'),',now())");	
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant ID', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID', '', 'Your merchant ID is listed on the \"Integration\" page under the \"Settings\" tab', '6', '1', now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant Key', 'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY', '', 'Your merchant key is also listed on the \"Integration\" page under the \"Settings\" tab', '6', '2', now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Select Mode of Operation', 'MODULE_PAYMENT_GOOGLECHECKOUT_MODE', 'https://sandbox.google.com/checkout/', 'Select either the Developer\'s Sandbox or live Production environment', '6', '3', 'tep_cfg_select_option(array(\'https://sandbox.google.com/checkout/\', \'https://checkout.google.com/\'),',now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Select Merchant Calculation Mode of Operation', 'MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE', 'https', 'Merchant calculation URL for Sandbox environment. (Checkout production environment always requires HTTPS.)', '6', '4', 'tep_cfg_select_option(array(\'http\', \'https\'),',now())");
-	tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('MultiSocket Shipping Quotes Retrieval', 'MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET', 'False', 'This configuration will enable a multisocket feature to parallelize Shipping Providers quotes. This should reduce the time this call take and avoid GC Merchant Calculation TimeOut. <a href=\"multisock.html\" target=\"_OUT\">More Info</a>.(Alfa)', '6', '4', 'tep_cfg_select_option(array(\'True\', \'False\'),',now())");	
+    tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Disable Google Checkout for Virtual Goods?', 'MODULE_PAYMENT_GOOGLECHECKOUT_VIRTUAL_GOODS', 'False', 'If this configuration is enabled and there is any virtual good in the cart the Google Checkout button will be shown disabled.', '6', '4', 'tep_cfg_select_option(array(\'True\', \'False\'),',now())"); 
+
+//	  tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('MultiSocket Shipping Quotes Retrieval', 'MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET', 'False', 'This configuration will enable a multisocket feature to parallelize Shipping Providers quotes. This should reduce the time this call take and avoid GC Merchant Calculation TimeOut. <a href=\"multisock.html\" target=\"_OUT\">More Info</a>.(Alfa)', '6', '4', 'tep_cfg_select_option(array(\'True\', \'False\'),',now())");	
+	  tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Allow US PO BOX shipping?', 'MODULE_PAYMENT_GOOGLECHECKOUT_USPOBOX', 'True', 'Allow sending items to US PO Boxes?', '6', '4', 'tep_cfg_select_option(array(\'True\', \'False\'),',now())");	
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Default Values for Real Time Shipping Rates', 'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING', '', 'Default values for real time rates in case the webservice call fails.', '6', '5',\"gc_cfg_select_shipping($shipping_list, \",now())");
+	  tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Rounding Policy Mode', 'MODULE_PAYMENT_GOOGLECHECKOUT_TAXMODE', 'HALF_EVEN', 'This configuration specifies the methodology that will be used to round values to two decimal places. <a href=\"http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html\">More info</a>', '6', '4', 'tep_cfg_select_option(array(\'UP\',\'DOWN\',\'CEILING\',\'HALF_UP\',\'HALF_DOWN\', \'HALF_EVEN\'),',now())");
+    tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Rounding Policy Rule', 'MODULE_PAYMENT_GOOGLECHECKOUT_TAXRULE', 'PER_LINE', 'This configuration specifies when rounding rules should be applied to monetary values while Google Checkout is computing an order total.', '6', '4', 'tep_cfg_select_option(array(\'PER_LINE\',\'TOTAL\'),',now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Google Analytics Id', 'MODULE_PAYMENT_GOOGLECHECKOUT_ANALYTICS', 'NONE', 'Do you want to integrate the module with Google Analytics? Add your GA Id (UA-XXXXXX-X), NONE to disable. <br/> More info <a href=\'http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html\'>here</a>', '6', '1', now())");
-    tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '6', '0', now())");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Continue shopping URL.', 'MODULE_PAYMENT_GOOGLECHECKOUT_CONTINUE_URL', 'index.php', 'Specify the page customers will be directed to if they choose to continue shopping after checkout.', '6', '8', now())");
+    tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '6', '0', now())");
     tep_db_query("create table if not exists ". $this->table_name ." (customers_id int(11), buyer_id bigint(20))");
     tep_db_query("create table if not exists ". $this->table_order ." (orders_id int(11), google_order_number bigint(20), order_amount decimal(15,4))");
   }
@@ -320,11 +387,15 @@ class googlecheckout {
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_MODE',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE',
-					       'MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET',
+                 'MODULE_PAYMENT_GOOGLECHECKOUT_VIRTUAL_GOODS',
+//					       'MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET',
+					       'MODULE_PAYMENT_GOOGLECHECKOUT_USPOBOX',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING',
+					       'MODULE_PAYMENT_GOOGLECHECKOUT_TAXMODE',
+					       'MODULE_PAYMENT_GOOGLECHECKOUT_TAXRULE',
 					       'MODULE_PAYMENT_GOOGLECHECKOUT_ANALYTICS',
-					       'MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER',
-                 'MODULE_PAYMENT_GOOGLECHECKOUT_CONTINUE_URL');
+                 'MODULE_PAYMENT_GOOGLECHECKOUT_CONTINUE_URL',
+					       'MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER');
   }
 }
 // ** END GOOGLE CHECKOUT **

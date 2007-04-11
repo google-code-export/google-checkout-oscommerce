@@ -292,6 +292,19 @@ CHANGE LOG
    - Fixed Tax for zones
    - Fixed Tax for products
    - Added support for All Areas Zones
+   - Disable button if we don't have sufficient stock (if setted in Admin UI) (thx GriffithLea)
    - Add a configuration to disable Google Checkout Button when are virtual good in the cart
    		(double check http://checkout.google.com/seller/policies.html#4)
    - Disable multisocket Option :(   
+
+   
+   6 jq
+
+   2 c picante 
+   2 pollo
+   1 roque
+   1 jq
+   
+   2 ccuchillo
+   1 c picante
+   1 verdura

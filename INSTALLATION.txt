@@ -1,24 +1,19 @@
-HOW TO INSTALL GOOGLE CHECKOUT MODULE FOR OSCOMMERCE (v1.2)
+HOW TO INSTALL GOOGLE CHECKOUT MODULE FOR OSCOMMERCE (v1.3RC1)
 
 If you haven't read the README file yet, please read it first.
 
-UPDATE from v1.1.*
+UPDATE from v1.2
 ================
 
-New Files:
-/catalog/admin/images/*
-/catalog/admin/htaccess.php
-/catalog/admin/multisock.html
-/catalog/googlecheckout/multisocket.php
+Modified:
+  INSTALLATION.txt
+  README.txt
+  catalog/admin/includes/functions/general.php
+  catalog/admin/orders.php
+  catalog/googlecheckout/gcheckout.php
+  catalog/googlecheckout/responsehandler.php
+  catalog/includes/modules/payment/googlecheckout.php
 
-Modified Files:
-  1. /catalog/admin/includes/functions/general.php
-  2. /catalog/admin/orders.php
-  3. /catalog/googlecheckout/gcheckout.php
-  4. /catalog/googlecheckout/gcxmlbuilder.php
-  5. /catalog/googlecheckout/googleresult.php
-  6. /catalog/googlecheckout/responsehandler.php
-  7. /catalog/includes/modules/payment/googlecheckout.php
 
 IMPORTANT: Uninstall and re install the module. If not, many new configuration will not be enabled.
 
@@ -52,8 +47,8 @@ If you have the basic osCommerce installation without any other modules or add-o
   17. /catalog/login.php
   18. /catalog/shopping_cart.php
   19. /catalog/admin/images/*
-  20. /catalog/admin/includes/htaccess.php
-  21. /catalog/admin/includes/multisock.html
+  20. /catalog/admin/htaccess.php
+  21. /catalog/admin/multisock.html
   22. /catalog/googlecheckout/multisocket.php
 
 * Note: If you applied a patch or manually modified the files to disable register_globals, go for Option B.
@@ -80,8 +75,8 @@ If you have other modules installed on your osCommerce installation, replacing y
   11. /catalog/includes/languages/german/modules/payment/googlecheckout.php
   12. /catalog/includes/modules/payment/googlecheckout.php
   13. /catalog/admin/images/*
-  14. /catalog/admin/includes/htaccess.php
-  15. /catalog/admin/includes/multisock.html
+  14. /catalog/admin/htaccess.php
+  15. /catalog/admin/multisock.html
   16. /catalog/googlecheckout/multisocket.php
 
  II. Manually edit the following files from your system as instructed below:
@@ -93,10 +88,6 @@ If you have other modules installed on your osCommerce installation, replacing y
   5. /catalog/login.php
   6. /catalog/shopping_cart.php
 
- III. Make the changes outlined in the file v-1-1-0b3.txt
- -------------------------------------------------------
-
-* The LINE number indicates where the change would need to be made if the file was unchanged by other modules.
   ----------------------------------------------------------------------------
   1. /catalog/admin/includes/functions/general.php                    LINE 758
   ============================================================================

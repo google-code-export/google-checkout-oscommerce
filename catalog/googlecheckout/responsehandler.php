@@ -19,7 +19,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-/* **GOOGLE CHECKOUT ** v1.3
+/* **GOOGLE CHECKOUT ** v1.3RC2
  * Script invoked for any callback notfications from the Checkout server
  * Can be used to process new order notifications, order state changes and risk notifications
  */
@@ -567,7 +567,7 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                           'date_purchased' => gc_makeSqlString($data[$root]['timestamp']['VALUE']), 
                           'orders_status' => 1, 
                           'currency' => $currency,
-                          'currency_value' => 1);
+                          'currency_value' => $currencies->get_value($currency));
   tep_db_perform(TABLE_ORDERS, $sql_data_array);
 
   // Insert entries into orders_products.
@@ -589,8 +589,8 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                             'products_id' => gc_makeSqlInteger($products[$i]['id']),
                             'products_model' => gc_makeSqlString($products[$i]['model']),
                             'products_name' => gc_makeSqlString($products[$i]['name']),
-                            'products_price' => gc_makeSqlFloat( $currencies->get_value($currency) * $products[$i]['price']),
-                            'final_price' => gc_makeSqlFloat( $currencies->get_value($currency) * $products[$i]['final_price']),
+                            'products_price' => gc_makeSqlFloat(  $products[$i]['price']),
+                            'final_price' => gc_makeSqlFloat(  $products[$i]['final_price']),
                             'products_tax' => gc_makeSqlFloat($products_tax), 
                             'products_quantity' => gc_makeSqlInteger($products[$i]['quantity'])); 
     tep_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);	
@@ -611,7 +611,7 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                                 'orders_products_id' => $orders_products_id,
                                 'products_options' => gc_makeSqlString($attributes['products_options_name']),
                                 'products_options_values' => gc_makeSqlString($attributes['products_options_values_name']),
-                                'options_values_price' => gc_makeSqlFloat( $currencies->get_value($currency) * $attributes['options_values_price']),
+                                'options_values_price' => gc_makeSqlFloat(  $attributes['options_values_price']),
                                 'price_prefix' => gc_makeSqlString($attributes['price_prefix'])); 
         tep_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);	
       }		
@@ -638,10 +638,15 @@ function process_new_order_notification($root, $data, $googlepayment, $cart, $cu
                           'orders_status_id' => 1,
                           'date_added' => 'now()',
                           'customer_notified' => 1,
-                           'comments' => 'Google Checkout Order No: ' . $data[$root]['google-order-number']['VALUE']. "\n" .
-                           'Merchant Calculations used: '. ((@$data[$root]['order-adjustment']['merchant-calculation-successful']['VALUE'] == 'true')?'True':'False') . "\n" .
-                           'Buyer\'s User: ' . $data[$root]['buyer-billing-address']['email']['VALUE'] . "\n" .
-                           'Buyer\'s Password: ' .  $data[$root]['buyer-id']['VALUE']
+                           'comments' => 'Google Checkout Order No: ' . $data[$root]['google-order-number']['VALUE']. "\n".
+                           'Merchant Calculations used: '. ((@$data[$root]['order-adjustment']['merchant-calculation-successful']['VALUE'] == 'true')?'True':'False') . 
+                           ((isset($customer_id) && $customer_id != '')?'':("\n" .'Buyer\'s User: ' . $data[$root]['buyer-billing-address']['email']['VALUE'] . "\n" .
+                           'Buyer\'s Password: ' .  $data[$root]['buyer-id']['VALUE']))
+
+//
+//                           'Merchant Calculations used: '. ((@$data[$root]['order-adjustment']['merchant-calculation-successful']['VALUE'] == 'true')?'True':'False') . "\n" .
+//                           'Buyer\'s User: ' . $data[$root]['buyer-billing-address']['email']['VALUE'] . "\n" .
+//                           'Buyer\'s Password: ' .  $data[$root]['buyer-id']['VALUE']
                            );  //Add Order number to Comments box. For customer's reference.
   tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);	
 

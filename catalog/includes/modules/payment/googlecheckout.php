@@ -50,8 +50,6 @@ class googlecheckout {
     // These are the flat shipping methods, add any other that is not merchant calculated 
     $this->shipping_support = array("flat", "item", "table");
 
-    $this->shipping_display = array(GOOGLECHECKOUT_FLAT_RATE_SHIPPING, GOOGLECHECKOUT_ITEM_RATE_SHIPPING, GOOGLECHECKOUT_TABLE_RATE_SHIPPING);
-
  	  // These are all the available methods for each shipping provider, 
     // see that you must set flat methods too!}
     // CONSTRAINT: Method's names MUST be UNIQUE

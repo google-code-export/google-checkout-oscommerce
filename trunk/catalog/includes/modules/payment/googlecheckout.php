@@ -334,12 +334,7 @@ class googlecheckout {
   function install() {
     global $language;
     require_once(DIR_FS_CATALOG .'includes/languages/'. $language .'/modules/payment/googlecheckout.php');
-    $shipping_list = 'array(';
-    foreach($this->shipping_display as $ship) {
-      $shipping_list .= "'". $ship ."',";	 
-    }
-    $shipping_list = substr($shipping_list, 0, strlen($shipping_list) - 1);
-    $shipping_list .= ")";
+    $shipping_list = 'array()';
     tep_db_query("ALTER TABLE ". TABLE_CONFIGURATION ." CHANGE `configuration_value` `configuration_value` TEXT NOT NULL");
     tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable GoogleCheckout Module', 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS', 'True', 'Accepts payments through Google Checkout on your site', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
 	  tep_db_query("insert into ". TABLE_CONFIGURATION ." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('.htaccess Basic Authentication Mode with PHP over CGI?', 'MODULE_PAYMENT_GOOGLECHECKOUT_CGI', 'False', 'This configuration will <b>disable</b> PHP Basic Authentication in the responsehandler.php to validate Google Checkout messages.<br />If setted True you MUST configure your .htaccess files <a href=\"htaccess.php\" target=\"_OUT\">here</a>.', '6', '4', 'tep_cfg_select_option(array(\'False\', \'True\'),',now())");	

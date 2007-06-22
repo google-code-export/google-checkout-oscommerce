@@ -222,7 +222,7 @@ function rowOutEffect(object) {
   
   $selection = $payment_modules->selection();
   for($i=0, $n=sizeof($selection); $i<$n; $i++) {
-    if($selection[$i]['module'] == 'GoogleCheckout') {
+    if($selection[$i]['id'] == 'googlecheckout') {
       array_splice($selection, $i, 1);	
       break;   
     }

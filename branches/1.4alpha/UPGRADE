@@ -1,0 +1,58 @@
+HOW TO UPGRADE GOOGLE CHECKOUT MODULE FOR OSC (v1.4Alpha1)
+
+UPGRADE 
+=======
+
+From v1.3*
+
+STATUS:             FILE:
+================================================================================
+Added               UPGRADE
+Added               CHANGELOG
+Modified            INSTALLATION.txt
+Modified            README.txt
+Removed             quick fixes.txt
+Added               catalog/gc_return.php
+Modified            catalog/shopping_cart.php
+Modified            catalog/checkout_payment.php
+Modified            catalog/login.php
+Added               catalog/googlecheckout/library
+Added               catalog/googlecheckout/library/googletax.php
+Added               catalog/googlecheckout/library/googleitem.php
+Added               catalog/googlecheckout/library/googleresponse.php
+Added               catalog/googlecheckout/library/googleresult.php
+Added               catalog/googlecheckout/library/googlelog.php
+Added               catalog/googlecheckout/library/googleshipping.php
+Added               catalog/googlecheckout/library/googlemerchantcalculations.php
+Added               catalog/googlecheckout/library/xml-processing
+Added               catalog/googlecheckout/library/xml-processing/xmlparser.php
+Added               catalog/googlecheckout/library/xml-processing/xmlbuilder.php
+Added               catalog/googlecheckout/library/googlerequest.php
+Added               catalog/googlecheckout/library/googlecart.php
+Added               catalog/googlecheckout/shipping_generator/*
+Added               catalog/googlecheckout/shipping_metrics/*
+Added               catalog/googlecheckout/logs
+Added               catalog/googlecheckout/logs/response_message.log
+Added               catalog/googlecheckout/logs/response_error.log
+Added               catalog/googlecheckout/logs/.htaccess
+Modified            catalog/googlecheckout/responsehandler.php
+Modified            catalog/googlecheckout/gcheckout.php
+Removed             catalog/googlecheckout/googleresult.php
+Removed             catalog/googlecheckout/response_message.log
+Removed             catalog/googlecheckout/response_error.log
+Removed             catalog/googlecheckout/googlemerchantcalculations.php
+Removed             catalog/googlecheckout/multisocket.php
+Removed             catalog/googlecheckout/gcxmlbuilder.php
+Removed             catalog/googlecheckout/gcxmlparser.php
+Modified            catalog/includes/modules/payment/googlecheckout.php
+Modified            catalog/includes/languages/espanol/modules/payment/googlecheckout.php
+Modified            catalog/includes/languages/english/modules/payment/googlecheckout.php
+Modified            catalog/includes/languages/german/modules/payment/googlecheckout.php
+Modified            catalog/admin/includes/functions/general.php
+Modified            catalog/admin/orders.php
+Removed             catalog/admin/images
+Removed             catalog/admin/images/googlecheckout
+Removed             catalog/admin/images/googlecheckout/gc_multisocket.gif
+Removed             catalog/admin/customers.php
+Removed             catalog/admin/multisock.html
+Removed             catalog/admin/modules.php

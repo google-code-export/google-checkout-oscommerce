@@ -2,6 +2,8 @@
 /*
   Copyright (C) 2007 Google Inc.
 
+  Bugfixed and improved by Ryan of http://www.ubercart.org
+
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
   as published by the Free Software Foundation; either version 2
@@ -17,7 +19,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-/* GOOGLE CHECKOUT v1.3RC2
+/* GOOGLE CHECKOUT v1.3
  * Script invoked when Google Checkout payment option has been enabled
  * It uses phpGCheckout library so it can work with PHP4 and PHP5
  * Generates the cart xml, shipping and tax options and adds them as hidden 
@@ -71,9 +73,6 @@ function gc_compare($key, $data)
 }
 
 $googlepayment = new googlecheckout();
-$total_weight = $cart->show_weight();
-$total_count = $cart->count_contents();
-
 $current_checkout_url = $googlepayment->checkout_url;
 
 if (($googlepayment->merchantid == '') || ($googlepayment->merchantkey == '')) {
@@ -102,18 +101,6 @@ if(MODULE_PAYMENT_GOOGLECHECKOUT_VIRTUAL_GOODS == 'True' && $cart->get_content_t
 if (sizeof($products) == 0) {
 	$googlepayment->variant = 'disabled';
 	$current_checkout_url = gc_selfURL();
-}
-
-// Disable the GC button if we don't have sufficient stock
-// Contrib added by GriffithLea
-if (STOCK_CHECK == 'true' && STOCK_ALLOW_CHECKOUT != 'true') {
-  for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
-    if (tep_check_stock($products[$i]['id'], $products[$i]['quantity'])) {
-      $googlepayment->variant = 'disabled';
-      $current_checkout_url = gc_selfURL();
-      break;
-    }
-  }
 }
 
 for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
@@ -222,12 +209,6 @@ if ($dir = @ dir($module_directory)) {
 	$dir->close();
 }
 
-$check_query = tep_db_fetch_array(tep_db_query("select countries_iso_code_2 
-                             from " . TABLE_COUNTRIES . " 
-                             where countries_id = 
-                             '" . SHIPPING_ORIGIN_COUNTRY . "'"));
-$shipping_origin_iso_code_2 = $check_query['countries_iso_code_2'];
-
 $module_info = array();
 $module_info_enabled = array();
 for ($i = 0, $n = sizeof($directory_array); $i < $n; $i++) {
@@ -238,24 +219,10 @@ for ($i = 0, $n = sizeof($directory_array); $i < $n; $i++) {
 
 	$class = substr($file, 0, strrpos($file, '.'));
 	$module = new $class;
-  $curr_ship = strtoupper($module->code);
-  switch($curr_ship){
-    case 'FEDEXGROUND':
-      $curr_ship = 'FEDEX_GROUND';
-      break; 
-    case 'FEDEXEXPRESS':
-      $curr_ship = 'FEDEX_EXPRESS';
-      break; 
-    default:
-      break;
-  }
-  $check_query = tep_db_fetch_array(tep_db_query("select configuration_value 
-                               from " . TABLE_CONFIGURATION . " 
-                               where configuration_key = 
-                               'MODULE_SHIPPING_" . $curr_ship . "_STATUS'"));
-  if ($check_query['configuration_value'] == 'True') {
+	if ($module->enabled == true) {
 	  $module_info_enabled[$module->code] = array('enabled' => true);
 	}
+//	if ($module->enabled == true) {
 	if ($module->check() == true) {
 		$module_info[$module->code] = array(
       'code' => $module->code,
@@ -272,7 +239,7 @@ $ship_calculation_mode = (count(array_keys($module_info_enabled)) > count(array_
 $calculations_array = tep_db_fetch_array(tep_db_query("select configuration_value from " . TABLE_CONFIGURATION
                                         ." where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING'"));
 $key_values = explode(", ", $calculations_array['configuration_value']);
-$shipping_config_errors = '';
+
 foreach ($module_info as $key => $value) {
 	// Check if the shipping method is activated.
 	$module_name = $module_info[$key]['code'];
@@ -299,202 +266,177 @@ foreach ($module_info as $key => $value) {
 	$handling = $data_arr[$common_string .'HANDLING'];
 	$table_mode = $data_arr[$common_string .'MODE'];
 	$allowed_restriction_state = $allowed_restriction_country = array();
-  if ($enable == "True") {
-  
-  	if ($zone != '') {
-  		$zone_result = tep_db_query("SELECT countries_name, coalesce(zone_code, 'All Areas') zone_code, countries_iso_code_2
-                                    FROM " . TABLE_GEO_ZONES . " AS gz
-                                    inner join ". TABLE_ZONES_TO_GEO_ZONES ." AS ztgz on gz.geo_zone_id = ztgz.geo_zone_id
-                                    inner join ". TABLE_COUNTRIES ." AS c on ztgz.zone_country_id = c.countries_id
-                                    left join ". TABLE_ZONES ." AS z on ztgz.zone_id = z.zone_id
-                                    WHERE gz.geo_zone_id = '". $zone ."'");
-                                   
-                                 
-  		$allowed_restriction_state = $allowed_restriction_country = array();
-  		// Get all the allowed shipping zones.
-  		while($zone_answer = tep_db_fetch_array($zone_result)) {
-  			$allowed_restriction_state[] = $zone_answer['zone_code'];
-  			$allowed_restriction_country[] = array($zone_answer['countries_name'], $zone_answer['countries_iso_code_2']);
-  		}
-  	}
-  	
-  	if ($curr_tax_class != 0 && $curr_tax_class != '') {
-  		$tax_class[] = $curr_tax_class;
-  		if (!in_array($curr_tax_class, $tax_class_unique))
-  			$tax_class_unique[] = $curr_tax_class;
-  	}
-    if (is_array($googlepayment->mc_shipping_methods[$key])) {
-  		foreach($googlepayment->mc_shipping_methods[$key] as $type => $shipping_type){
-  			foreach($shipping_type as $method => $name){
-  		
-  //	['domestic_types']
-  			// merchant calculated shipping
-  				if ($ship_calculation_mode == 'True') {
-  						$gcheck->push('merchant-calculated-shipping', array ('name' => $googlepayment->mc_shipping_methods_names[$module_info[$key]['code']] . ': ' . $name));
-  				} 
-  			// flat rate shipping 
-  				else {
-            $gcheck->push('flat-rate-shipping', array ('name' => $googlepayment->mc_shipping_methods_names[$module_info[$key]['code']] . ': ' . $name));
-          }	
-  				if(!in_array($module_info[$key]['code'], $googlepayment->shipping_support)) {
-  			
-  					$gcheck->element('price',  $currencies->get_value($currency) * gc_compare($module_info[$key]['code'].$method . $type ,$key_values), array ('currency' => $currency));
-  					// 8245366
-  				}
-  				// flat rate shipping
-  				else {
-  					$module = new $module_name;
-  					$quote = $module->quote($method);
-  					$price = $quote['methods'][0]['cost'];
-  					$gcheck->element('price',  $currencies->get_value($currency) * ($price>=0?$price:0), array ('currency' => $currency));
-  				}
-  				$gcheck->push('shipping-restrictions');
-  				if(MODULE_PAYMENT_GOOGLECHECKOUT_USPOBOX == 'False') {
-  						$gcheck->element('allow-us-po-box', 'false');
-  				}
-          if(!empty($allowed_restriction_country)){
-              $gcheck->push('allowed-areas');   
-              foreach($allowed_restriction_state as $state_key => $state) {
-                if($allowed_restriction_country[$state_key][1] == 'US') {
-                  if($state == 'All Areas') {
-                    $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
-                  }
-                  else {
-                    $gcheck->push('us-state-area');
-                    $gcheck->element('state', $state);
-                    $gcheck->pop('us-state-area');
-                  }
+	if ($zone != '') {
+		$zone_result = tep_db_query("select countries_name, zone_code, countries_iso_code_2 from " . TABLE_GEO_ZONES
+                               ." as gz, ". TABLE_ZONES_TO_GEO_ZONES ." as ztgz, ". TABLE_ZONES
+                               ." as z, ". TABLE_COUNTRIES ." as c where gz.geo_zone_id = ". $zone
+                               ." and gz.geo_zone_id = ztgz.geo_zone_id and ztgz.zone_id = z.zone_id"
+                               ." and z.zone_country_id = c.countries_id ");
+                               
+		$allowed_restriction_state = $allowed_restriction_country = array();
+		// Get all the allowed shipping zones.
+		while($zone_answer = tep_db_fetch_array($zone_result)) {
+			$allowed_restriction_state[] = $zone_answer['zone_code'];
+			$allowed_restriction_country[] = array($zone_answer['countries_name'], $zone_answer['countries_iso_code_2']);
+		}
+	}
+	
+	if ($curr_tax_class != 0 && $curr_tax_class != '') {
+		$tax_class[] = $curr_tax_class;
+		if (!in_array($curr_tax_class, $tax_class_unique))
+			$tax_class_unique[] = $curr_tax_class;
+	}
+
+	if ($enable == "True") {
+		foreach($googlepayment->mc_shipping_methods[$key] as $type => $shipping_type){
+			foreach($shipping_type as $method => $name){
+		
+//	['domestic_types']
+			// merchant calculated shipping
+				if ($ship_calculation_mode == 'True') {
+						$gcheck->push('merchant-calculated-shipping', array ('name' => $googlepayment->mc_shipping_methods_names[$module_info[$key]['code']] . ': ' . $name));
+				} 
+			// flat rate shipping 
+				else {
+					$gcheck->push('flat-rate-shipping', array ('name' => $module_info[$key]['title']));
+				}	
+				if(!in_array($module_info[$key]['code'], $googlepayment->shipping_support)) {
+			
+					$gcheck->element('price',  $currencies->get_value($currency) * gc_compare($module_info[$key]['code'].$method . $type ,$key_values), array ('currency' => $currency));
+					// 8245366
+				}
+				// flat rate shipping
+				else {
+					$module = new $module_name;
+					$quote = $module->quote($method);
+					$price = $quote['methods'][0]['cost'];
+					$gcheck->element('price',  $currencies->get_value($currency) * ($price>=0?$price:0), array ('currency' => $currency));
+
+//					$price = $googlepayment->getShippingPrice($module_name, $cart, $price, $handling, $table_mode);
+//					$gcheck->element('price',  $currencies->get_value($currency) * $price, array ('currency' => $currency));
+				}
+					
+				$gcheck->push('shipping-restrictions');
+				if(MODULE_PAYMENT_GOOGLECHECKOUT_USPOBOX == 'False') {
+						$gcheck->element('allow-us-po-box', 'false');
+				}
+				
+				$gcheck->push('allowed-areas');
+//				if(!empty($allowed_restriction_country)){
+//					foreach($allowed_restriction_state as $state_key => $state) {
+//						if($allowed_restriction_country[$state_key][1] == 'US') {
+//							$gcheck->push('us-state-area');
+//							$gcheck->element('state', $state);
+//							$gcheck->pop('us-state-area');
+//						}
+//						else {
+//						  // TODO here should go the non use area
+//							$gcheck->push('postal-area');
+//							$gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
+//							$gcheck->pop('postal-area');
+////						  country-code
+////							$gcheck->emptyElement('world-area');
+//						}
+//					}
+//				}
+//				else {
+////					$gcheck->element('us-country-area', '', array ('country-area' => 'ALL'));
+//					$gcheck->emptyElement('world-area');
+//				}
+//        
+        if(!empty($allowed_restriction_country)){
+            foreach($allowed_restriction_state as $state_key => $state) {
+              if($allowed_restriction_country[$state_key][1] == 'US') {
+                if($state == 'All Areas') {
+                  $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
                 }
                 else {
-                  // TODO here should go the non us area (not implemented in GC)
-                  // now just the country
-                  $gcheck->push('postal-area');
-                  $gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
-                  $gcheck->pop('postal-area');
+                  $gcheck->push('us-state-area');
+                  $gcheck->element('state', $state);
+                  $gcheck->pop('us-state-area');
                 }
-              }      
-              $gcheck->pop('allowed-areas'); 
+              }
+              else {
+                // TODO here should go the non us area (not implemented in GC)
+                // now just the country
+                $gcheck->push('postal-area');
+                $gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
+                $gcheck->pop('postal-area');
+              }
+            }       
+        }
+        else {
+          $gcheck->emptyElement('world-area');
+        }
+        
+				$gcheck->pop('allowed-areas');
+				$gcheck->pop('shipping-restrictions');
+
+				if ($ship_calculation_mode == 'True') {
+					$gcheck->push('address-filters');
+					if(MODULE_PAYMENT_GOOGLECHECKOUT_USPOBOX == 'False') {
+							$gcheck->element('allow-us-po-box', 'false');
+					}
+					
+					$gcheck->push('allowed-areas');
+
+          if(!empty($allowed_restriction_country)){
+            reset($allowed_restriction_state);
+            foreach($allowed_restriction_state as $state_key => $state) {
+              if($allowed_restriction_country[$state_key][1] == 'US') {
+                if($state == 'All Areas') {
+                  $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
+                }
+                else {
+                  $gcheck->push('us-state-area');
+                  $gcheck->element('state', $state);
+                  $gcheck->pop('us-state-area');
+                }
+              }
+              else {
+                $gcheck->push('postal-area');
+                $gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
+                $gcheck->pop('postal-area');
+              }
+            }
           }
           else {
-            switch($type) {
-              case 'domestic_types':
-                if('US' == $shipping_origin_iso_code_2) {
-                  $gcheck->push('allowed-areas');
-                    $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
-                  $gcheck->pop('allowed-areas');
-                }else{
-                  $gcheck->push('allowed-areas');
-                    $gcheck->push('postal-area');
-                      $gcheck->element('country-code', $shipping_origin_iso_code_2);
-                    $gcheck->pop('postal-area');
-                  $gcheck->pop('allowed-areas');
-                }
-               break;
-              case 'international_types':
-                  $gcheck->push('allowed-areas');
-                    $gcheck->emptyElement('world-area');
-                  $gcheck->pop('allowed-areas');
-                if('US' == SHIPPING_ORIGIN_COUNTRY) {
-                  $gcheck->push('excluded-areas');
-                    $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
-                  $gcheck->pop('excluded-areas');
-                }else{
-                  $gcheck->push('excluded-areas');
-                    $gcheck->push('postal-area');
-                      $gcheck->element('country-code', $shipping_origin_iso_code_2);
-                    $gcheck->pop('postal-area');
-                  $gcheck->pop('excluded-areas');
-                }
-               break;
-              default:
-              // should never reach here!
-                $gcheck->push('allowed-areas');
-                  $gcheck->emptyElement('world-area');
-                $gcheck->pop('allowed-areas');
-               break;
-            }
+            $gcheck->emptyElement('world-area');
           }
-  				$gcheck->pop('shipping-restrictions');
-  
-  				if ($ship_calculation_mode == 'True') {
-            $gcheck->push('address-filters');
-            if(MODULE_PAYMENT_GOOGLECHECKOUT_USPOBOX == 'False') {
-                $gcheck->element('allow-us-po-box', 'false');
-            }
-            if(!empty($allowed_restriction_country)){
-              $gcheck->push('allowed-areas');
-              reset($allowed_restriction_state);
-              foreach($allowed_restriction_state as $state_key => $state) {
-                if($allowed_restriction_country[$state_key][1] == 'US') {
-                  if($state == 'All Areas') {
-                    $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
-                  }
-                  else {
-                    $gcheck->push('us-state-area');
-                    $gcheck->element('state', $state);
-                    $gcheck->pop('us-state-area');
-                  }
-                }
-                else {
-                  $gcheck->push('postal-area');
-                  $gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
-                  $gcheck->pop('postal-area');
-                }
-              }
-              $gcheck->pop('allowed-areas');
-            }
-            else {
-              switch($type) {
-                case 'domestic_types':
-                  if('US' == $shipping_origin_iso_code_2) {
-                    $gcheck->push('allowed-areas');
-                      $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
-                    $gcheck->pop('allowed-areas');
-                  }else{
-                    $gcheck->push('allowed-areas');
-                      $gcheck->push('postal-area');
-                        $gcheck->element('country-code', $shipping_origin_iso_code_2);
-                      $gcheck->pop('postal-area');
-                    $gcheck->pop('allowed-areas');
-                  }
-                 break;
-                case 'international_types':
-                    $gcheck->push('allowed-areas');
-                      $gcheck->emptyElement('world-area');
-                    $gcheck->pop('allowed-areas');
-                  if('US' == SHIPPING_ORIGIN_COUNTRY) {
-                    $gcheck->push('excluded-areas');
-                      $gcheck->emptyElement('us-country-area', array('country-area' => 'ALL'));
-                    $gcheck->pop('excluded-areas');
-                  }else{
-                    $gcheck->push('excluded-areas');
-                      $gcheck->push('postal-area');
-                        $gcheck->element('country-code', $shipping_origin_iso_code_2);
-                      $gcheck->pop('postal-area');
-                    $gcheck->pop('excluded-areas');
-                  }
-                 break;
-                default:
-                // shoud never reach here!
-                  $gcheck->push('allowed-areas');
-                    $gcheck->emptyElement('world-area');
-                  $gcheck->pop('allowed-areas');
-                 break;
-              }
-  
-            }
-            $gcheck->pop('address-filters');        
-            $gcheck->pop('merchant-calculated-shipping');
-          } 
-  				else {
-  					$gcheck->pop('flat-rate-shipping');
-  				}
-  			}
-  		}
-    }
-    else {
-      $shipping_config_errors .= $key ." (ignored)<br />";
-    }
+
+
+
+
+
+//					if(!empty($allowed_restriction_country)){
+//					  reset($allowed_restriction_state);
+//						foreach($allowed_restriction_state as $state_key => $state) {
+//							if($allowed_restriction_country[$state_key][1] == 'US') {
+//								$gcheck->push('us-state-area');
+//								$gcheck->element('state', $state);
+//								$gcheck->pop('us-state-area');
+//							}
+//							else {
+//								$gcheck->push('postal-area');
+//								$gcheck->element('country-code', $allowed_restriction_country[$state_key][1]);
+//								$gcheck->pop('postal-area');
+//	//						  country-code
+//	//							$gcheck->emptyElement('world-area');
+//							}
+//						}
+//					}
+//					else {
+//						$gcheck->emptyElement('world-area');
+//					}
+					$gcheck->pop('allowed-areas');
+					$gcheck->pop('address-filters');
+					$gcheck->pop('merchant-calculated-shipping');
+				} 
+				else {
+					$gcheck->pop('flat-rate-shipping');
+				}
+			}
+		}
 	}
 }
 
@@ -527,13 +469,18 @@ $gcheck->push('tax-tables');
 $gcheck->push('default-tax-table');
 $gcheck->push('tax-rules');
 
-if (sizeof($tax_class_unique) == 1 && sizeof($module_info_enabled) == sizeof($tax_class)) {
+if (sizeof($tax_class_unique) == 1 && sizeof($module_info) == sizeof($tax_class)) {
   $tax_rates_result = tep_db_query("select countries_name, coalesce(zone_code, 'All Areas') zone_code, tax_rate, countries_iso_code_2
                                  from " . TABLE_TAX_RATES . " as tr " .
                                  " inner join " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz on tr.tax_zone_id = ztgz.geo_zone_id " .
                                  " inner join " . TABLE_COUNTRIES . " as c on ztgz.zone_country_id = c.countries_id " .
                                  " left join " . TABLE_ZONES . " as z on ztgz.zone_id=z.zone_id
                                  where tr.tax_class_id= '" .  $tax_class_unique[0] ."'");
+//  $tax_rates_result = tep_db_query("select countries_name, zone_code, tax_rate, countries_iso_code_2 from ". TABLE_TAX_RATES
+//                                  ." as tr, ". TABLE_ZONES_TO_GEO_ZONES ." as ztgz, ". TABLE_ZONES
+//                                  ." as z, ". TABLE_COUNTRIES ." as c where tr.tax_class_id = "
+//                                  . $tax_class_unique[0] ." and tr.tax_zone_id = ztgz.geo_zone_id "
+//                                  ."and ztgz.zone_id = z.zone_id and ztgz.zone_country_id = c.countries_id");
 	$num_rows = tep_db_num_rows($tax_rates_result);
 	$tax_rule = array();
 
@@ -563,6 +510,21 @@ if (sizeof($tax_class_unique) == 1 && sizeof($module_info_enabled) == sizeof($ta
         $gcheck->element('country-code', $tax_result['countries_iso_code_2']);
         $gcheck->pop('postal-area');
       }           
+
+
+
+//
+//		if($tax_result['countries_iso_code_2'] == 'US') {
+//			$gcheck->push('us-state-area');
+//			$gcheck->element('state', $tax_result['zone_code']);
+//			$gcheck->pop('us-state-area');
+//		}
+//		else {
+//			$gcheck->push('postal-area');
+//			$gcheck->element('country-code', $tax_result['countries_iso_code_2']);
+//			$gcheck->pop('postal-area');
+//		}
+		
 		$gcheck->pop('tax-area');
 		$gcheck->pop('default-tax-rule');
 	}
@@ -578,7 +540,7 @@ else {
 $gcheck->pop('tax-rules');
 $gcheck->pop('default-tax-table');
 
-if (sizeof($tax_class_unique) > 1 || (sizeof($tax_class_unique) == 1 && sizeof($module_info_enabled) != sizeof($tax_class))) {
+if (sizeof($tax_class_unique) > 1 || (sizeof($tax_class_unique) == 1 && sizeof($module_info) != sizeof($tax_class))) {
 	$googlepayment->variant = "disabled";
 	$current_checkout_url = gc_selfURL();
 }
@@ -598,6 +560,15 @@ foreach ($tax_array as $tax_table) {
                                  " inner join " . TABLE_COUNTRIES . " as c on ztgz.zone_country_id = c.countries_id " .
                                  " left join " . TABLE_ZONES . " as z on ztgz.zone_id=z.zone_id
                                  where tr.tax_class_id= '" . $tax_array[$i] ."'");
+//  $tax_rates_result = tep_db_query("select countries_name, zone_code, tax_rate, countries_iso_code_2
+//                                             from " . TABLE_TAX_RATES . " as tr, 
+//                                            " . TABLE_ZONES_TO_GEO_ZONES . " as ztgz, 
+//                                            " . TABLE_ZONES . " as z, 
+//                                            " . TABLE_COUNTRIES . " as c 
+//                                            where tr.tax_class_id= " . $tax_array[$i] . " 
+//                                            and tr.tax_zone_id = ztgz.geo_zone_id 
+//                                            and ztgz.zone_id=z.zone_id 
+//                                            and ztgz.zone_country_id = c.countries_id");
 	$num_rows = tep_db_num_rows($tax_rates_result);
 	
 	$tax_rule = array ();
@@ -694,7 +665,7 @@ $gcheck->pop('checkout-shopping-cart');
      <input type="hidden" name="cart" value="<?php echo base64_encode($gcheck->getXml());?>">
      <input type="hidden" name="signature" value="<?php echo base64_encode( $googlepayment->CalcHmacSha1($gcheck->getXml())); ?>">
 	   <input type="image" name="Checkout" alt="Checkout" 
-            src="<?php echo $googlepayment->mode;?>buttons/checkout.gif?merchant_id=<?php echo $googlepayment->merchantid;?>&w=180&h=46&style=white&variant=<?php echo $googlepayment->variant;?>&loc=en_US"height="46" width="180">  
+            src="<?php echo $googlepayment->mode;?>buttons/checkout.gif?merchant_id= <?php echo $googlepayment->merchantid;?>&w=180&h=46&style=white&variant=<?php echo $googlepayment->variant;?>&loc=en_US"height="46" width="180">  
         </form>
     <?php
     if(!(MODULE_PAYMENT_GOOGLECHECKOUT_ANALYTICS == 'NONE')) {
@@ -710,22 +681,6 @@ $gcheck->pop('checkout-shopping-cart');
     }    
     ?>
         </p>
-    <?php
-      if(MODULE_PAYMENT_GOOGLECHECKOUT_VIRTUAL_GOODS == 'True' && $cart->get_content_type() != 'physical' ) {
-        echo '<div class="warning">' . MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_VIRTUAL . '</div>';
-      }
-      if($shipping_config_errors != ''){
-        echo '<div class="warning"><b>Error: Shipping Methods not configured</b><br />';
-        echo $shipping_config_errors;
-        echo '</div>';
-      }
-    ?>
-        
     </td></tr>
 </table>
-<xmp>
-<?php
-//echo $gcheck->getXml();
-?>
-</xmp>
 <!-- ** END GOOGLE CHECKOUT ** -->

@@ -1,4 +1,4 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.3 RC2 - 04/18/2007
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.3 RC1 - 04/10/2007
 
 INTRODUCTION
 ============
@@ -75,9 +75,6 @@ of the fields you can update:
 
 9. Rounding Policy Mode and Rounding Policy Rule: Determines how Google Checkout
     will do rounding in prices.
-    US default: rounding rule TOTAL, rounding mode is HALF_EVEN
-    UK default: rounding rule PER_LINE, rounding mode is HALF_UP
-    
     More info:
     http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html
 
@@ -108,26 +105,6 @@ http://code.google.com/apis/checkout/developer/checkout_analytics_integration.ht
 
 MERCHANT CALCULATED SHIPPING
 ============================
-In order to use this module you must have some Real Time Shipping provider,
- such as USPS or FedEx. This Module must be activated and configured in
- Modules->Shipping. For each enabled module you'll have to set the default
- values in the Google Checkout Admin UI.
-This Value will be used if for any reason Google Checkout cannot reach your
- API callback to calculate the shipping price. 
-
-The available shipping methods for each shipping provider must be configured
- in includes/modules/payment/googlecheckout.php in the mc_shipping_methods
- parameter. If you want to disable one or more methods, just comment them out.
-Be aware that if you mix flat rate and real time rates, both will be taken
- as merchant-calculated-shipping. 
-
-Script to create new shipping methods
-	http://your-site/osccart_dir/googlecheckout/shipping_generator
-More Info: 
-	http://your-site/osccart_dir/googlecheckout/shipping_generator/README
-	
-MERCHANT CALCULATED SHIPPING
-============================
 In order to use this module you must have some Real Time Shipping provider, 
 such as USPS or FedEx. This Module must be activated and configured in 
 Modules->Shipping. For each enabled module you'll have to set the default 
@@ -142,9 +119,7 @@ Be aware that if you mix flat rate and real time rates, both will be taken as
 merchant-calculated-shipping. 
 
 Script to create new shipping methods
-	http://your-site/zencart_dir/googlecheckout/shipping_generator
-More Info: 
-	http://your-site/zencart_dir/googlecheckout/shipping_generator/README
+http://demo.globant.com/~brovagnati/tools -> Shipping Method Generator
 
 
 
@@ -320,12 +295,3 @@ CHANGE LOG
    - Add a configuration to disable Google Checkout Button when are virtual good in the cart
    		(double check http://checkout.google.com/seller/policies.html#4)
    - Disable multisocket Option :(
-   
-04/18/2007 v1.3RC2 (ropu)
-   - Support for UK merchants 
-     http://code.google.com/apis/checkout/developer/release_notes.html (apr13)
-   - Docs update
-   - Minor bug fix
-   - Added Shipping Generator Tool in the stardard package (Optional)
-   - Flat rate shipping bug fixed
-   - Improved tax and shipping restrictions

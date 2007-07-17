@@ -890,7 +890,7 @@
   	      }
         }
         else {
-          $string .= $select_array[$i]['code'] ." not configured!<br />";
+          $string .= $select_array[$i]['code'] .GOOGLECHECKOUT_MERCHANT_CALCULATION_NOT_CONFIGURED;
         }
       }
     }

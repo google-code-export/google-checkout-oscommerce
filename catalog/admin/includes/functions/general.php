@@ -1,23 +1,151 @@
 <?php
 /*
-  $Id: general.php,v 1.160 2003/07/12 08:32:47 hpdl Exp $
+$Id: general.php 14 2006-07-28 17:42:07Z user $
 
-  osCommerce, Open Source E-Commerce Solutions
-  http://www.oscommerce.com
+  osCMax Power E-Commerce
+  http://oscdox.com
 
-  Copyright (c) 2003 osCommerce
+  Copyright 2006 osCMax
 
   Released under the GNU General Public License
 */
+
+/// Begin mods for Order Editor
+// Return the tax description for a zone / class
+// TABLES: tax_rates;
+  function tep_get_tax_description($class_id, $country_id, $zone_id) {
+    $tax_query = tep_db_query("select tax_description from " . TABLE_TAX_RATES . " tr left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id) left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) where (za.zone_country_id is null or za.zone_country_id = '0' or za.zone_country_id = '" . (int)$country_id . "') and (za.zone_id is null or za.zone_id = '0' or za.zone_id = '" . (int)$zone_id . "') and tr.tax_class_id = '" . (int)$class_id . "' order by tr.tax_priority");
+    if (tep_db_num_rows($tax_query)) {
+      $tax_description = '';
+      while ($tax = tep_db_fetch_array($tax_query)) {
+        $tax_description .= $tax['tax_description'] . ' + ';
+      }
+      $tax_description = substr($tax_description, 0, -3);
+
+      return $tax_description;
+    } else {
+      return ENTRY_TAX;
+    }
+  }
+
+////
+
+// Function    : tep_get_country_id
+  // Arguments   : country_name		country name string
+  // Return      : country_id
+  // Description : Function to retrieve the country_id based on the country's name
+  function tep_get_country_id($country_name) {
+    $country_id_query = tep_db_query("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $country_name . "'");
+    if (!tep_db_num_rows($country_id_query)) {
+      return 0;
+    }
+    else {
+      $country_id_row = tep_db_fetch_array($country_id_query);
+      return $country_id_row['countries_id'];
+    }
+  }
+
+   // Function    : tep_get_zone_id
+  // Arguments   : country_id		country id string    zone_name		state/province name
+  // Return      : zone_id
+  // Description : Function to retrieve the zone_id based on the zone's name
+  function tep_get_zone_id($country_id, $zone_name) {
+    $zone_id_query = tep_db_query("select * from " . TABLE_ZONES . " where zone_country_id = '" . $country_id . "' and zone_name = '" . $zone_name . "'");
+    if (!tep_db_num_rows($zone_id_query)) {
+      return 0;
+    }
+    else {
+      $zone_id_row = tep_db_fetch_array($zone_id_query);
+      return $zone_id_row['zone_id'];
+    }
+  }
+  
+
+// Function    : tep_html_quotes
+  // Arguments   : string	any string
+  // Return      : string with single quotes converted to html equivalent
+  // Description : Function to change quotes to HTML equivalents for form inputs.
+  function tep_html_quotes($string) {
+    return str_replace("'", "&#39;", $string);
+  }
+
+/////end Order Editor mods
+// BOF: MOD - Admin w/access levels
+//Check login and file access
+function tep_admin_check_login() {
+  global $PHP_SELF, $login_groups_id;
+  if (!tep_session_is_registered('login_id')) {
+    tep_redirect(tep_href_link(FILENAME_LOGIN, '', 'SSL'));
+  } else {
+    $filename = basename( $PHP_SELF );
+    if ($filename != FILENAME_DEFAULT && $filename != FILENAME_FORBIDEN && $filename != FILENAME_LOGOFF && $filename != FILENAME_ADMIN_ACCOUNT && $filename != FILENAME_POPUP_IMAGE && $filename != 'packingslip.php' && $filename != 'invoice.php') {
+      $db_file_query = tep_db_query("select admin_files_name from " . TABLE_ADMIN_FILES . " where FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) and admin_files_name = '" . $filename . "'");
+      if (!tep_db_num_rows($db_file_query)) {
+        tep_redirect(tep_href_link(FILENAME_FORBIDEN));
+      }
+    }
+  }
+}
+
+////
+//Return 'true' or 'false' value to display boxes and files in index.php and column_left.php
+function tep_admin_check_boxes($filename, $boxes='') {
+  global $login_groups_id;
+
+  $is_boxes = 1;
+  if ($boxes == 'sub_boxes') {
+    $is_boxes = 0;
+  }
+  $dbquery = tep_db_query("select admin_files_id from " . TABLE_ADMIN_FILES . " where FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) and admin_files_is_boxes = '" . $is_boxes . "' and admin_files_name = '" . $filename . "'");
+
+  $return_value = false;
+  if (tep_db_num_rows($dbquery)) {
+    $return_value = true;
+  }
+  return $return_value;
+}
+
+////
+//Return files stored in box that can be accessed by user
+function tep_admin_files_boxes($filename, $sub_box_name) {
+  global $login_groups_id;
+  $sub_boxes = '';
+
+  $dbquery = tep_db_query("select admin_files_name from " . TABLE_ADMIN_FILES . " where FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) and admin_files_is_boxes = '0' and admin_files_name = '" . $filename . "'");
+  if (tep_db_num_rows($dbquery)) {
+    $sub_boxes = '<a href="' . tep_href_link($filename) . '" class="menuBoxContentLink">' . $sub_box_name . '</a><br>';
+  }
+  return $sub_boxes;
+}
+
+////
+//Get selected file for index.php
+function tep_selected_file($filename) {
+  global $login_groups_id;
+  $randomize = FILENAME_ADMIN_ACCOUNT;
+
+  $dbquery = tep_db_query("select admin_files_id as boxes_id from " . TABLE_ADMIN_FILES . " where FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) and admin_files_is_boxes = '1' and admin_files_name = '" . $filename . "'");
+  if (tep_db_num_rows($dbquery)) {
+    $boxes_id = tep_db_fetch_array($dbquery);
+    $randomize_query = tep_db_query("select admin_files_name from " . TABLE_ADMIN_FILES . " where FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) and admin_files_is_boxes = '0' and admin_files_to_boxes = '" . $boxes_id['boxes_id'] . "'");
+    if (tep_db_num_rows($randomize_query)) {
+      $file_selected = tep_db_fetch_array($randomize_query);
+      $randomize = $file_selected['admin_files_name'];
+    }
+  }
+  return $randomize;
+}
+// EOF: MOD - Admin w/access levels
 
 ////
 // Redirect to another page or site
   function tep_redirect($url) {
     global $logger;
-
+// BOF: MS2 update 501112-Added
     if ( (strstr($url, "\n") != false) || (strstr($url, "\r") != false) ) {
       tep_redirect(tep_href_link(FILENAME_DEFAULT, '', 'NONSSL', false));
     }
+// EOF: MS2 update 501112-Added
 
     header('Location: ' . $url);
 
@@ -199,11 +327,39 @@
     }
 
     $select_string .= '>';
+// BOF: MOD - Separate Price Per Customer
+      $all_groups=array();
+      $customers_groups_query = tep_db_query("select customers_group_name, customers_group_id from " . TABLE_CUSTOMERS_GROUPS . " order by customers_group_id ");
+      while ($existing_groups =  tep_db_fetch_array($customers_groups_query)) {
+          $all_groups[$existing_groups['customers_group_id']]=$existing_groups['customers_group_name'];
+      }
+// EOF: MOD - Separate Price Per Customer
 
     $products_query = tep_db_query("select p.products_id, pd.products_name, p.products_price from " . TABLE_PRODUCTS . " p, " . TABLE_PRODUCTS_DESCRIPTION . " pd where p.products_id = pd.products_id and pd.language_id = '" . (int)$languages_id . "' order by products_name");
     while ($products = tep_db_fetch_array($products_query)) {
-      if (!in_array($products['products_id'], $exclude)) {
-        $select_string .= '<option value="' . $products['products_id'] . '">' . $products['products_name'] . ' (' . $currencies->format($products['products_price']) . ')</option>';
+
+// BOF: MOD - Separate Price Per Customer
+//      if (!in_array($products['products_id'], $exclude)) {
+//        $select_string .= '<option value="' . $products['products_id'] . '">' . $products['products_name'] . ' (' . $currencies->format($products['products_price']) . ')</option>';
+     if (!in_array($products['products_id'], $exclude)) {
+         $price_query=tep_db_query("select customers_group_price, customers_group_id from " . TABLE_PRODUCTS_GROUPS . " where products_id = " . $products['products_id']);
+         $product_prices=array();
+         while($prices_array=tep_db_fetch_array($price_query)){
+             $product_prices[$prices_array['customers_group_id']]=$prices_array['customers_group_price'];
+         }
+         reset($all_groups);
+         $price_string="";
+         $sde=0;
+         while(list($sdek,$sdev)=each($all_groups)){
+             if (!in_array((int)$products['products_id'].":".(int)$sdek, $exclude)) {
+                 if($sde)
+                    $price_string.=", ";
+                 $price_string.=$sdev.": ".$currencies->format(isset($product_prices[$sdek]) ? $product_prices[$sdek]:$products['products_price']);
+                 $sde=1;
+             }
+         }
+         $select_string .= '<option value="' . $products['products_id'] . '">' . $products['products_name'] . ' (' . $price_string . ')</option>\n';
+// EOF: MOD - Separate Price Per Customer
       }
     }
 
@@ -435,7 +591,7 @@
       $state_prov_values = tep_db_fetch_array($state_prov_query);
       $state_prov_code = $state_prov_values['zone_code'];
     }
-    
+
     return $state_prov_code;
   }
 
@@ -676,6 +832,24 @@
     return tep_draw_pull_down_menu($name, $tax_class_array, $tax_class_id);
   }
 
+// BOF: MOD - QT Pro
+// Function to build menu of available class files given a file prefix
+// Used for configuring plug-ins for product information attributes
+  function tep_cfg_pull_down_class_files($prefix, $current_file) {
+    $d=DIR_FS_CATALOG . DIR_WS_CLASSES;
+    $function_directory = dir ($d);
+
+    while (false !== ($function = $function_directory->read())) {
+      if (preg_match('/^'.$prefix.'(.+)\.php$/',$function,$function_name)) {
+          $file_list[]=array('id'=>$function_name[1], 'text'=>$function_name[1]);
+      }
+    }
+    $function_directory->close();
+
+    return tep_draw_pull_down_menu('configuration_value', $file_list, $current_file);
+  }
+// EOF: MOD - QT Pro
+
 ////
 // Function to read in text area in admin
  function tep_cfg_textarea($text) {
@@ -890,7 +1064,7 @@
   	      }
         }
         else {
-          $string .= $select_array[$i]['code'] ." not configured!<br />";
+          $string .= $select_array[$i]['code'] .GOOGLECHECKOUT_MERCHANT_CALCULATION_NOT_CONFIGURED;
         }
       }
     }
@@ -912,6 +1086,23 @@
 
     return $string;
   }
+
+// BOF: MOD - USPS Methods 2.5
+// Alias function for Store configuration values in the Administration Tool
+  function tep_cfg_select_multioption($select_array, $key_value, $key = '') {
+    for ($i=0; $i<sizeof($select_array); $i++) {
+      $name = (($key) ? 'configuration[' . $key . '][]' :
+'configuration_value');
+      $string .= '<br><input type="checkbox" name="' . $name . '" value="' .
+$select_array[$i] . '"';
+      $key_values = explode( ", ", $key_value);
+      if ( in_array($select_array[$i], $key_values) ) $string .= ' CHECKED';
+      $string .= '> ' . $select_array[$i];
+    }
+    $string .= '<input type="hidden" name="' . $name . '" value="--none--">';
+    return $string;
+  }
+// EOF: MOD - USPS Methods 2.5
 
 ////
 // Retreive server information
@@ -1037,12 +1228,14 @@
 
     tep_db_query("delete from " . TABLE_SPECIALS . " where products_id = '" . (int)$product_id . "'");
     tep_db_query("delete from " . TABLE_PRODUCTS . " where products_id = '" . (int)$product_id . "'");
+// LINE ADDED: MOD - Separate Price per Customer
+    tep_db_query("delete from " . TABLE_PRODUCTS_GROUPS . " where products_id = '" . (int)$product_id . "'");
     tep_db_query("delete from " . TABLE_PRODUCTS_TO_CATEGORIES . " where products_id = '" . (int)$product_id . "'");
     tep_db_query("delete from " . TABLE_PRODUCTS_DESCRIPTION . " where products_id = '" . (int)$product_id . "'");
     tep_db_query("delete from " . TABLE_PRODUCTS_ATTRIBUTES . " where products_id = '" . (int)$product_id . "'");
     tep_db_query("delete from " . TABLE_CUSTOMERS_BASKET . " where products_id = '" . (int)$product_id . "' or products_id like '" . (int)$product_id . "{%'");
     tep_db_query("delete from " . TABLE_CUSTOMERS_BASKET_ATTRIBUTES . " where products_id = '" . (int)$product_id . "' or products_id like '" . (int)$product_id . "{%'");
-
+   
     $product_reviews_query = tep_db_query("select reviews_id from " . TABLE_REVIEWS . " where products_id = '" . (int)$product_id . "'");
     while ($product_reviews = tep_db_fetch_array($product_reviews_query)) {
       tep_db_query("delete from " . TABLE_REVIEWS_DESCRIPTION . " where reviews_id = '" . (int)$product_reviews['reviews_id'] . "'");
@@ -1057,18 +1250,47 @@
 
   function tep_remove_order($order_id, $restock = false) {
     if ($restock == 'on') {
-      $order_query = tep_db_query("select products_id, products_quantity from " . TABLE_ORDERS_PRODUCTS . " where orders_id = '" . (int)$order_id . "'");
+// BOF: MOD - QT Pro
+//old $order_query = tep_db_query("select products_id, products_quantity from " . TABLE_ORDERS_PRODUCTS . " where orders_id = '" . (int)$order_id . "'");
+//    while ($order = tep_db_fetch_array($order_query)) {
+//      tep_db_query("update " . TABLE_PRODUCTS . " set products_quantity = products_quantity + " . $order['products_quantity'] . ", products_ordered = products_ordered - " . $order['products_quantity'] . " where products_id = '" . (int)$order['products_id'] . "'");
+      $order_query = tep_db_query("select products_id, products_quantity, products_stock_attributes from " . TABLE_ORDERS_PRODUCTS . " where orders_id = '" . (int)$order_id . "'");
       while ($order = tep_db_fetch_array($order_query)) {
-        tep_db_query("update " . TABLE_PRODUCTS . " set products_quantity = products_quantity + " . $order['products_quantity'] . ", products_ordered = products_ordered - " . $order['products_quantity'] . " where products_id = '" . (int)$order['products_id'] . "'");
+        $product_stock_adjust = 0;
+          if (tep_not_null($order['products_stock_attributes'])) {
+          if ($order['products_stock_attributes'] != '$$DOWNLOAD$$') {
+            $attributes_stock_query = tep_db_query("SELECT products_stock_quantity
+                                                    FROM " . TABLE_PRODUCTS_STOCK . "
+                                                    WHERE products_stock_attributes = '" . $order['products_stock_attributes'] . "'
+                                                    AND products_id = '" . (int)$order['products_id'] . "'");
+            if (tep_db_num_rows($attributes_stock_query) > 0) {
+                $attributes_stock_values = tep_db_fetch_array($attributes_stock_query);
+                tep_db_query("UPDATE " . TABLE_PRODUCTS_STOCK . "
+                              SET products_stock_quantity = products_stock_quantity + '" . (int)$order['products_quantity'] . "'
+                              WHERE products_stock_attributes = '" . $order['products_stock_attributes'] . "'
+                              AND products_id = '" . (int)$order['products_id'] . "'");
+                $product_stock_adjust = min($order['products_quantity'],  $order['products_quantity']+$attributes_stock_values['products_stock_quantity']);
+            } else {
+                tep_db_query("INSERT into " . TABLE_PRODUCTS_STOCK . "
+                              (products_id, products_stock_attributes, products_stock_quantity)
+                              VALUES ('" . (int)$order['products_id'] . "', '" . $order['products_stock_attributes'] . "', '" . (int)$order['products_quantity'] . "')");
+                $product_stock_adjust = $order['products_quantity'];
+            }
+          }
+        } else {
+            $product_stock_adjust = $order['products_quantity'];
+        }
+        tep_db_query("UPDATE " . TABLE_PRODUCTS . "
+                      SET products_quantity = products_quantity + " . $product_stock_adjust . ", products_ordered = products_ordered - " . (int)$order['products_quantity'] . "
+                      WHERE products_id = '" . (int)$order['products_id'] . "'");
+// EOF: MOD - QT Pro
       }
     }
-
     tep_db_query("delete from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
     tep_db_query("delete from " . TABLE_ORDERS_PRODUCTS . " where orders_id = '" . (int)$order_id . "'");
     tep_db_query("delete from " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " where orders_id = '" . (int)$order_id . "'");
     tep_db_query("delete from " . TABLE_ORDERS_STATUS_HISTORY . " where orders_id = '" . (int)$order_id . "'");
     tep_db_query("delete from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "'");
-
     $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
     while ($status = tep_db_fetch_array($status_query)) {
       $status_flag = $status['configuration_value'];	
@@ -1286,26 +1508,24 @@
 
 ////
 // Add tax to a products price
-  function tep_add_tax($price, $tax) {
-    global $currencies;
-
-    if (DISPLAY_PRICE_WITH_TAX == 'true') {
-      return tep_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']) + tep_calculate_tax($price, $tax);
+  function tep_add_tax($price, $tax, $override = false) {
+    if ( ( (DISPLAY_PRICE_WITH_TAX == 'true') || ($override == true) ) && ($tax > 0) ) {
+      return $price + tep_calculate_tax($price, $tax);
     } else {
-      return tep_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']);
+      return $price;
     }
   }
 
 // Calculates Tax rounding the result
   function tep_calculate_tax($price, $tax) {
-    global $currencies;
-
-    return tep_round($price * $tax / 100, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']);
+    return $price * $tax / 100;
   }
 
 ////
 // Returns the tax rate for a zone / class
 // TABLES: tax_rates, zones_to_geo_zones
+// This is the original function
+/*
   function tep_get_tax_rate($class_id, $country_id = -1, $zone_id = -1) {
     global $customer_zone_id, $customer_country_id;
 
@@ -1330,7 +1550,33 @@
       return 0;
     }
   }
+  */
+ //this one is copied from the catalog side
+  function tep_get_tax_rate($class_id, $country_id = -1, $zone_id = -1) {
+    global $customer_zone_id, $customer_country_id;
 
+    if ( ($country_id == -1) && ($zone_id == -1) ) {
+      if (!tep_session_is_registered('customer_id')) {
+        $country_id = STORE_COUNTRY;
+        $zone_id = STORE_ZONE;
+      } else {
+        $country_id = $customer_country_id;
+        $zone_id = $customer_zone_id;
+      }
+    }
+
+    $tax_query = tep_db_query("select sum(tax_rate) as tax_rate from " . TABLE_TAX_RATES . " tr left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id) left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) where (za.zone_country_id is null or za.zone_country_id = '0' or za.zone_country_id = '" . (int)$country_id . "') and (za.zone_id is null or za.zone_id = '0' or za.zone_id = '" . (int)$zone_id . "') and tr.tax_class_id = '" . (int)$class_id . "' group by tr.tax_priority");
+    if (tep_db_num_rows($tax_query)) {
+      $tax_multiplier = 1.0;
+      while ($tax = tep_db_fetch_array($tax_query)) {
+        $tax_multiplier *= 1.0 + ($tax['tax_rate'] / 100);
+      }
+      return ($tax_multiplier - 1.0) * 100;
+    } else {
+      return 0;
+    }
+  }
+  
 ////
 // Returns the tax rate for a tax class
 // TABLES: tax_rates
@@ -1460,4 +1706,103 @@
 
     return $tmp_array;
   }
+// LINE ADDED: MOD - Downloads Controller
+  require(DIR_WS_FUNCTIONS . 'downloads_controller.php');
+
+// LINE ADDED: MOD - IndvShip
+//require(DIR_WS_FUNCTIONS . 'indvship_status.php');
+
+// BOF: MOD - FedEx functions
+  function tep_ship_request($shipData,$ship_type,$order) {
+
+    $fed = new FedExDC($shipData[0][10],$shipData[1][498]);
+
+    $ship_Ret = $fed->$ship_type($shipData);
+    // todo: add appropriate error checking for at least some of the possible errors
+    if ($error = $fed->getError()) {
+      // in case the ship date is a holiday, check for the error and correct the date
+      // todo: correct the date!
+      if (preg_match('/FF43/',$error)) {
+        echo 'You cannot schedule a pickup on a weekend or holiday! Please go back and change
+        the pickup date.';
+        die();
+      } else {
+        echo 'This transaction could not be completed. Please note the error message
+              below.<br><br>';
+        die("ERROR: ". $error);
+      }
+
+    // if successful, we get the tracking number, write the label *.png file to images/fedex,
+    // and display the label
+    } else {
+      $trackNum = $ship_Ret[29];
+      // decode and save label, named for the tracking number
+      $fed->label(DIR_WS_FEDEX_LABELS . $trackNum . '.png');
+    }
+    return $trackNum;
+  }
+// EOF: MOD - FedEx functions
+
+// BOF: MOD - Ultimate SEO URLs - by Chemo
+// Funtion to reset SEO URLs database cache entries
+  function tep_reset_cache_data_seo_urls($action){
+    switch ($action){
+      case 'reset':
+        tep_db_query("DELETE FROM cache WHERE cache_name LIKE '%seo_urls%'");
+        tep_db_query("UPDATE configuration SET configuration_value='false' WHERE configuration_key='SEO_URLS_CACHE_RESET'");
+        break;
+      default:
+        break;
+    }
+    # The return value is used to set the value upon viewing
+    # It's NOT returining a false to indicate failure!!
+    return 'false';
+  }
+// EOF: MOD - Ultimate SEO URLs - by Chemo
+
+// BOF: MOD - WebMakers.com Pull the shipping method used on an order
+// Return orders shipping method
+  function tep_get_orders_shipping_method($order_id) {
+    $check_order_query= tep_db_query("select title from " . TABLE_ORDERS_TOTAL . " where orders_id='" . $order_id . "' and class='ot_shipping'");
+    $check_order= tep_db_fetch_array($check_order_query);
+    if (SHOW_INVOICE_SHIPPING=='2' and ($check_order['title']=='United Parcel Service' or $check_order['title']=='United States Postal Service')) {
+      // return short version on UPS and USPS
+      $short_shipping_end= strpos($check_order['title'], '');
+      $short_shipping= substr($check_order['title'], 1, $short_shipping_end);
+      return $short_shipping;
+    } else {
+      // return normal shipping
+      return $check_order['title'];
+    }
+  }
+// EOF: MOD - WebMakers.com Pull the shipping method used on an order
+  // >>> BEGIN REGISTER_GLOBALS
+  // Work-around functions to allow disabling of register_globals in php.ini
+  // These functions perform a similar operation as the 'link_session_variable'
+  // function added to .../functions/sessions.php but for the GET, POST, etc
+  // variables
+  //
+  // Parameters:
+  // var_name - Name of session variable
+  //
+  // Returns:
+  // None
+  function link_get_variable($var_name)
+  {
+    // Map global to GET variable
+    if (isset($_GET[$var_name]))
+    {
+      $GLOBALS[$var_name] =& $_GET[$var_name];
+    }
+  }
+
+  function link_post_variable($var_name)
+  {
+    // Map global to POST variable
+    if (isset($_POST[$var_name]))
+    {
+      $GLOBALS[$var_name] =& $_POST[$var_name];
+    }
+  }
+// <<< END REGISTER_GLOBALS
 ?>

@@ -1,11 +1,11 @@
 <?php
 /*
-  $Id: orders.php,v 1.112 2003/06/29 22:50:52 hpdl Exp $
+$Id: orders.php 14 2006-07-28 17:42:07Z user $
 
-  osCommerce, Open Source E-Commerce Solutions
-  http://www.oscommerce.com
+  osCMax Power E-Commerce
+  http://oscdox.com
 
-  Copyright (c) 2003 osCommerce
+  Copyright 2006 osCMax
 
   Released under the GNU General Public License
 */
@@ -17,152 +17,125 @@
   define('STATE_PROCESSING', "2");
   define('STATE_DELIVERED', "3");
  
- /*
-  * Function which posts a request to the specified url.
-  * @param url Url where request is to be posted
-  * @param merid The merchant ID used for HTTP Basic Authentication
-  * @param merkey The merchant key used for HTTP Basic Authentication
-  * @param postargs The post arguments to be sent
-  * @param message_log An opened log file poitner for appending logs
-  */
-  function send_google_req($url, $merid, $merkey, $postargs, $message_log) {
-    // Get the curl session object
-    $session = curl_init($url);
+   function google_checkout_state_change($check_status, $status, $oID, 
+                                              $cust_notify, $notify_comments) {
+    global $messageStack,$carrier_select, $tracking_number;
 
-    $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
-    $header_string_2 = "Content-Type: application/xml;charset=UTF-8";	
-    $header_string_3 = "Accept: application/xml;charset=UTF-8";
-	
-//    fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
-    // Set the POST options.
-    curl_setopt($session, CURLOPT_POST, true);
-    curl_setopt($session, CURLOPT_HTTPHEADER, array($header_string_1, $header_string_2, $header_string_3));
-    curl_setopt($session, CURLOPT_POSTFIELDS, $postargs);
-    curl_setopt($session, CURLOPT_HEADER, true);
-    curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
-	// Uncomment the following and set the path to your CA-bundle.crt file if SSL verification fails
-	//curl_setopt($session, CURLOPT_CAINFO, "C:\\Program Files\\xampp\\apache\\conf\\ssl.crt\\ca-bundle.crt");
+    define('API_CALLBACK_ERROR_LOG', 
+                     DIR_FS_CATALOG. "/googlecheckout/logs/response_error.log");
+    define('API_CALLBACK_MESSAGE_LOG',
+                     DIR_FS_CATALOG . "/googlecheckout/logs/response_message.log");
 
-    // Do the POST and then close the session
-    $response = curl_exec($session);
-	if (curl_errno($session)) {
-		die(curl_error($session));
-	} else {
-	    curl_close($session);
-	}
+    include_once(DIR_FS_CATALOG.'/includes/modules/payment/googlecheckout.php');
+    include_once(DIR_FS_CATALOG.'/googlecheckout/library/googlerequest.php');
 
-    fwrite($message_log, sprintf("\r\n%s\n",$response));
-	
-    // Get HTTP Status code from the response
-    $status_code = array();
-    preg_match('/\d\d\d/', $response, $status_code);
+    $googlepayment = new googlecheckout();
     
-    fwrite($message_log, sprintf("\r\n%s\n",$status_code[0]));
-    // Check for errors
-    switch( $status_code[0] ) {
-      case 200:
-      // Success
-        break;
-      case 503:
-        die('Error 503: Service unavailable. An internal problem prevented us from returning data to you.');
-	      break;
-      case 403:
-        die('Error 403: Forbidden. You do not have permission to access this resource, or are over your rate limit.');
-        break;
-      case 400:
-        die('Error 400: Bad request. The parameters passed to the service did not match as expected. The exact error is returned in the XML response.');
-        break;
-      default:
-        die('Error :' . $status_code[0]);
-    }
-  }
-  
-  function google_checkout_state_change($check_status, $status, $oID, $cust_notify, $notify_comments) {
+    $Grequest = new GoogleRequest($googlepayment->merchantid, 
+                                  $googlepayment->merchantkey, 
+                                  MODULE_PAYMENT_GOOGLECHECKOUT_MODE==
+                                    'https://sandbox.google.com/checkout/'
+                                    ?"sandbox":"production",
+                                  DEFAULT_CURRENCY);
+    $Grequest->SetLogFiles(API_CALLBACK_ERROR_LOG, API_CALLBACK_MESSAGE_LOG);
+
+    $google_answer = tep_db_fetch_array(tep_db_query("select google_order_number," .
+                               " order_amount from " . $googlepayment->table_order . 
+                               " where orders_id = " . (int)$oID ));
+    $google_order = $google_answer['google_order_number'];  
+    $amount = $google_answer['order_amount'];
+
     // If status update is from Pending -> Processing on the Admin UI
     // this invokes the processing-order and charge-order commands
     // 1->Pending, 2-> Processing
-    global $carrier_select, $tracking_number;
-
-      define('API_CALLBACK_MESSAGE_LOG', DIR_FS_CATALOG . "/googlecheckout/response_message.log");
-      define('API_CALLBACK_ERROR_LOG', DIR_FS_CATALOG. "/googlecheckout/response_error.log");
-
-      include_once(DIR_FS_CATALOG . '/includes/modules/payment/googlecheckout.php');
-      $googlepay = new googlecheckout();
-				
-      //Setup the log file
-      if (!$message_log = fopen(API_CALLBACK_MESSAGE_LOG, "a")) {
-        error_func("Cannot open " . API_CALLBACK_MESSAGE_LOG . " file.\n", 0);
-        exit(1);
+    if($check_status['orders_status'] == STATE_PENDING 
+               && $status == STATE_PROCESSING && $google_order != '') {
+      list($status,) = $Grequest->SendMerchantOrderNumber($google_order, $oID);
+      if($status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_MERCHANT_ORDER_NUMBER, 'error');
       }
-      $google_answer = tep_db_fetch_array(tep_db_query("select google_order_number, order_amount from " . $googlepay->table_order . " where orders_id = " . (int)$oID ));
-      $google_order = $google_answer['google_order_number'];  
-      $amt = $google_answer['order_amount'];  
-
-    if($check_status['orders_status'] == STATE_PENDING && $status == STATE_PROCESSING) {
-      if($google_order != '') {					
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                    <charge-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\">
-                    <amount currency=\"" . DEFAULT_CURRENCY . "\">" . $amt . "</amount>
-                    </charge-order>";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-                        $postargs, $message_log); 
-        
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                    <process-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"/> ";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-                    $postargs, $message_log); 
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_MERCHANT_ORDER_NUMBER, 'success');          
       }
-    }			
+      list($status,) = $Grequest->SendChargeOrder($google_order, $amount);
+      if($status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_CHARGE_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_CHARGE_ORDER, 'success');          
+      }
+      list($status,) = $Grequest->SendProcessOrder($google_order);
+      if($status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_PROCESS_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_PROCESS_ORDER, 'success');          
+      }
+    }
     
     // If status update is from Processing -> Delivered on the Admin UI
     // this invokes the deliver-order and archive-order commands
     // 2->Processing, 3-> Delivered
-    if($check_status['orders_status'] == STATE_PROCESSING &&  $status == STATE_DELIVERED) {
-      $send_mail = "false";
-      if($cust_notify == 1) 
-        $send_mail = "true";
-      if($google_order != '') {					
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                     <deliver-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"> 
-                     	 <send-email> " . $send_mail . "</send-email>";
-        if(isset($carrier_select) &&  ($carrier_select != 'select') && isset($tracking_number) && !empty($tracking_number)) {
-					$postargs .=	"<tracking-data>
-									        <carrier>" . $carrier_select . "</carrier>
-									        <tracking-number>" . $tracking_number . "</tracking-number>
-									    	 </tracking-data>";
-					$comments = "Shipping Tracking Data:\n Carrier: " . $carrier_select . "\n Tracking Number: " . $tracking_number . "";
-					tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($cust_notify) . "', '" . tep_db_input($comments)  . "')");
-        }
-				$postargs .=  "</deliver-order> ";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-	              $postargs, $message_log); 
-
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                     <archive-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\"/>";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-                        $postargs, $message_log); 
+    if($check_status['orders_status'] == STATE_PROCESSING 
+                    && $status == STATE_DELIVERED && $google_order != '') {
+      $carrier = $tracking_no = "";
+      // Add tracking Data
+      if(isset($carrier_select) &&  ($carrier_select != 'select') 
+          && isset($tracking_number) && !empty($tracking_number)) {
+        $carrier = $carrier_select;
+        $tracking_no = $tracking_number;
+        $comments = GOOGLECHECKOUT_STATE_STRING_TRACKING ."\n" .
+                    GOOGLECHECKOUT_STATE_STRING_TRACKING_CARRIER . $carrier_select ."\n" .
+                    GOOGLECHECKOUT_STATE_STRING_TRACKING_NUMBER . $tracking_number . "";
+        tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " " .
+                      "(orders_id, orders_status_id, date_added, customer_notified, comments)" .
+                      " values ('" . (int)$oID . "', 
+                      '" . tep_db_input($status) . 
+                      "', now(), '" . 
+                      tep_db_input($cust_notify) . "', '" . 
+                      tep_db_input($comments)  . "')");
+      }
+      
+      list($status,) = $Grequest->SendDeliverOrder($google_order, $carrier,
+                              $tracking_no, ($cust_notify==1)?"true":"false");
+      if($status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_DELIVER_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_DELIVER_ORDER, 'success');          
+      }
+      list($status,) = $Grequest->SendArchiveOrder($google_order);
+      if($status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_ARCHIVE_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_ARCHIVE_ORDER, 'success');          
       }
     }
     
-    if(isset($notify_comments)) {
-      $send_mail = "false";
-      if($cust_notify == 1) 
-        $send_mail = "true";
-      $postargs =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                   <send-buyer-message xmlns=\"http://checkout.google.com/schema/2\" google-order-number=\"". $google_order. "\">
-                   <send-email> " . $send_mail . "</send-email>
-                   <message>". strip_tags($notify_comments) . "</message>
-                   </send-buyer-message>";    
-      fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-      send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey,
-                      $postargs, $message_log);
-
+    // Send Buyer's message
+    if($cust_notify==1 && isset($notify_comments) && !empty($notify_comments)) {
+      list($status,) = $Grequest->sendBuyerMessage($google_order, 
+                           $notify_comments, "true");
+      if($status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_MESSAGE_ORDER, 'error');
+        $cust_notify_ok = '0';
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_MESSAGE_ORDER, 'success');          
+        $cust_notify_ok = '1';
+      }
+      if(strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH) {
+        $messageStack->add_session(
+        sprintf(GOOGLECHECKOUT_WARNING_CHUNK_MESSAGE, GOOGLE_MESSAGE_LENGTH), 'warning');          
+      }
+      // Cust notified
+      return $cust_notify_ok;
     }
+    // Cust notified
+    return '0';
   }
+  
   // ** END GOOGLE CHECKOUT ** 
 
   require(DIR_WS_CLASSES . 'currencies.php');
@@ -190,36 +163,49 @@
         $check_status_query = tep_db_query("select customers_name, customers_email_address, orders_status, date_purchased from " . TABLE_ORDERS . " where orders_id = '" . (int)$oID . "'");
         $check_status = tep_db_fetch_array($check_status_query);
 
-        if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
+// BOF: MOD - Downloads Controller
+// always update date and time on order_status
+// original        if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
+                   if ( ($check_status['orders_status'] != $status) || $comments != '' || ($status ==DOWNLOADS_ORDERS_STATUS_UPDATED_VALUE) ) {
           tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
+        $check_status_query2 = tep_db_query("select customers_name, customers_email_address, orders_status, date_purchased from " . TABLE_ORDERS . " where orders_id = '" . (int)$oID . "'");
+        $check_status2 = tep_db_fetch_array($check_status_query2);
+      if ( $check_status2['orders_status']==DOWNLOADS_ORDERS_STATUS_UPDATED_VALUE ) {
+        tep_db_query("update " . TABLE_ORDERS_PRODUCTS_DOWNLOAD . " set download_maxdays = '" . tep_get_configuration_key_value('DOWNLOAD_MAX_DAYS') . "', download_count = '" . tep_get_configuration_key_value('DOWNLOAD_MAX_COUNT') . "' where orders_id = '" . (int)$oID . "'");
+      }
+// EOF: MOD - Downloads Controller
+// ** GOOGLE CHECKOUT **
+          chdir("./..");
+          require_once(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/payment/googlecheckout.php');
+          $payment_value= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
+          $num_rows = tep_db_num_rows(tep_db_query("select google_order_number from google_orders where orders_id= ". (int)$oID));
 
-          $customer_notified = '0';
+          if($num_rows != 0) {
+            $customer_notified = google_checkout_state_change($check_status, $status, $oID, 
+                               (@$_POST['notify']=='on'?1:0), 
+                               (@$_POST['notify_comments']=='on'?$comments:''));
+          }
+          $customer_notified = isset($customer_notified)?$customer_notified:'0';
+// ** END GOOGLE CHECKOUT **
           if (isset($HTTP_POST_VARS['notify']) && ($HTTP_POST_VARS['notify'] == 'on')) {
             $notify_comments = '';
             if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
               $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
 	            $customer_notified = '1';
             }
-            
             // ** GOOGLE CHECKOUT **
-            chdir("./..");
-            require_once('includes/languages/' . $language . '/' .'modules/payment/googlecheckout.php');
-            $payment_value= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
-            $num_rows = tep_db_num_rows(tep_db_query("select google_order_number from google_orders where orders_id= ". (int)$oID));
-            
-            //Check if order is a Google Checkout order
-            if($num_rows == 0) {
-              $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
-              tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            }else {
-		          if($HTTP_POST_VARS['notify'] != 'on')
-		          	unset($notify_comments);
-		          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
+            $force_email = false;
+            if($num_rows != 0 && (strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH && MODULE_PAYMENT_GOOGLECHECKOUT_USE_CART_MESSAGING == 'True')) {
+              $force_email = true;
+              $messageStack->add_session(GOOGLECHECKOUT_WARNING_SYSTEM_EMAIL_SENT, 'warning');          
             }
-            // ** END GOOGLE CHECKOUT **
+            if($num_rows == 0 || $force_email) {
+            $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
 
+            tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+            }
           }
-                    
+
           tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
 
           $order_updated = true;
@@ -253,6 +239,16 @@
       $messageStack->add(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
     }
   }
+// BOF: MOD - Downloads Controller - Extra order info
+// Look up things in orders
+  $the_extra_query= tep_db_query("select * from " . TABLE_ORDERS . " where orders_id = '" . (int)$oID . "'");
+  $the_extra= tep_db_fetch_array($the_extra_query);
+  $the_customers_id= $the_extra['customers_id'];
+// Look up things in customers
+  $the_extra_query= tep_db_query("select * from " . TABLE_CUSTOMERS . " where customers_id = '" . $the_customers_id . "'");
+  $the_extra= tep_db_fetch_array($the_extra_query);
+  $the_customers_fax= $the_extra['customers_fax'];
+// EOF: MOD - Downloads Controller - Extra order info
 
   include(DIR_WS_CLASSES . 'order.php');
 ?>
@@ -290,7 +286,19 @@
           <tr>
             <td class="pageHeading"><?php echo HEADING_TITLE; ?></td>
             <td class="pageHeading" align="right"><?php echo tep_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
-            <td class="pageHeading" align="right"><?php echo '<a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('action'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>'; ?></td>
+<?php
+// BOF: MOD - PayPal IPN
+    if ($order->info['payment_method'] == 'paypal'  && isset($HTTP_GET_VARS['refer']) && $HTTP_GET_VARS['refer'] == 'ipn'){
+?>
+           <td class="pageHeading" align="right"><?php echo '<a href="' . tep_href_link(FILENAME_PAYPAL_IPN, tep_get_all_get_params(array('action','oID','refer'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>'; ?></td>
+<?php
+    } else {
+?>
+            <td class="pageHeading" align="right"><?php echo '<a href="' . tep_href_link(FILENAME_ORDERS_EDIT, 'oID=' . $_GET['oID']) . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $_GET['oID']) . '" TARGET="_blank">' . tep_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $_GET['oID']) . '" TARGET="_blank">' . tep_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('action'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a> '; ?></td>
+<?php
+    }//else not paypal
+// EOF: MOD - PayPal IPN
+?>
           </tr>
         </table></td>
       </tr>
@@ -312,6 +320,16 @@
                 <td class="main"><b><?php echo ENTRY_TELEPHONE_NUMBER; ?></b></td>
                 <td class="main"><?php echo $order->customer['telephone']; ?></td>
               </tr>
+<?php
+// BOF: MOD - Downloads Controller - Extra order info
+?>
+              <tr>
+                <td class="main"><b><?php echo 'FAX #:'; ?></b></td>
+                <td class="main"><?php echo $the_customers_fax; ?></td>
+              </tr>
+<?php
+// EOF: MOD - Downloads Controller - Extra order info
+?>
               <tr>
                 <td class="main"><b><?php echo ENTRY_EMAIL_ADDRESS; ?></b></td>
                 <td class="main"><?php echo '<a href="mailto:' . $order->customer['email_address'] . '"><u>' . $order->customer['email_address'] . '</u></a>'; ?></td>
@@ -337,11 +355,33 @@
       </tr>
       <tr>
         <td><table border="0" cellspacing="0" cellpadding="2">
+<?php
+// BOF: MOD - Downloads Controller - Extra order info
+?>
+<!-- add Order # // -->
+      <tr>
+        <td class="main"><b>Order # </b></td>
+        <td class="main"><?php echo tep_db_input($oID); ?></td>
+      </tr>
+<!-- add date/time // -->
+      <tr>
+        <td class="main"><b>Order Date & Time</b></td>
+        <td class="main"><?php echo tep_datetime_short($order->info['date_purchased']); ?></td>
+      </tr>
+<?php
+// EOF: MOD - Downloads Controller - Extra order info
+// BOF: MOD - PayPal IPN
+  if (strtolower($order->info['payment_method']) == 'paypal') {
+    include 'paypal_ipn_order.php';
+  } else {
+// EOF: MOD - PayPal IPN
+?>
           <tr>
             <td class="main"><b><?php echo ENTRY_PAYMENT_METHOD; ?></b></td>
             <td class="main"><?php echo $order->info['payment_method']; ?></td>
           </tr>
 <?php
+  }//else not paypal
     if (tep_not_null($order->info['cc_type']) || tep_not_null($order->info['cc_owner']) || tep_not_null($order->info['cc_number'])) {
 ?>
           <tr>
@@ -400,9 +440,9 @@
            '            <td class="dataTableContent" valign="top">' . $order->products[$i]['model'] . '</td>' . "\n" .
            '            <td class="dataTableContent" align="right" valign="top">' . tep_display_tax_value($order->products[$i]['tax']) . '%</td>' . "\n" .
            '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format($order->products[$i]['final_price'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
-           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax']), true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
+           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax'], true), true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
            '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format($order->products[$i]['final_price'] * $order->products[$i]['qty'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
-           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax']) * $order->products[$i]['qty'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n";
+           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax'], true) * $order->products[$i]['qty'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n";
       echo '          </tr>' . "\n";
     }
 ?>
@@ -540,7 +580,18 @@
         </table></td>
       </form></tr>
       <tr>
-        <td colspan="2" align="right"><?php echo '<a href="' . tep_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $HTTP_GET_VARS['oID']) . '" TARGET="_blank">' . tep_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $HTTP_GET_VARS['oID']) . '" TARGET="_blank">' . tep_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('action'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>'; ?></td>
+<?php /* BOF: MOD - PayPal IPN */ ?>
+<?php
+    if ($order->info['payment_method'] == 'paypal'  && isset($HTTP_GET_VARS['refer']) && $HTTP_GET_VARS['refer'] == 'ipn'){
+?>
+           <td colspan="2" align="right"><?php echo '<a href="' . tep_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $HTTP_GET_VARS['oID']) . '" TARGET="_blank">' . tep_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $HTTP_GET_VARS['oID']) . '" TARGET="_blank">' . tep_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a> <a href="' . tep_href_link(FILENAME_PAYPAL_IPN, tep_get_all_get_params(array('action','oID','refer'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>'; ?></td>
+<?php
+    } else {
+?>
+       <td colspan="2" align="right"><?php echo '<a href="' . tep_href_link(FILENAME_ORDERS_EDIT, 'oID=' . $_GET['oID']) . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $_GET['oID']) . '" TARGET="_blank">' . tep_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $_GET['oID']) . '" TARGET="_blank">' . tep_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('action'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a> '; ?></td>
+<?php
+    }//else not paypal
+// EOF: MOD - PayPal IPN ?>
       </tr>
 <?php
   } else {
@@ -553,10 +604,10 @@
             <td align="right"><table border="0" width="100%" cellspacing="0" cellpadding="0">
               <tr><?php echo tep_draw_form('orders', FILENAME_ORDERS, '', 'get'); ?>
                 <td class="smallText" align="right"><?php echo HEADING_TITLE_SEARCH . ' ' . tep_draw_input_field('oID', '', 'size="12"') . tep_draw_hidden_field('action', 'edit'); ?></td>
-              </form></tr>
+              <?php echo tep_hide_session_id(); ?></form></tr>
               <tr><?php echo tep_draw_form('status', FILENAME_ORDERS, '', 'get'); ?>
                 <td class="smallText" align="right"><?php echo HEADING_TITLE_STATUS . ' ' . tep_draw_pull_down_menu('status', array_merge(array(array('id' => '', 'text' => TEXT_ALL_ORDERS)), $orders_statuses), '', 'onChange="this.form.submit();"'); ?></td>
-              </form></tr>
+              <?php echo tep_hide_session_id(); ?></form></tr>
             </table></td>
           </tr>
         </table></td>
@@ -575,12 +626,17 @@
 <?php
     if (isset($HTTP_GET_VARS['cID'])) {
       $cID = tep_db_prepare_input($HTTP_GET_VARS['cID']);
-      $orders_query_raw = "select o.orders_id, o.customers_name, o.customers_id, o.payment_method, o.date_purchased, o.last_modified, o.currency, o.currency_value, s.orders_status_name, ot.text as order_total from " . TABLE_ORDERS . " o left join " . TABLE_ORDERS_TOTAL . " ot on (o.orders_id = ot.orders_id), " . TABLE_ORDERS_STATUS . " s where o.customers_id = '" . (int)$cID . "' and o.orders_status = s.orders_status_id and s.language_id = '" . (int)$languages_id . "' and ot.class = 'ot_total' order by orders_id DESC";
+//LINE CHANGED: MOD - fedex added "o.fedex_tracking"
+      $orders_query_raw = "select o.orders_id, o.customers_name, o.customers_id, o.payment_method, o.date_purchased, o.last_modified, o.currency, o.currency_value, s.orders_status_name, o.fedex_tracking, ot.text as order_total from " . TABLE_ORDERS . " o left join " . TABLE_ORDERS_TOTAL . " ot on (o.orders_id = ot.orders_id), " . TABLE_ORDERS_STATUS . " s where o.customers_id = '" . (int)$cID . "' and o.orders_status = s.orders_status_id and s.language_id = '" . (int)$languages_id . "' and ot.class = 'ot_total' order by orders_id DESC";
+// LINE CHANGED: MS2 update 501112
+//  } elseif (isset($HTTP_GET_VARS['status'])) {
     } elseif (isset($HTTP_GET_VARS['status']) && is_numeric($HTTP_GET_VARS['status']) && ($HTTP_GET_VARS['status'] > 0)) {
       $status = tep_db_prepare_input($HTTP_GET_VARS['status']);
-      $orders_query_raw = "select o.orders_id, o.customers_name, o.payment_method, o.date_purchased, o.last_modified, o.currency, o.currency_value, s.orders_status_name, ot.text as order_total from " . TABLE_ORDERS . " o left join " . TABLE_ORDERS_TOTAL . " ot on (o.orders_id = ot.orders_id), " . TABLE_ORDERS_STATUS . " s where o.orders_status = s.orders_status_id and s.language_id = '" . (int)$languages_id . "' and s.orders_status_id = '" . (int)$status . "' and ot.class = 'ot_total' order by o.orders_id DESC";
+//LINE CHANGED: MOD - fedex added "o.fedex_tracking"
+      $orders_query_raw = "select o.orders_id, o.customers_name, o.payment_method, o.date_purchased, o.last_modified, o.currency, o.currency_value, s.orders_status_name, o.fedex_tracking, ot.text as order_total from " . TABLE_ORDERS . " o left join " . TABLE_ORDERS_TOTAL . " ot on (o.orders_id = ot.orders_id), " . TABLE_ORDERS_STATUS . " s where o.orders_status = s.orders_status_id and s.language_id = '" . (int)$languages_id . "' and s.orders_status_id = '" . (int)$status . "' and ot.class = 'ot_total' order by o.orders_id DESC";
     } else {
-      $orders_query_raw = "select o.orders_id, o.customers_name, o.payment_method, o.date_purchased, o.last_modified, o.currency, o.currency_value, s.orders_status_name, ot.text as order_total from " . TABLE_ORDERS . " o left join " . TABLE_ORDERS_TOTAL . " ot on (o.orders_id = ot.orders_id), " . TABLE_ORDERS_STATUS . " s where o.orders_status = s.orders_status_id and s.language_id = '" . (int)$languages_id . "' and ot.class = 'ot_total' order by o.orders_id DESC";
+//LINE CHANGED: MOD - fedex added "o.fedex_tracking"
+      $orders_query_raw = "select o.orders_id, o.customers_name, o.payment_method, o.date_purchased, o.last_modified, o.currency, o.currency_value, s.orders_status_name, o.fedex_tracking, ot.text as order_total from " . TABLE_ORDERS . " o left join " . TABLE_ORDERS_TOTAL . " ot on (o.orders_id = ot.orders_id), " . TABLE_ORDERS_STATUS . " s where o.orders_status = s.orders_status_id and s.language_id = '" . (int)$languages_id . "' and ot.class = 'ot_total' order by o.orders_id DESC";
     }
     $orders_split = new splitPageResults($HTTP_GET_VARS['page'], MAX_DISPLAY_SEARCH_RESULTS, $orders_query_raw, $orders_query_numrows);
     $orders_query = tep_db_query($orders_query_raw);
@@ -630,9 +686,42 @@
       if (isset($oInfo) && is_object($oInfo)) {
         $heading[] = array('text' => '<b>[' . $oInfo->orders_id . ']&nbsp;&nbsp;' . tep_datetime_short($oInfo->date_purchased) . '</b>');
 
-        $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=edit') . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=delete') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a>');
-        $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $oInfo->orders_id) . '" TARGET="_blank">' . tep_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $oInfo->orders_id) . '" TARGET="_blank">' . tep_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a>');
-        $contents[] = array('text' => '<br>' . TEXT_DATE_ORDER_CREATED . ' ' . tep_date_short($oInfo->date_purchased));
+// BOF: MOD - FedEx 
+// first determine whether this is on the test or production server to send
+// in the url (there may be a better place to do this...)
+	$value_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_SHIPPING_FEDEX1_SERVER'");
+	$value = tep_db_fetch_array($value_query);
+	$fedex_gateway = $value['configuration_value'];	
+
+// check for a fedex tracking number in the order record
+// if yes tracking number, show "fedex label," "track" and "cancel" options
+	$fedex_tracking = $oInfo->fedex_tracking;
+
+// get the current order status				
+	$check_fedex_status_query = tep_db_query("select orders_status from " . TABLE_ORDERS . " where orders_id = '" . $oInfo->orders_id . "'");
+	$check_fedex_status = tep_db_fetch_array($check_fedex_status_query);
+
+	if ($fedex_tracking) {
+// display the label
+          $contents[] = array('align' => 'center', 'text' => '<a href="fedex_popup.php?num=' . $fedex_tracking . '&oID=' . $oInfo->orders_id . '">' . tep_image_button('button_fedex_label.gif', IMAGE_ORDERS_FEDEX_LABEL) . '</a>');
+					
+// track the package (no gateway needs to be specified)
+          $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_TRACK_FEDEX, 'oID=' .$oInfo->orders_id . '&num=' . $fedex_tracking) . '&fedex_gateway=track">' . tep_image_button('button_track.gif', IMAGE_ORDERS_TRACK) . '</a>');
+
+// cancel the request				
+					
+          $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_SHIP_FEDEX, 'oID=' .$oInfo->orders_id . '&num=' . $fedex_tracking . '&action=cancel&fedex_gateway=' . $fedex_gateway) . '" onClick="return(window.confirm(\'Cancel shipment of order number ' . $oInfo->orders_id . '?\'));">' . tep_image_button('button_cancel_shipment.gif', IMAGE_ORDERS_CANCEL_SHIPMENT) . '</a>');
+        }
+// if no fedex tracking number, AND if the order has not been manually marked "delivered,"
+// display the "ship" button
+
+        elseif ((!$fedex_tracking) && (($check_fedex_status['orders_status']) != 3)) {			
+          $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_SHIP_FEDEX, 'oID=' .$oInfo->orders_id . '&action=new&status=3') . '">' . tep_image_button('button_ship.gif', IMAGE_ORDERS_SHIP) . '</a>');
+        }
+// EOF: MOD - FedEx 
+       $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=edit') . '">' . tep_image_button('button_details.gif', IMAGE_DETAILS) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS, tep_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=delete') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a>');
+$contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $oInfo->orders_id) . '" TARGET="_blank">' . tep_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $oInfo->orders_id) . '" TARGET="_blank">' . tep_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a> <a href="' . tep_href_link(FILENAME_ORDERS_EDIT, 'oID=' . $oInfo->orders_id) . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a>');
+$contents[] = array('text' => '<br>' . TEXT_DATE_ORDER_CREATED . ' ' . tep_date_short($oInfo->date_purchased));
         if (tep_not_null($oInfo->last_modified)) $contents[] = array('text' => TEXT_DATE_ORDER_LAST_MODIFIED . ' ' . tep_date_short($oInfo->last_modified));
         $contents[] = array('text' => '<br>' . TEXT_INFO_PAYMENT_METHOD . ' '  . $oInfo->payment_method);
       }

@@ -1,44 +1,4 @@
-<?php
-/*
-  $Id: shopping_cart.php,v 1.73 2003/06/09 23:03:56 hpdl Exp $
-
-  osCommerce, Open Source E-Commerce Solutions
-  http://www.oscommerce.com
-
-  Copyright (c) 2003 osCommerce
-
-  Released under the GNU General Public License
-*/
-
-  require("includes/application_top.php");
-
-  require(DIR_WS_LANGUAGES . $language . '/' . FILENAME_SHOPPING_CART);
-
-  $breadcrumb->add(NAVBAR_TITLE, tep_href_link(FILENAME_SHOPPING_CART));
-?>
-<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html <?php echo HTML_PARAMS; ?>>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=<?php echo CHARSET; ?>">
-<title><?php echo TITLE; ?></title>
-<base href="<?php echo (($request_type == 'SSL') ? HTTPS_SERVER : HTTP_SERVER) . DIR_WS_CATALOG; ?>">
-<link rel="stylesheet" type="text/css" href="stylesheet.css">
-</head>
-<body marginwidth="0" marginheight="0" topmargin="0" bottommargin="0" leftmargin="0" rightmargin="0">
-<!-- header //-->
-<?php require(DIR_WS_INCLUDES . 'header.php'); ?>
-<!-- header_eof //-->
-
-<!-- body //-->
-<table border="0" width="100%" cellspacing="3" cellpadding="3">
-  <tr>
-    <td width="<?php echo BOX_WIDTH; ?>" valign="top"><table border="0" width="<?php echo BOX_WIDTH; ?>" cellspacing="0" cellpadding="2">
-<!-- left_navigation //-->
-<?php require(DIR_WS_INCLUDES . 'column_left.php'); ?>
-<!-- left_navigation_eof //-->
-    </table></td>
-<!-- body_text //-->
-    <td width="100%" valign="top"><?php echo tep_draw_form('cart_quantity', tep_href_link(FILENAME_SHOPPING_CART, 'action=update_product')); ?><table border="0" width="100%" cellspacing="0" cellpadding="0">
+    <?php echo tep_draw_form('cart_quantity', tep_href_link(FILENAME_SHOPPING_CART, 'action=update_product')); ?><table border="0" width="100%" cellspacing="0" cellpadding="0">
       <tr>
         <td><table border="0" width="100%" cellspacing="0" cellpadding="0">
           <tr>
@@ -54,7 +14,7 @@
   if ($cart->count_contents() > 0) {
 ?>
       <tr>
-        <td>
+        <td class="infoBoxHeading">
 <?php
     $info_box_contents = array();
     $info_box_contents[0][] = array('align' => 'center',
@@ -79,7 +39,8 @@
       if (isset($products[$i]['attributes']) && is_array($products[$i]['attributes'])) {
         while (list($option, $value) = each($products[$i]['attributes'])) {
           echo tep_draw_hidden_field('id[' . $products[$i]['id'] . '][' . $option . ']', $value);
-          $attributes = tep_db_query("select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix
+//++++ QT Pro: Begin Changed code
+          $attributes = tep_db_query("select popt.products_options_name, popt.products_options_track_stock, poval.products_options_values_name, pa.options_values_price, pa.price_prefix
                                       from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                                       where pa.products_id = '" . (int)$products[$i]['id'] . "'
                                        and pa.options_id = '" . (int)$option . "'
@@ -88,6 +49,7 @@
                                        and pa.options_values_id = poval.products_options_values_id
                                        and popt.language_id = '" . (int)$languages_id . "'
                                        and poval.language_id = '" . (int)$languages_id . "'");
+//++++ QT Pro: End Changed Code									   
           $attributes_values = tep_db_fetch_array($attributes);
 
           $products[$i][$option]['products_options_name'] = $attributes_values['products_options_name'];
@@ -95,6 +57,9 @@
           $products[$i][$option]['products_options_values_name'] = $attributes_values['products_options_values_name'];
           $products[$i][$option]['options_values_price'] = $attributes_values['options_values_price'];
           $products[$i][$option]['price_prefix'] = $attributes_values['price_prefix'];
+//++++ QT Pro: Begin Changed code
+          $products[$i][$option]['track_stock'] = $attributes_values['products_options_track_stock'];
+//++++ QT Pro: End Changed Code
         }
       }
     }
@@ -118,7 +83,13 @@
                        '    <td class="productListing-data" valign="top"><a href="' . tep_href_link(FILENAME_PRODUCT_INFO, 'products_id=' . $products[$i]['id']) . '"><b>' . $products[$i]['name'] . '</b></a>';
 
       if (STOCK_CHECK == 'true') {
+//++++ QT Pro: Begin Changed code
+        if (isset($products[$i]['attributes']) && is_array($products[$i]['attributes'])) {
+          $stock_check = tep_check_stock($products[$i]['id'], $products[$i]['quantity'], $products[$i]['attributes']); 
+        }else{
         $stock_check = tep_check_stock($products[$i]['id'], $products[$i]['quantity']);
+        }
+//++++ QT Pro: End Changed Code
         if (tep_not_null($stock_check)) {
           $any_out_of_stock = 1;
 
@@ -207,13 +178,8 @@
     // ** GOOGLE CHECKOUT **
     // Checks if the Google Checkout payment module has been enabled and if so 
     // includes gcheckout.php to add the Checkout button to the page 
-  
-    $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
-    while ($status = tep_db_fetch_array($status_query)) {
-      $status_flag = $status['configuration_value'];	
-    }
-    if ($status_flag == 'True') {
-      include('googlecheckout/gcheckout.php');
+    if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+      include_once('googlecheckout/gcheckout.php');
     }
     // ** END GOOGLE CHECKOUT **
     ?>
@@ -244,22 +210,5 @@
 <?php
   }
 ?>
-</table></td>
+    </table>
 
-<!-- body_text_eof //-->
-    <td width="<?php echo BOX_WIDTH; ?>" valign="top"><table border="0" width="<?php echo BOX_WIDTH; ?>" cellspacing="0" cellpadding="2">
-<!-- right_navigation //-->
-<?php require(DIR_WS_INCLUDES . 'column_right.php'); ?>
-<!-- right_navigation_eof //-->
-    </table></td>
-  </tr>
-</table>
-<!-- body_eof //-->
-
-<!-- footer //-->
-<?php require(DIR_WS_INCLUDES . 'footer.php'); ?>
-<!-- footer_eof //-->
-<br>
-</body>
-</html>
-<?php require(DIR_WS_INCLUDES . 'application_bottom.php'); ?>

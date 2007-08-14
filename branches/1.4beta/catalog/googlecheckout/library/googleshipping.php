@@ -47,7 +47,7 @@
 
     function GoogleMerchantCalculatedShipping($name, $price) {
       $this->price = $price;
-      $this->name = $name;
+      $this->name = htmlentities($name);
     }
 
     function AddShippingRestrictions($restrictions) {

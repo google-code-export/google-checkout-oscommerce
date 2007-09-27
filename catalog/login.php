@@ -214,12 +214,8 @@ function session_win() {
     // ** GOOGLE CHECKOUT **
     // Checks if the Google Checkout payment module has been enabled and if so 
     // includes gcheckout.php to add the Checkout button to the page 
-    $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
-    while ($status = tep_db_fetch_array($status_query)) {
-      $status_flag = $status['configuration_value'];	
-    }
-    if ($status_flag == 'True') {
-      include('googlecheckout/gcheckout.php');
+    if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+      include_once('googlecheckout/gcheckout.php');
     } 
    	// ** END GOOGLE CHECKOUT **            
     ?>

@@ -1,4 +1,7 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.3 RC2 - 04/18/2007
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.4.5_CCS - 09/27/2007
+
+NOTE: This will work with New OSCommercer v2.2. RC1
+http://www.oscommerce.com/solutions/downloads
 
 INTRODUCTION
 ============
@@ -10,28 +13,33 @@ The plugin provides Level 2 integration of Google Checkout with osCommerce.
 
 Plugin features include:
 1. Posting shopping carts to Google Checkout
-2. Shipping support, now you can use Merchant Calculated Shipping Rates!
-   - Tested to work with FedEx and UPS XML.
+2. Shipping support with Merchant Calculated Shipping Rates!
 3. Tax support
-4. User and order updates within osCommerce
-5. Order processing using osCommerce Admin UI 
+4. User and order updates within OSC
+5. Order processing using OSC Admin UI 
+6. Order Totals Support
 
 For continued support, you may use either support area:
 
-http://forums.oscommerce.com/index.php?showtopic=229637
+http://groups.google.com/group/google-checkout-for-osc-mod-support
 
 REQUIREMENTS
 ============
-osCommerce v2.2
+osCommerce v2.2RC1
 PHP3 or PHP4 or PHP5 with cURL(libcurl) installed and enabled
 
 
 INSTALLATION NOTES
 ==================
-* Follow instructions contained in the INSTALLATION file.
-* register_globals can be either On or Off. 
-Verify the installation from the Admin site and selecting MODULES->PAYMENTS and 
-checking if Google Checkout is listed as a payment option.
+1. Follow instructions contained in the INSTALLATION file.
+2. Verify the installation from the Admin site and selecting MODULES->PAYMENTS 
+    and checking if Google Checkout is listed as a payment option.
+3. Set the file attribute to 777 for /googlecheckout/logs/response_error.log and 
+    /googlecheckout/logs/response_message.log files.
+4. Go to http://<url-site-url>/googlecheckout/responsehandler.php
+    If you get a 'Invalid or not supported Message', go to the next section.  
+    If you get any errors,  you must correct all errors before proceeding.  
+    Refer to the troubleshooting section below or go to the support forum for help.
 
 
 SETUP ON ADMIN UI
@@ -39,27 +47,36 @@ SETUP ON ADMIN UI
 Select and install the Google Checkout payment module. The following are some 
 of the fields you can update:
 
+Select and install the Google Checkout payment module. The following are some 
+of the fields you can update:
+
+0. Installed GC module version
 1. Enable/Disable: Enable this to use Google Checkout for your site.
-2. .htaccess Basic Authentication Mode with PHP over CGI? If your site is 
+
+2. Operation Mode: Test your site with Google Checkout's sandbox server before 
+   migrating to production. You will need it signup for a separate Google Checkout 
+   sandbox account at http://sandbox.google.com/checkout/sell. Your sandbox account
+   will have a different Merchant ID and Merchant Key. When you are ready to run 
+   against the production server, remember to update your merchant ID and key 
+   when migrating.
+   
+3. Merchant ID and Merchant Key:(Mandatory) If any of these are not set and the 
+   module is enabled, a disabled (gray) Checkout button appears on the Checkout 
+   page. Set these values from your seller Google account under the 
+   Settings->Integration tab. Separate Sandbox and Production.
+   
+4. .htaccess Basic Authentication Mode with PHP over CGI? If your site is 
    installed on a PHP CGI you must disable Basic Authentication over PHP. 
    To avoid spoofed messages (only if this feature is enabled) reaching 
    responsehandler.php, set the .htaccess file with the script linked 
    (http://your-site/admin/htaccess.php). 
    Set permission 777 for http://your-site/googlecheckout/ before running 
    the script. Remember to turn back permissions after creating the files.
-3. Merchant ID and Merchant Key:(Mandatory) If any of these are not set and the 
-   module is enabled, a disabled (gray) Checkout button appears on the Checkout 
-   page. Set these values from your seller Google account under the 
-   Settings->Integration tab.
-4. Operation Mode: Test your site with Google Checkout's sandbox server before 
-   migrating to production. You will need it signup for a separate Google Checkout 
-   sandbox account at http://sandbox.google.com/sell. Your sandbox account will 
-   have a different Merchant ID and Merchant Key. When you are ready to run 
-   against the production server, remember to update your merchant ID and key 
-   when migrating.
+   
 5. Merchant Calculation Mode of Operation: Sets Merchant calculation URL for 
    Sandbox environment. Could be HTTP or HTTPS. (Checkout production environment 
    always requires HTTPS.)
+   
 6. Disable Google Checkout for Virtual Goods?: This configuration is enabled and
     there is any virtual good in the cart the Google Checkout button will be
     shown disabled.
@@ -73,23 +90,73 @@ of the fields you can update:
    reason Google Checkout cannot reach your API callback to calculate the 
    shipping price.
 
-9. Rounding Policy Mode and Rounding Policy Rule: Determines how Google Checkout
-    will do rounding in prices.
-    US default: rounding rule TOTAL, rounding mode is HALF_EVEN
-    UK default: rounding rule PER_LINE, rounding mode is HALF_UP
-    
-    More info:
-    http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html
+9. GoogleCheckout Carrier Calculated Shipping. Set if you want or not to use CCS.
+    Note that if you enable CCS, all Merchant Calculation Modules will be IGNORED
+    for GC orders. Only Flat Rate shippings will be included with CCS.
 
-10. Google Analytics Id: Add google analytics to your e-commerce. Now there is a 
-   feature in GA to integrate easily with any e-commerce with GoogleCheckout.
-   More info: See below "Enabling E-Commerce Reporting for Google Analytics".
-   
-11. Continue shopping URL: The URL customers will be redirected to if they 
-   follow the link back to your site after checkout.
+10. Carrier Calculater Shipping Configuration. Set Default Values, Fix and 
+    Variable charge for each specific CCS method. 
+    The DV contains the default shipping cost for a carrier-calculated-shipping 
+     option. If Google is unable to obtain the carrier's shipping rate for a 
+     shipping option, the buyer will still have the option of selecting that 
+     shipping option and paying the DV value to have the order shipped.
+     http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_price
+    The Fix value allows you to specify a fixed charge that will be added to the
+     total cost of an order.
+     http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_additional-fixed-charge
+    The Variable Charge pecifies a percentage amount by which a carrier-calculated
+     shipping rate will be adjusted. The tag's value may be positive or negative.
+     http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_additional-variable-charge-percent
+    
+    Set Def. Value to 0 to disable the method
+
+11. Rounding Policy Mode and Rounding Policy Rule: Determines how Google Checkout
+     will do rounding in prices.
+     US default: rounding rule TOTAL, rounding mode is HALF_EVEN
+     UK default: rounding rule PER_LINE, rounding mode is HALF_UP
+
+     More info:
+     http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html
+
+12. Cart Expiration Time: if different from NONE, this postive integrer will set 
+     an expiration time from the creation of the GC button to X minutes. Where X
+     is the value set. This will prevent buyers to use carts that may be deprecated
+     or with wrong settings. Default is NONE. Take in care that the time in your
+     server may not be syncronized with GC servers, so if you set short expiration
+     times this may not be so accurate.     
+
+13. Also send Notification with OSC, if enabled, will send an email using the 
+     OSC internal email system if the comment in an order is larger than 254 
+     chars, limit for a google send message. If this happens a warning will be 
+     shown in the Admin UI. It will also send emails to the merchant account 
+     when orders states are changed in the Admin UI.
+
+14. Google Analytics Id: Add google analytics to your e-commerce. Now there is a 
+     feature in GA to integrate easily with any e-commerce with GoogleCheckout.
+     More info: See below "Enabling E-Commerce Reporting for Google Analytics".
+
+15. 3rd Party Tracking: Do you want to integrate the module 3rd party tracking? 
+     Add the tracker URL, NONE to disable.
+    More info:
+    http://code.google.com/apis/checkout/developer/checkout_pixel_tracking.html
+
+16. Google Checkout restricted product categories: Insert here the Ids of all the 
+     product categories that you want to exclude from the Google Checkout. 
+     Separate them using commas (ie. "1, 3,56 , 32").
+     Double check Google Policy:
+     http://checkout.google.com/support/sell/bin/answer.py?answer=46174&topic=8681
+     http://checkout.google.com/seller/policies.html#4
+
+17. Continue shopping URL: The URL customers will be redirected to if they 
+     follow the link back to your site after checkout. 
+     (http://your-site/osc_dir/<input data>)
+     Note:Use GC_return.php for special page that will show all the purchased items 
+      with Google Checkout
 
 Your Google Checkout setup page is correct if, upon viewing it, a non-disabled 
-Google Checkout button appears.
+Google Checkout button appears. Double check the INSTALLATION file for more info
+Your Google Checkout setup page is correct if, upon viewing it, a non-disabled 
+Google Checkout button appears. Double check the INSTALLATION file for more info
 
 Enabling E-Commerce Reporting for Google Analytics
 ==================================================
@@ -106,6 +173,39 @@ enable e-commerce reporting for your website:
 More info: 
 http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html
 
+Note for 3rd party tracking: Actual configuration supports just one 3rd party 
+ tracking Co. And some modification maybe needed to do in the code for 
+ specific trakers.
+ Read:
+ http://code.google.com/apis/checkout/developer/checkout_pixel_tracking.html
+ And change the code here:
+  googlecheckout/gcheckout.php
+ Maping works this way:
+  $tracking_attr_types = array(
+                              'GC_attr_type1' => '3rd_attr_name1',
+                              'GC_attr_type2' => '3rd_attr_name2',
+                              ...
+                              );
+  Will be traduced to:
+  <parameters>
+    <url-parameter name="3rd_attr_name1" type="GC_attr_type1"/>
+    <url-parameter name="3rd_attr_name2" type="GC_attr_type2"/>
+    ...
+  </parameters>
+  
+DIGITAL DELIVERY
+================
+All products marked as maked as "Product is Virtual" will be included in the 
+ digital delivery API. This means that at the end of the GC transaction a link
+ to the OSC checkout_success.php page will be shown as well as a description of the 
+ product.
+If the whole cart is virtual, no shipping to: will be shown in the GC Place 
+ Order Page. 
+Note: If the cart is virtual but has some custom order_totals (low_orderFee, 
+ group_discount, etc), a notice saying an "Email will sent" will be show for each
+ order total in the GC confirmation page. This is a limitation of GC API for
+ supporting custom OT and digital delivery.
+ 
 MERCHANT CALCULATED SHIPPING
 ============================
 In order to use this module you must have some Real Time Shipping provider,
@@ -125,60 +225,96 @@ Script to create new shipping methods
 	http://your-site/osccart_dir/googlecheckout/shipping_generator
 More Info: 
 	http://your-site/osccart_dir/googlecheckout/shipping_generator/README
-	
-MERCHANT CALCULATED SHIPPING
-============================
-In order to use this module you must have some Real Time Shipping provider, 
-such as USPS or FedEx. This Module must be activated and configured in 
-Modules->Shipping. For each enabled module you'll have to set the default 
-values in the Google Checkout Admin UI.
-This Value will be used if for any reason Google Checkout cannot reach your API 
-callback to calculate the shipping price. 
 
-The available shipping methods for each shipping provider must be configured in 
-catalog/includes/modules/payment/googlecheckout.php in the mc_shipping_methods 
-parameter. If you want to disable one or more methods, just comment them out.
-Be aware that if you mix flat rate and real time rates, both will be taken as 
-merchant-calculated-shipping. 
+CARRIER CALCULATED SHIPPING
+===========================
+This feature allows merchants to get real time quotes without any effort. All
+ calculation are done by the GC servers. You only need to specify the shipping
+ methods you want to provide. 
+ Google supports the carrier-calculated shipping feature for three carriers: 
+ FedEx, UPS and the U.S. Postal Service (USPS)
 
-Script to create new shipping methods
-	http://your-site/zencart_dir/googlecheckout/shipping_generator
-More Info: 
-	http://your-site/zencart_dir/googlecheckout/shipping_generator/README
+You cannot offer carrier-calculated shipping methods and merchant-calculated
+ shipping methods for the same order. However, you can offer carrier-calculated
+ shipping methods and still use the Merchant Calculations API to calculate taxes 
+ and adjustments for coupons and gift certificates.
+ 
+Note: Only US Domestic shipping address are allowed right now. If shipping 
+       address is Int'l only Flat Rate shippings will be shown.
 
-
-
+More info:
+ http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#Process
+ 
 TRACKING USERS AND ORDERS
 =========================
-In order to provide this support (as required for Level 2 integration), update 
-the API callback request field in the seller account to 
-https://<url-site-url>/catalog/googlecheckout/responsehandler.php . Note that 
-the production Checkout server requires an SSL callback site.
-The Sandbox server accepts non SSL callback URLs, 
-http://<url-site-url>/catalog/googlecheckout/responsehandler.php
+In order to provide this support (as required for Level 2 integration), update
+ the API callback request field in the seller account to 
+ https://<url-site-url>/googlecheckout/responsehandler.php . 
+ Note that the production Checkout server requires an SSL callback site.
+The Sandbox server accepts non SSL callback URLs.
 
 View your Google Checkout customers and their orders in the Reports tab. 
-For each order, the default starting state is PENDING. 
-The state changes to PROCESSING and DELIVERED as follows; corresponding messages
-will be sent out to the Checkout server for order processing.
+For each order, the default starting state is Google New. 
+GC Orders States in OSC Admin
 
-| Original State | New State  | Action                         |  Customer Notification    |
-| PENDING        | PROCESSING | charging the order             |  Processing order message |
-| PROCESSING     | DELIVERED  | marking the order for delivery |  Shipped order message    |
+(the instructions below assume you have enabled "Automatically authorize and
+charge the buyer's credit card" in your GC merchant account Settings >
+Preferences).
 
-You can add a Tracking Number in the state change from PROCESSING to DELIVERED. 
+1. When an order for a regular (non-download) product is submitted  through
+GC the order state in OSC admin will be auto set to "Google_Processing". When
+following-up on (shipping) these orders you will need to change the order
+status to "Google_Shipped".
+
+2. When an order for a download product is submitted via GC, the order
+status in OSC admin will be auto set to "Google_Shipped" (even if customer
+has attempted to download or not). When following-up on download orders keep
+the
+status "Google_Shipped", no need to change the state.
+
+3.. Refunding/canceling "total" GC orders works from within OSC admin.
+
+a. If you have not yet changed a non-download order from "Google_Processing"
+to "Google_Shipped" you can directly cancel/refund the TOTAL order by
+selecting "Google_Canceled" (but do NOT set to "Google_Refunded").
+
+Changing the state to "Google_Cancelled" will auto refund 100% of
+transaction AND cancel the order at the same time. So there is no need to
+login to GC Merchant account to process the TOTAL refund.
+
+b. Also after an item is shipped you can refund the TOTAL amount of order by
+ choosing "Google_Canceled" (but as stated above do NOT set to
+"Google_Refunded").
+
+c. However if you want to only refund a PORTION of the order amount (for
+example if customer ordered two items and want to refund amount for only one
+item) then you will need to log in to your GC Merchant amount and process
+the partial refund. (Then Google will automatically change the order status
+in OSC admin to "Google_Refunded" or "Google_Shipped and
+Refunded", and you won't have to change the state in OSC admin.
+
+d. Understanding the above then you should not ever need to apply
+"Google_Refunded" or "Google_Shipped and Refunded". These states are usually
+reserved for Google use only.
+
+You can add a Tracking Number in the state change from GoogleProcessing to
+GoogleShipped
 A text field and a combo with the shipping providers will be show when the order
-is in the PROCESSING state.
+is in the GoogleProcessing state.
 
-Any comments added during state change will be sent to the buyer account page if
-you have selected the Notify Customer option.
+Any comments added during state change will be sent to the buyer account page
+ if you have selected the Append Comments option.
 
-All request and response messages will be logged to the file 
-catalog/googlecheckout/response_message.log.
-In case an order payment is declined or an order is canceled 
-(by Google or otherwise), you can add code to 
-catalog/googlecheckout/responsehandler.php for any specific actions you 
-need to take.
+All statechanges are added as notes in the Admin UI
+All request and response messages will be logged to the file
+googlecheckout/logs/response_message.log.
+
+Refunds are added as new order totals in each order as well as part of the
+history of the order.
+
+The same for cancellations
+
+Check states.jpg for the states machine diagram. 
 
 
 PROJECT HOME
@@ -191,15 +327,15 @@ GROUP DISCUSSIONS
 =================
 To meet other developers and merchants who have integrated Google Checkout with 
 osCommerce and to discuss any topics related to integration of Google Checkout 
-with osCommerce, go to http://forums.oscommerce.com/index.php?showtopic=229637
+with osCommerce, go to http://groups.google.com/group/google-checkout-for-osc-mod-support
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MOST COMMON MISTAKES
 ====================
-1. Make sure you set the file attribute to 777 for /googlecheckout/response_error.log 
-   and /googlecheckout/response_message.log files.
+1. Make sure you set the file attribute to 777 for 
+    /googlecheckout/logs/response_error.log and /googlecheckout/logs/response_message.log files.
 2. Set your Google callback url to https://<url-site-url>/googlecheckout/responsehandler.php
    In Sandbox, HTTPS is not required.
    In Production mode, HTTPS is required.
@@ -213,10 +349,10 @@ MOST COMMON MISTAKES
 
 TROUBLE SHOOTING
 ================
-1. Problem: /public_html/googlecheckout/response_message.log) [function.fopen]: 
+1. Problem: /public_html/googlecheckout/logs/response_message.log) [function.fopen]: 
     failed to open stream: Permission denied.
-   Solution: Set the file attribute to 777 for /googlecheckout/response_error.log 
-    and /googlecheckout/response_message.log files.
+   Solution: Set the file attribute to 777 for /googlecheckout/logs/response_error.log 
+    and /googlecheckout/logs/response_message.log files.
 2. Problem: Test order shows up in Google but not admin.
    Solution: There is an error somewhere in the file 
     /googlecheckout/responsehandler.php or you have set a wrong API callback 
@@ -238,7 +374,7 @@ TROUBLE SHOOTING
     http://checkout.google.com/support/sell/bin/answer.py?answer=57856
 6. Problem: <error-message>Bad Signature on Cart</error-message>
    Solution: Incorrect Merchant key.
-7. Problem: (/public_html/googlecheckout/response_error.log) 
+7. Problem: (/public_html/googlecheckout/logs/response_error.log) 
     Tue Nov 28 8:56:21 PST 2006:- Shopping cart not obtained from session. 
    Solution: Set to False admin->configuration->session->Prevent Spider Sessions
     configuration (Thx dawnmariegifts, beta tester)
@@ -255,77 +391,22 @@ TROUBLE SHOOTING
 			Change googlecheckout/gcheckout.php Line 34 'admin' for the modified admin
 			 directory
       require_once('admin/includes/configure.php');      
-    
-KNOWN BUGS - (Report bugs at http://forums.oscommerce.com/index.php?showtopic=229637)
+10. IIS Note::  For HTTP Authentication to work with IIS, 
+		the PHP directive cgi.rfc2616_headers must be set to 0 (the default value).
+		Will use the $_SERVER['HTTP_AUTHORIZATION'] header
+11. No shipping is shown in the Cart.
+     Have you checked that this constant have the correct value set in the includes/configure.php?
+     DIR_FS_CATALOG and DIR_WS_MODULES
+     Try adding an echo in googlecheckout/gcheckout.php
+       echo $module_directory = DIR_FS_CATALOG . DIR_WS_MODULES . 'shipping/';
+     and in the shopping_cart.php page see if the string u see is the correct 
+     dir where the shipping file are. 	   
+KNOWN BUGS -
 ==========
+(Report bugs at 
+ http://groups.google.com/group/google-checkout-for-osc-mod-support)
 
 
 CHANGE LOG
-==========
-09/26/2006 v1.0.0 (Google Checkout team)
-           - Initial release. 
-
-09/27/2006 v1.0.1 (Google Checkout team)
-           - Updated the original module to run on either PHP4 or PHP5.
-
-10/05/2006 v1.0.1b (Google Checkout team)
-           - Step-by-step installation instructions included.
-
-10/18/2006 v1.0.2 (Google Checkout team)
-           - Fixed minor bugs in responsehandler.php and orders.php files
-  
-11/17/2006 v1.0.3 (ropu)
-           - Add support for Merchant Calculated Shipping Rates.
-           - Fixed minor bugs in responsehandler.php and orders.php files
-           - Change the XML parser and builder
-           - Removed getallheader() function
-           - Fixed wrong Qty in Admin UI
-           - Fixed modules not saving their settings
-           - Fixed Notify Customer option
-
-12/04/2006 v1.0.4 (ropu)
-           - Add order-state-change, risk-information and charge-amount notification into the Admin UI
-           - Fix Shopping cart not obtained from session. See TROUBLE SHOOTING.
-
-01/10/2007 v1.1.0b3 (rszrama)
-           - Bugfix compilation so people stop downloading the old code till 1.1.0 comes out!
-           - Read v1-1-0b2.txt for more information.
-           
-01/12/2007 v1.1.0b4 (ropu)
-           - Fix <tax-table-selector> strict validation.
-           
-02/26/2007 v1.2 (ropu)
-           - Add multisocket feature for merchant-calculations (alfa)(optional)
-           - Different algorithm to retrieve quotes
-           - Add Google Analytics Support
-           - Add support for PHP CGI installations
-           - Add in UPSXML methods by default
-           - Add user and password for Google Checkout buyers
-           - Items retrieved from Merchant-private-item-data instead of session.
-           - Many bug fixes
-
-03/05/2007 v1.2 RC3 (ropu)
-   - Fix gray button when Tax Class selected bug (Thx BlessIsaacola)
-   
-04/10/2007 v1.3RC1 (ropu)
-   - Add tracking data to the Admin UI Orders
-   - Fixed SSL issue with Google Analytics feature
-   - International Shipping Features
-   - Restricting Shipping Options for Post Office (P.O.) Box Addresses feature
-   - International Tax Features
-   - Selecting a Rounding Policy for Tax Calculations
-   - Fixed Tax for zones
-   - Fixed Tax for products
-   - Added support for All Areas Zones
-   - Add a configuration to disable Google Checkout Button when are virtual good in the cart
-   		(double check http://checkout.google.com/seller/policies.html#4)
-   - Disable multisocket Option :(
-   
-04/18/2007 v1.3RC2 (ropu)
-   - Support for UK merchants 
-     http://code.google.com/apis/checkout/developer/release_notes.html (apr13)
-   - Docs update
-   - Minor bug fix
-   - Added Shipping Generator Tool in the stardard package (Optional)
-   - Flat rate shipping bug fixed
-   - Improved tax and shipping restrictions
+=========
+See CHANGELOG file. 	 	

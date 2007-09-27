@@ -1,6 +1,7 @@
 <?php
 /*
   $Id: orders.php,v 1.112 2003/06/29 22:50:52 hpdl Exp $
+  $Id: orders.php,v 1.2.1 2007/09/27 22:50:52 Ropu - added Google Checkout (v1.4.5) $
 
   osCommerce, Open Source E-Commerce Solutions
   http://www.oscommerce.com
@@ -13,155 +14,195 @@
   require('includes/application_top.php');
   	
  /* ** GOOGLE CHECKOUT **/
-  define('STATE_PENDING', "1");
-  define('STATE_PROCESSING', "2");
-  define('STATE_DELIVERED', "3");
- 
- /*
-  * Function which posts a request to the specified url.
-  * @param url Url where request is to be posted
-  * @param merid The merchant ID used for HTTP Basic Authentication
-  * @param merkey The merchant key used for HTTP Basic Authentication
-  * @param postargs The post arguments to be sent
-  * @param message_log An opened log file poitner for appending logs
-  */
-  function send_google_req($url, $merid, $merkey, $postargs, $message_log) {
-    // Get the curl session object
-    $session = curl_init($url);
+  define('GC_STATE_NEW', 100);
+  define('GC_STATE_PROCESSING', 101);
+  define('GC_STATE_SHIPPED', 102);
+  define('GC_STATE_REFUNDED', 103);
+  define('GC_STATE_SHIPPED_REFUNDED', 104);
+  define('GC_STATE_CANCELED', 105);
+  function google_checkout_state_change($check_status, $status, $oID, 
+                                              $cust_notify, $notify_comments) {
+      global $db,$messageStack, $orders_statuses;
 
-    $header_string_1 = "Authorization: Basic ".base64_encode($merid.':'.$merkey);
-    $header_string_2 = "Content-Type: application/xml;charset=UTF-8";	
-    $header_string_3 = "Accept: application/xml;charset=UTF-8";
-	
-//    fwrite($message_log, sprintf("\r\n%s %s %s\n",$header_string_1, $header_string_2, $header_string_3));
-    // Set the POST options.
-    curl_setopt($session, CURLOPT_POST, true);
-    curl_setopt($session, CURLOPT_HTTPHEADER, array($header_string_1, $header_string_2, $header_string_3));
-    curl_setopt($session, CURLOPT_POSTFIELDS, $postargs);
-    curl_setopt($session, CURLOPT_HEADER, true);
-    curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
-	// Uncomment the following and set the path to your CA-bundle.crt file if SSL verification fails
-	//curl_setopt($session, CURLOPT_CAINFO, "C:\\Program Files\\xampp\\apache\\conf\\ssl.crt\\ca-bundle.crt");
+      define('API_CALLBACK_ERROR_LOG', 
+                       DIR_FS_CATALOG. "/googlecheckout/logs/response_error.log");
+      define('API_CALLBACK_MESSAGE_LOG',
+                       DIR_FS_CATALOG . "/googlecheckout/logs/response_message.log");
 
-    // Do the POST and then close the session
-    $response = curl_exec($session);
-	if (curl_errno($session)) {
-		die(curl_error($session));
-	} else {
-	    curl_close($session);
-	}
+      include_once(DIR_FS_CATALOG.'/includes/modules/payment/googlecheckout.php');
+      include_once(DIR_FS_CATALOG.'/googlecheckout/library/googlerequest.php');
 
-    fwrite($message_log, sprintf("\r\n%s\n",$response));
-	
-    // Get HTTP Status code from the response
-    $status_code = array();
-    preg_match('/\d\d\d/', $response, $status_code);
-    
-    fwrite($message_log, sprintf("\r\n%s\n",$status_code[0]));
-    // Check for errors
-    switch( $status_code[0] ) {
-      case 200:
-      // Success
-        break;
-      case 503:
-        die('Error 503: Service unavailable. An internal problem prevented us from returning data to you.');
-	      break;
-      case 403:
-        die('Error 403: Forbidden. You do not have permission to access this resource, or are over your rate limit.');
-        break;
-      case 400:
-        die('Error 400: Bad request. The parameters passed to the service did not match as expected. The exact error is returned in the XML response.');
-        break;
-      default:
-        die('Error :' . $status_code[0]);
-    }
-  }
-  
-  function google_checkout_state_change($check_status, $status, $oID, $cust_notify, $notify_comments) {
-    // If status update is from Pending -> Processing on the Admin UI
-    // this invokes the processing-order and charge-order commands
-    // 1->Pending, 2-> Processing
-    global $carrier_select, $tracking_number;
+      $googlepayment = new googlecheckout();
+      
+      $Grequest = new GoogleRequest($googlepayment->merchantid, 
+                                    $googlepayment->merchantkey, 
+                                    MODULE_PAYMENT_GOOGLECHECKOUT_MODE==
+                                      'https://sandbox.google.com/checkout/'
+                                      ?"sandbox":"production",
+                                    DEFAULT_CURRENCY);
+      $Grequest->SetLogFiles(API_CALLBACK_ERROR_LOG, API_CALLBACK_MESSAGE_LOG);
 
-      define('API_CALLBACK_MESSAGE_LOG', DIR_FS_CATALOG . "/googlecheckout/response_message.log");
-      define('API_CALLBACK_ERROR_LOG', DIR_FS_CATALOG. "/googlecheckout/response_error.log");
 
-      include_once(DIR_FS_CATALOG . '/includes/modules/payment/googlecheckout.php');
-      $googlepay = new googlecheckout();
-				
-      //Setup the log file
-      if (!$message_log = fopen(API_CALLBACK_MESSAGE_LOG, "a")) {
-        error_func("Cannot open " . API_CALLBACK_MESSAGE_LOG . " file.\n", 0);
-        exit(1);
-      }
-      $google_answer = tep_db_fetch_array(tep_db_query("select google_order_number, order_amount from " . $googlepay->table_order . " where orders_id = " . (int)$oID ));
+      $google_answer = tep_db_fetch_array(tep_db_query("SELECT go.google_order_number, go.order_amount, o.customers_email_address, gc.buyer_id, o.customers_id
+                                      FROM " . $googlepayment->table_order . " go 
+                                      inner join " . TABLE_ORDERS . " o on go.orders_id = o.orders_id
+                                      inner join " . $googlepayment->table_name . " gc on gc.customers_id = o.customers_id
+                                      WHERE go.orders_id = '" . (int)$oID ."'
+                                      group by o.customers_id order by o.orders_id desc"));
+
       $google_order = $google_answer['google_order_number'];  
-      $amt = $google_answer['order_amount'];  
+      $amount = $google_answer['order_amount'];  
 
-    if($check_status['orders_status'] == STATE_PENDING && $status == STATE_PROCESSING) {
-      if($google_order != '') {					
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                    <charge-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\">
-                    <amount currency=\"" . DEFAULT_CURRENCY . "\">" . $amt . "</amount>
-                    </charge-order>";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-                        $postargs, $message_log); 
-        
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                    <process-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"/> ";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-                    $postargs, $message_log); 
+    // If status update is from Google New -> Google Processing on the Admin UI
+    // this invokes the processing-order and charge-order commands
+    // 1->Google New, 2-> Google Processing
+    if($check_status['orders_status'] == GC_STATE_NEW 
+               && $status == GC_STATE_PROCESSING && $google_order != '') {
+      list($curl_status,) = $Grequest->SendChargeOrder($google_order, $amount);
+      if($curl_status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_CHARGE_ORDER, 'error');
       }
-    }			
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_CHARGE_ORDER, 'success');          
+      }
+      list($curl_status,) = $Grequest->SendProcessOrder($google_order);
+      if($curl_status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_PROCESS_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_PROCESS_ORDER, 'success');          
+      }
+    } 
     
-    // If status update is from Processing -> Delivered on the Admin UI
+    // If status update is from Google Processing or Google Refunded -> Google Shipped on the Admin UI
     // this invokes the deliver-order and archive-order commands
-    // 2->Processing, 3-> Delivered
-    if($check_status['orders_status'] == STATE_PROCESSING &&  $status == STATE_DELIVERED) {
-      $send_mail = "false";
-      if($cust_notify == 1) 
-        $send_mail = "true";
-      if($google_order != '') {					
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                     <deliver-order xmlns=\"".$googlepay->schema_url    ."\" google-order-number=\"". $google_order. "\"> 
-                     	 <send-email> " . $send_mail . "</send-email>";
-        if(isset($carrier_select) &&  ($carrier_select != 'select') && isset($tracking_number) && !empty($tracking_number)) {
-					$postargs .=	"<tracking-data>
-									        <carrier>" . $carrier_select . "</carrier>
-									        <tracking-number>" . $tracking_number . "</tracking-number>
-									    	 </tracking-data>";
-					$comments = "Shipping Tracking Data:\n Carrier: " . $carrier_select . "\n Tracking Number: " . $tracking_number . "";
-					tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($cust_notify) . "', '" . tep_db_input($comments)  . "')");
+    // 2->Google Processing or Google Refunded, 3-> Google Shipped (refunded)
+    else if(($check_status['orders_status'] == GC_STATE_PROCESSING 
+            || $check_status['orders_status'] == GC_STATE_REFUNDED)
+                 && ($status == GC_STATE_SHIPPED || $status == GC_STATE_SHIPPED_REFUNDED )
+                 && $google_order != '') {
+      $carrier = $tracking_no = "";
+      // Add tracking Data
+      if(isset($_POST['carrier_select']) &&  ($_POST['carrier_select'] != 'select') 
+           && isset($_POST['tracking_number']) && !empty($_POST['tracking_number'])) {
+        $carrier = $_POST['carrier_select'];
+        $tracking_no = $_POST['tracking_number'];
+        $comments = GOOGLECHECKOUT_STATE_STRING_TRACKING ."\n" .
+                    GOOGLECHECKOUT_STATE_STRING_TRACKING_CARRIER . $_POST['carrier_select'] ."\n" .
+                    GOOGLECHECKOUT_STATE_STRING_TRACKING_NUMBER . $_POST['tracking_number'] . "";
+        tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . "
+                    (orders_id, orders_status_id, date_added, customer_notified, comments)
+                    values ('" . (int)$oID . "',
+                    '" . tep_db_input(($check_status['orders_status']==GC_STATE_REFUNDED
+                                      ?GC_STATE_SHIPPED_REFUNDED:GC_STATE_SHIPPED)) . "',
+                    now(),
+                    '" . tep_db_input($cust_notify) . "',
+                    '" . tep_db_input($comments)  . "')");
+         
+      }
+      
+      list($curl_status,) = $Grequest->SendDeliverOrder($google_order, $carrier,
+                              $tracking_no, ($cust_notify==1)?"true":"false");
+      if($curl_status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_DELIVER_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_DELIVER_ORDER, 'success');          
+      }
+      list($curl_status,) = $Grequest->SendArchiveOrder($google_order);
+      if($curl_status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_ARCHIVE_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_ARCHIVE_ORDER, 'success');          
+      }
+    } 
+    // If status update is to Google Canceled on the Admin UI
+    // this invokes the cancel-order and archive-order commands
+    else if($check_status['orders_status'] != GC_STATE_CANCELED &&
+            $status == GC_STATE_CANCELED && $google_order != '') {
+      if($check_status['orders_status'] != GC_STATE_NEW){
+        list($curl_status,) = $Grequest->SendRefundOrder($google_order, 0,
+                                        GOOGLECHECKOUT_STATE_STRING_ORDER_CANCELED
+                                        );
+        if($curl_status != 200) {
+          $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_REFUND_ORDER, 'error');
         }
-				$postargs .=  "</deliver-order> ";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-	              $postargs, $message_log); 
-
-        $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                     <archive-order xmlns=\"".$googlepay->schema_url."\" google-order-number=\"". $google_order. "\"/>";
-        fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-        send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey, 
-                        $postargs, $message_log); 
+        else {
+          $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_REFUND_ORDER, 'success');          
+        }
+      }
+      else {
+        // Tell google witch is the OSC's internal order Number        
+        list($curl_status,) = $Grequest->SendMerchantOrderNumber($google_order, $oID);
+        if($curl_status != 200) {
+          $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_MERCHANT_ORDER_NUMBER, 'error');
+        }
+        else {
+          $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_MERCHANT_ORDER_NUMBER, 'success');          
+        }
+      }
+//    Is the order is not archive, I do it
+      if($check_status['orders_status'] != GC_STATE_SHIPPED 
+         && $check_status['orders_status'] != GC_STATE_SHIPPED_REFUNDED){
+        list($curl_status,) = $Grequest->SendArchiveOrder($google_order);
+        if($curl_status != 200) {
+          $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_ARCHIVE_ORDER, 'error');
+        }
+        else {
+          $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_ARCHIVE_ORDER, 'success');          
+        }
+      }
+//    Cancel the order
+      list($curl_status,) = $Grequest->SendCancelOrder($google_order, 
+                                      GOOGLECHECKOUT_STATE_STRING_ORDER_CANCELED,
+                                      $notify_comments);
+      if($curl_status != 200) {
+        $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_CANCEL_ORDER, 'error');
+      }
+      else {
+        $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_CANCEL_ORDER, 'success');          
       }
     }
+    else if($google_order != '' 
+            && $check_status['orders_status'] != $status){
+      $statuses = array();
+      foreach($orders_statuses as $status_array){
+        $statuses[$status_array['id']] = $status_array['text'];
+      }
+      $messageStack->add_session( sprintf(GOOGLECHECKOUT_ERR_INVALID_STATE_TRANSITION,
+                                  $statuses[$check_status['orders_status']],
+                                  $statuses[$status],
+                                  $statuses[$check_status['orders_status']]),
+                                  'error');
+    }    
     
-    if(isset($notify_comments)) {
-      $send_mail = "false";
-      if($cust_notify == 1) 
-        $send_mail = "true";
-      $postargs =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                   <send-buyer-message xmlns=\"http://checkout.google.com/schema/2\" google-order-number=\"". $google_order. "\">
-                   <send-email> " . $send_mail . "</send-email>
-                   <message>". strip_tags($notify_comments) . "</message>
-                   </send-buyer-message>";    
-      fwrite($message_log, sprintf("\r\n%s\n",$postargs));
-      send_google_req($googlepay->request_url, $googlepay->merchantid, $googlepay->merchantkey,
-                      $postargs, $message_log);
-
+    // Send Buyer's message
+    if($cust_notify==1 && isset($notify_comments) && !empty($notify_comments)) {
+      $cust_notify_ok = '0';      
+      if(!((strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH)
+              && MODULE_PAYMENT_GOOGLECHECKOUT_USE_CART_MESSAGING=='True')){
+    
+        list($curl_status,) = $Grequest->sendBuyerMessage($google_order, 
+                             $notify_comments, "true");
+        if($curl_status != 200) {
+          $messageStack->add_session(GOOGLECHECKOUT_ERR_SEND_MESSAGE_ORDER, 'error');
+          $cust_notify_ok = '0';
+        }
+        else {
+          $messageStack->add_session(GOOGLECHECKOUT_SUCCESS_SEND_MESSAGE_ORDER, 'success');          
+          $cust_notify_ok = '1';
+        }
+        if(strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH) {
+          $messageStack->add_session(
+          sprintf(GOOGLECHECKOUT_WARNING_CHUNK_MESSAGE, GOOGLE_MESSAGE_LENGTH), 'warning');          
+        }
+      }
+      // Cust notified
+      return $cust_notify_ok;
     }
+    // Cust notified
+    return '0';
   }
   // ** END GOOGLE CHECKOUT ** 
 
@@ -193,38 +234,42 @@
         if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
           tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
 
-          $customer_notified = '0';
-          if (isset($HTTP_POST_VARS['notify']) && ($HTTP_POST_VARS['notify'] == 'on')) {
+// ** GOOGLE CHECKOUT **
+          chdir("./..");
+          require_once(DIR_WS_LANGUAGES . $language . '/modules/payment/googlecheckout.php');
+          $payment_value= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
+          $num_rows = tep_db_num_rows(tep_db_query("select google_order_number from google_orders where orders_id= ". (int)$oID));
+
+          if($num_rows != 0) {
+            $customer_notified = google_checkout_state_change($check_status, $status, $oID, 
+                               (@$_POST['notify']=='on'?1:0), 
+                               (@$_POST['notify_comments']=='on'?$comments:''));
+          }
+          $customer_notified = isset($customer_notified)?$customer_notified:'0';
+// ** END GOOGLE CHECKOUT **
+          if (isset($_POST['notify']) && ($_POST['notify'] == 'on')) {
             $notify_comments = '';
-            if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
-              $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
-	            $customer_notified = '1';
+            if (isset($_POST['notify_comments']) && ($_POST['notify_comments'] == 'on') && tep_not_null($comments)) {
+              $notify_comments = EMAIL_TEXT_COMMENTS_UPDATE . $comments . "\n\n";
             }
-            
-            // ** GOOGLE CHECKOUT **
-            chdir("./..");
-            require_once('includes/languages/' . $language . '/' .'modules/payment/googlecheckout.php');
-            $payment_value= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
-            $num_rows = tep_db_num_rows(tep_db_query("select google_order_number from google_orders where orders_id= ". (int)$oID));
-            
-            //Check if order is a Google Checkout order
-            if($num_rows == 0) {
+// ** GOOGLE CHECKOUT **
+            $force_email = false;
+            if($num_rows != 0 && (strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH && MODULE_PAYMENT_GOOGLECHECKOUT_USE_CART_MESSAGING == 'True')) {
+              $force_email = true;
+              $messageStack->add_session(GOOGLECHECKOUT_WARNING_SYSTEM_EMAIL_SENT, 'warning');          
+            }
+
+            if($num_rows == 0 || $force_email) {
+  //send emails, not a google order or configured to use both messaging systems
               $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
               tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            }else {
-		          if($HTTP_POST_VARS['notify'] != 'on')
-		          	unset($notify_comments);
-		          google_checkout_state_change($check_status, $status, $oID, $customer_notified, $notify_comments);
+              $customer_notified = '1';
+  //send extra emails
             }
-            // ** END GOOGLE CHECKOUT **
-
           }
-                    
           tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
-
           $order_updated = true;
         }
-
         if ($order_updated == true) {
          $messageStack->add_session(SUCCESS_ORDER_UPDATED, 'success');
         } else {
@@ -483,7 +528,8 @@
 <!-- googlecheckout Tracking Number -->
 <?php 
 // orders_status == STATE_PROCESSING -> Processing before delivery
-	if($order->info['payment_method'] == 'Google Checkout' && $order->info['orders_status'] == STATE_PROCESSING){
+
+	if(strpos($order->info['payment_method'], 'Google')!= -1 && $order->info['orders_status'] == GC_STATE_PROCESSING){
 			echo '<td><table border="0" cellpadding="3" cellspacing="0" width="100%">   
 				<tbody>
 					<tr>  

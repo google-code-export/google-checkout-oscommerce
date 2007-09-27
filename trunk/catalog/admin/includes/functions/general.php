@@ -760,6 +760,87 @@
 // Function to store configuration values(shipping options) using 
 // checkboxes in the Administration Tool 
 
+//  carrier calculation
+  // perhaps this function must be moved to googlecheckout class, is not too general
+  function gc_cfg_select_CCshipping($key_value, $key = '') {
+    //add ropu
+    // i get all the shipping methods available!
+    global $PHP_SELF,$language,$module_type;
+    
+    require_once (DIR_FS_CATALOG . 'includes/modules/payment/googlecheckout.php');
+    $googlepayment = new googlecheckout();
+    
+    $javascript = "<script language='javascript'>
+            
+          function CCS_blur(valor, code, hid_id, pos){
+            var hid = document.getElementById(hid_id);
+            var temp = hid.value.substring((code  + '_CCS:').length).split('|');
+            valor.value = isNaN(parseFloat(valor.value))?'':parseFloat(valor.value);
+            if(valor.value != ''){ 
+              temp[pos] = valor.value;
+            }else {
+              temp[pos] = 0;
+              valor.value = '0';      
+            }
+            hid.value = code + '_CCS:' + temp[0] + '|'+ temp[1] + '|'+ temp[2];
+          }
+      
+          function CCS_focus(valor, code, hid_id, pos){
+            var hid = document.getElementById(hid_id);
+            var temp = hid.value.substring((code  + '_CCS:').length).split('|');
+          //  valor.value = valor.value.substr((code  + '_CCS:').length, hid.value.length);
+            temp[pos] = valor.value;        
+            hid.value = code + '_CCS:' + temp[0] + '|'+ temp[1] + '|'+ temp[2];        
+
+          }
+          </script>";
+  
+  
+    $string .= $javascript;
+    
+    $key_values = explode( ", ", $key_value);
+    
+    foreach($googlepayment->cc_shipping_methods_names as $CCSCode => $CCSName){
+      
+      $name = (($key) ? 'configuration[' . $key . '][]' : 'configuration_value');
+      $string .= "<br><b>" . $CCSName . "</b>"."\n";
+      foreach($googlepayment->cc_shipping_methods[$CCSCode] as $type => $methods) {
+        if (is_array($methods) && !empty($methods)) {
+          $string .= '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>'. $type .'</b><br />';            
+            $string .= 'Def. Value | Fix Charge | Variable | Method Name';
+          foreach($methods as $method => $method_name) {
+            $string .= '<br>';
+            
+            // default value 
+            $value = gc_compare($CCSCode . $method. $type , $key_values, "_CCS:", '1.00|0|0');
+            $values = explode('|',$value);
+            $string .= DEFAULT_CURRENCY . ':<input size="3"  onBlur="CCS_blur(this, \'' . $CCSCode. $method . $type . '\', \'hid_' .
+                        $CCSCode . $method . $type . '\', 0);" onFocus="CCS_focus(this, \'' . $CCSCode . $method .
+                        $type . '\' , \'hid_' . $CCSCode . $method . $type .'\', 0);" type="text" name="no_use' . $method . 
+                        '" value="' . $values[0] . '"> ';
+
+            $string .= DEFAULT_CURRENCY . ':<input size="3"  onBlur="CCS_blur(this, \'' . $CCSCode. $method . $type . '\', \'hid_' .
+                        $CCSCode . $method . $type . '\', 1 );" onFocus="CCS_focus(this, \'' . $CCSCode . $method .
+                        $type . '\' , \'hid_' . $CCSCode . $method . $type .'\', 1);" type="text" name="no_use' . $method . 
+                        '" value="' . $values[1] . '"> ';
+
+            $string .= '<input size="3"  onBlur="CCS_blur(this, \'' . $CCSCode. $method . $type . '\', \'hid_' .
+                        $CCSCode . $method . $type . '\', 2 );" onFocus="CCS_focus(this, \'' . $CCSCode . $method .
+                        $type . '\' , \'hid_' . $CCSCode . $method . $type .'\', 2);" type="text" name="no_use' . $method . 
+                        '" value="' . $values[2] . '">% ';
+
+            $string .= '<input size="10" id="hid_' . $CCSCode . $method . $type . '" type="hidden" name="' . $name . 
+                        '" value="' . $CCSCode . $method . $type . '_CCS:' . $value . '">'."\n";      
+
+            $string .= $method_name;
+          }
+        }
+      }
+    }
+    return $string;
+  }
+
+
   function gc_cfg_select_multioption($select_array, $key_value, $key = '') {
 
     for ($i=0; $i<sizeof($select_array); $i++) {
@@ -775,15 +856,15 @@
 
 	
 // Custom Function to store configuration values (shipping default values)  
-	function gc_compare($key, $data)
-	{
-		foreach($data as $value) {
-			list($key2, $valor) = explode("_VD:", $value);
-			if($key == $key2)		
-				return $valor;
-		}
-		return '0';
-	}
+	function gc_compare($key, $data, $sep="_VD:", $def_ret='1')
+  {
+    foreach($data as $value) {
+      list($key2, $valor) = explode($sep, $value);
+      if($key == $key2)   
+        return $valor;
+    }
+    return $def_ret;
+  }
 	// perhaps this function must be moved to googlecheckout class, is not too general
   function gc_cfg_select_shipping($select_array, $key_value, $key = '') {
 
@@ -837,30 +918,30 @@
 		return '<br/><i>'. GOOGLECHECKOUT_TABLE_NO_MERCHANT_CALCULATION . '</i>';
 	}
 
-	$javascript = "<script language='javascript'>
-						
-					function VD_blur(valor, code, hid_id){
-						var hid = document.getElementById(hid_id);
-						valor.value = isNaN(parseFloat(valor.value))?'':parseFloat(valor.value);
-						if(valor.value != ''){ 
-							hid.value = code + '_VD:' + valor.value;
-					//		valor.value = valor.value;	
-					//		hid.disabled = false;
-						}else {		
-							hid.value = code + '_VD:0';
-							valor.value = '0';			
-						}
-			
-			
-					}
-			
-					function VD_focus(valor, code, hid_id){
-						var hid = document.getElementById(hid_id);		
-					//	valor.value = valor.value.substr((code  + '_VD:').length, valor.value.length);
-						hid.value = valor.value.substr((code  + '_VD:').length, valor.value.length);				
-					}
-	
-					</script>";
+    $javascript = "<script language='javascript'>
+              
+            function VD_blur(valor, code, hid_id){
+              var hid = document.getElementById(hid_id);
+              valor.value = isNaN(parseFloat(valor.value))?'':parseFloat(valor.value);
+              if(valor.value != ''){ 
+                hid.value = code + '_VD:' + valor.value;
+            //    valor.value = valor.value;  
+            //    hid.disabled = false;
+              }else {   
+                hid.value = code + '_VD:0';
+                valor.value = '0';      
+              }
+        
+        
+            }
+        
+            function VD_focus(valor, code, hid_id){
+              var hid = document.getElementById(hid_id);    
+//              valor.value = valor.value.substr((code  + '_VD:').length, valor.value.length);
+              hid.value = valor.value.substr((code  + '_VD:').length, valor.value.length);        
+            }
+    
+            </script>";
 	
 	
   	$string .= $javascript;
@@ -879,7 +960,7 @@
     			      $string .= '<br>';
     			      
     			      // default value 
-    			      $value = gc_compare($select_array[$i]['code'] . $method. $type , $key_values);
+    			      $value = gc_compare($select_array[$i]['code'] . $method. $type , $key_values, 1);
     				  $string .= '<input size="5"  onBlur="VD_blur(this, \'' . $select_array[$i]['code']. $method . $type . '\', \'hid_' . $select_array[$i]['code'] . $method . $type . '\' );" onFocus="VD_focus(this, \'' . $select_array[$i]['code'] . $method . $type . '\' , \'hid_' . $select_array[$i]['code'] . $method . $type .'\');" type="text" name="no_use' . $method . '" value="' . $value . '"';
     			      $string .= '>';
     				  $string .= '<input size="10" id="hid_' . $select_array[$i]['code'] . $method . $type . '" type="hidden" name="' . $name . '" value="' . $select_array[$i]['code'] . $method . $type . '_VD:' . $value . '"';		  
@@ -890,7 +971,7 @@
   	      }
         }
         else {
-          $string .= $select_array[$i]['code'] ." not configured!<br />";
+          $string .= $select_array[$i]['code'] .GOOGLECHECKOUT_MERCHANT_CALCULATION_NOT_CONFIGURED;
         }
       }
     }

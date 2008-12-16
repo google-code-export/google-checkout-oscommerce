@@ -1,6 +1,6 @@
 <?php
 /*
-  $Id: login.php,v 1.80 2003/06/05 23:28:24 hpdl Exp $
+  $Id: login.php 1739 2007-12-20 00:52:16Z hpdl $
 
   osCommerce, Open Source E-Commerce Solutions
   http://www.oscommerce.com
@@ -201,7 +201,7 @@ function session_win() {
                       <tr>
                         <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
                         <td align="right"><?php echo tep_image_submit('button_login.gif', IMAGE_BUTTON_LOGIN); ?></td>
-                        <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td></form>
+                        <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
                       </tr>
                     </table></td>
                   </tr>
@@ -210,20 +210,18 @@ function session_win() {
             </table></td>
           </tr>
         </table>
-    <?php
-    // ** GOOGLE CHECKOUT **
-    // Checks if the Google Checkout payment module has been enabled and if so 
-    // includes gcheckout.php to add the Checkout button to the page 
-    if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
-      include_once('googlecheckout/gcheckout.php');
-    } 
-   	// ** END GOOGLE CHECKOUT **            
-    ?>
+<?php
+          // *** BEGIN GOOGLE CHECKOUT ***
+          // Checks if the Google Checkout payment module has been enabled and, if so, 
+          // includes gcheckout.php to add the Checkout button to the page.
+          if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+            include_once('googlecheckout/gcheckout.php');
+          }
+          // *** END GOOGLE CHECKOUT *** 
+?>
         </td>
       </tr>
-    </table></td>
-    
-       
+    </table></form></td>
 <!-- body_text_eof //-->
     <td width="<?php echo BOX_WIDTH; ?>" valign="top"><table border="0" width="<?php echo BOX_WIDTH; ?>" cellspacing="0" cellpadding="2">
 <!-- right_navigation //-->

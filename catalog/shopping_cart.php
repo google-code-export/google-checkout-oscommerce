@@ -1,16 +1,21 @@
 <?php
 /*
-  $Id: shopping_cart.php,v 1.73 2003/06/09 23:03:56 hpdl Exp $
+  $Id: shopping_cart.php 1739 2007-12-20 00:52:16Z hpdl $
 
   osCommerce, Open Source E-Commerce Solutions
   http://www.oscommerce.com
 
-  Copyright (c) 2003 osCommerce
+  Copyright (c) 2007 osCommerce
 
   Released under the GNU General Public License
 */
 
   require("includes/application_top.php");
+
+  if ($cart->count_contents() > 0) {
+    include(DIR_WS_CLASSES . 'payment.php');
+    $payment_modules = new payment;
+  }
 
   require(DIR_WS_LANGUAGES . $language . '/' . FILENAME_SHOPPING_CART);
 
@@ -199,24 +204,44 @@
               </tr>
             </table></td>
           </tr>
-        </table></form></td>
+        </table></td>
       </tr>
-	  <tr>
-	    <td>
-    <?php
-    // ** GOOGLE CHECKOUT **
-    // Checks if the Google Checkout payment module has been enabled and if so 
-    // includes gcheckout.php to add the Checkout button to the page 
-    if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
-      include_once('googlecheckout/gcheckout.php');
-    }
-    // ** END GOOGLE CHECKOUT **
-    ?>
+<?php
+    $initialize_checkout_methods = $payment_modules->checkout_initialization_method();
+
+    if (!empty($initialize_checkout_methods)) {
+?>
+      <tr>
+        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
+      </tr>
+      <tr>
+        <td align="right" class="main" style="padding-right: 50px;">
+<?php
+          // *** BEGIN GOOGLE CHECKOUT ***
+          // Checks if the Google Checkout payment module has been enabled and, if so, 
+          // includes gcheckout.php to add the Checkout button to the page.
+          if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+            include_once('googlecheckout/gcheckout.php');
+          }
+          // *** END GOOGLE CHECKOUT ***
+?>
         </td>
       </tr>
-    <?php
-      } else {
-    ?>
+<?php
+      reset($initialize_checkout_methods);
+      while (list(, $value) = each($initialize_checkout_methods)) {
+?>
+      <tr>
+        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
+      </tr>
+      <tr>
+        <td align="right" class="main"><?php echo $value; ?></td>
+      </tr>
+<?php
+      }
+    }
+  } else {
+?>
       <tr>
         <td align="center" class="main"><?php new infoBox(array(array('text' => TEXT_CART_EMPTY))); ?></td>
       </tr>
@@ -234,13 +259,12 @@
               </tr>
             </table></td>
           </tr>
-        </table></form></td>
+        </table></td>
       </tr>
 <?php
   }
 ?>
-</table></td>
-
+    </table></form></td>
 <!-- body_text_eof //-->
     <td width="<?php echo BOX_WIDTH; ?>" valign="top"><table border="0" width="<?php echo BOX_WIDTH; ?>" cellspacing="0" cellpadding="2">
 <!-- right_navigation //-->

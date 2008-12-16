@@ -1,6 +1,6 @@
 <?php
 /*
-  $Id: checkout_payment.php,v 1.113 2003/06/29 23:03:27 hpdl Exp $
+  $Id: checkout_payment.php 1739 2007-12-20 00:52:16Z hpdl $
 
   osCommerce, Open Source E-Commerce Solutions
   http://www.oscommerce.com
@@ -52,12 +52,14 @@
     $billto = $customer_default_address_id;
   } else {
 // verify the selected billing address
-    $check_address_query = tep_db_query("select count(*) as total from " . TABLE_ADDRESS_BOOK . " where customers_id = '" . (int)$customer_id . "' and address_book_id = '" . (int)$billto . "'");
-    $check_address = tep_db_fetch_array($check_address_query);
+    if ( (is_array($billto) && empty($billto)) || is_numeric($billto) ) {
+      $check_address_query = tep_db_query("select count(*) as total from " . TABLE_ADDRESS_BOOK . " where customers_id = '" . (int)$customer_id . "' and address_book_id = '" . (int)$billto . "'");
+      $check_address = tep_db_fetch_array($check_address_query);
 
-    if ($check_address['total'] != '1') {
-      $billto = $customer_default_address_id;
-      if (tep_session_is_registered('payment')) tep_session_unregister('payment');
+      if ($check_address['total'] != '1') {
+        $billto = $customer_default_address_id;
+        if (tep_session_is_registered('payment')) tep_session_unregister('payment');
+      }
     }
   }
 
@@ -219,19 +221,18 @@ function rowOutEffect(object) {
           <tr class="infoBoxContents">
             <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
 <?php
-  // ** GOOGLE CHECKOUT **
-  // Skips Google checkout as a payment option on the payments page since that option
-  // is provided in the checkout page
-  
+  // *** BEGIN GOOGLE CHECKOUT ***
+  // Skips Google Checkout as a payment option on the payments page since that option
+  // is provided in the checkout page.
   $selection = $payment_modules->selection();
-  for($i=0, $n=sizeof($selection); $i<$n; $i++) {
-    if($selection[$i]['id'] == 'googlecheckout') {
-      array_splice($selection, $i, 1);	
+  for ($i = 0, $n = sizeof($selection); $i < $n; $i++) {
+    if ($selection[$i]['id'] == 'googlecheckout') {
+      array_splice($selection, $i, 1);
       break;   
     }
   }
-  // ** END GOOGLE CHECKOUT **
-
+  // *** END GOOGLE CHECKOUT ***
+  
   if (sizeof($selection) > 1) {
 ?>
               <tr>

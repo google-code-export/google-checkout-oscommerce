@@ -1,11 +1,11 @@
 <?php
 /*
-  $Id: general.php,v 1.160 2003/07/12 08:32:47 hpdl Exp $
+  $Id: general.php 1739 2007-12-20 00:52:16Z hpdl $
 
   osCommerce, Open Source E-Commerce Solutions
   http://www.oscommerce.com
 
-  Copyright (c) 2003 osCommerce
+  Copyright (c) 2007 osCommerce
 
   Released under the GNU General Public License
 */
@@ -756,11 +756,13 @@
     return $string;
   }
 
-// ** GOOGLE CHECKOUT** 
-// Function to store configuration values(shipping options) using 
-// checkboxes in the Administration Tool 
+// *** BEGIN GOOGLE CHECKOUT *** 
+// Functions to store configuration values (shipping options) using 
+// checkboxes in the Administration Tool
+//
+// TODO(eddavisson): Move these to a separate file.
 
-//  carrier calculation
+  // Carrier Calculated Shipping
   // perhaps this function must be moved to googlecheckout class, is not too general
   function gc_cfg_select_CCshipping($key_value, $key = '') {
     //add ropu
@@ -977,8 +979,7 @@
     }
     return $string;
   }
-
-// ** END GOOGLE CHECKOUT **  
+// *** END GOOGLE CHECKOUT ***  
     
 ////
 // Alias function for module configuration keys
@@ -1150,6 +1151,7 @@
     tep_db_query("delete from " . TABLE_ORDERS_STATUS_HISTORY . " where orders_id = '" . (int)$order_id . "'");
     tep_db_query("delete from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "'");
 
+    // *** BEGIN GOOGLE CHECKOUT ***
     $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
     while ($status = tep_db_fetch_array($status_query)) {
       $status_flag = $status['configuration_value'];	
@@ -1159,6 +1161,7 @@
       $googlepayment = new googlecheckout();
       tep_db_query("delete from " . $googlepayment->table_order . " where orders_id = '" . (int)$order_id . "'");
     }
+    // *** END GOOGLE CHECKOUT ***
   }
 
   function tep_reset_cache_block($cache_block) {
@@ -1367,21 +1370,17 @@
 
 ////
 // Add tax to a products price
-  function tep_add_tax($price, $tax) {
-    global $currencies;
-
-    if (DISPLAY_PRICE_WITH_TAX == 'true') {
-      return tep_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']) + tep_calculate_tax($price, $tax);
+  function tep_add_tax($price, $tax, $override = false) {
+    if ( ( (DISPLAY_PRICE_WITH_TAX == 'true') || ($override == true) ) && ($tax > 0) ) {
+      return $price + tep_calculate_tax($price, $tax);
     } else {
-      return tep_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']);
+      return $price;
     }
   }
 
 // Calculates Tax rounding the result
   function tep_calculate_tax($price, $tax) {
-    global $currencies;
-
-    return tep_round($price * $tax / 100, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']);
+    return $price * $tax / 100;
   }
 
 ////

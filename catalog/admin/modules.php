@@ -13,7 +13,6 @@
   require('includes/application_top.php');
 
   // *** BEGIN GOOGLE CHECKOUT ***
-  // TODO(eddavisson): Why are we providing this function?
   function gc_makeSqlString($str) {
     $single_quote = "'";
     $escaped_str = addcslashes(stripcslashes($str), "'\"\\\0..\37!@\177..\377");

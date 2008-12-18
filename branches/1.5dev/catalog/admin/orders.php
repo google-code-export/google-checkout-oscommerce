@@ -10,14 +10,10 @@
   Released under the GNU General Public License
 */
 
-// *** BEGIN GOOGLE CHECKOUT ***
-// TODO(eddavisson): Need to extract our modifications into 
-// a separate file as much as possible.
-// *** END GOOGLE CHECKOUT ***
-
   require('includes/application_top.php');
   	
- /* ** GOOGLE CHECKOUT **/
+  // *** GOOGLE CHECKOUT ***
+  // TODO(eddavisson): Need to extract our modifications into 
   define('GC_STATE_NEW', 100);
   define('GC_STATE_PROCESSING', 101);
   define('GC_STATE_SHIPPED', 102);
@@ -208,7 +204,7 @@
     // Cust notified
     return '0';
   }
-  // ** END GOOGLE CHECKOUT ** 
+  // *** END GOOGLE CHECKOUT *** 
 
   require(DIR_WS_CLASSES . 'currencies.php');
   $currencies = new currencies();
@@ -238,42 +234,44 @@
         if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
           tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
 
-// ** GOOGLE CHECKOUT **
+          // *** BEGIN GOOGLE CHECKOUT ***
           chdir("./..");
           require_once(DIR_WS_LANGUAGES . $language . '/modules/payment/googlecheckout.php');
           $payment_value= MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_TITLE;
           $num_rows = tep_db_num_rows(tep_db_query("select google_order_number from google_orders where orders_id= ". (int)$oID));
 
-          if($num_rows != 0) {
+          if ($num_rows != 0) {
             $customer_notified = google_checkout_state_change($check_status, $status, $oID, 
-                               (@$_POST['notify']=='on'?1:0), 
-                               (@$_POST['notify_comments']=='on'?$comments:''));
+                (@$_POST['notify']=='on'?1:0), 
+                (@$_POST['notify_comments']=='on'?$comments:''));
           }
           $customer_notified = isset($customer_notified)?$customer_notified:'0';
-// ** END GOOGLE CHECKOUT **
           if (isset($_POST['notify']) && ($_POST['notify'] == 'on')) {
             $notify_comments = '';
-            if (isset($_POST['notify_comments']) && ($_POST['notify_comments'] == 'on') && tep_not_null($comments)) {
-              $notify_comments = EMAIL_TEXT_COMMENTS_UPDATE . $comments . "\n\n";
+            if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
+              $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
             }
-// ** GOOGLE CHECKOUT **
             $force_email = false;
-            if($num_rows != 0 && (strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH && MODULE_PAYMENT_GOOGLECHECKOUT_USE_CART_MESSAGING == 'True')) {
+            if ($num_rows != 0 && (strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH && MODULE_PAYMENT_GOOGLECHECKOUT_USE_CART_MESSAGING == 'True')) {
               $force_email = true;
               $messageStack->add_session(GOOGLECHECKOUT_WARNING_SYSTEM_EMAIL_SENT, 'warning');          
             }
 
-            if($num_rows == 0 || $force_email) {
-  //send emails, not a google order or configured to use both messaging systems
+            if ($num_rows == 0 || $force_email) {
+              // send emails, not a google order or configured to use both messaging systems
               $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
               tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
               $customer_notified = '1';
-  //send extra emails
+              // send extra emails
             }
           }
+          // *** END GOOGLE CHECKOUT ***
+
           tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
+
           $order_updated = true;
         }
+
         if ($order_updated == true) {
          $messageStack->add_session(SUCCESS_ORDER_UPDATED, 'success');
         } else {
@@ -449,9 +447,9 @@
            '            <td class="dataTableContent" valign="top">' . $order->products[$i]['model'] . '</td>' . "\n" .
            '            <td class="dataTableContent" align="right" valign="top">' . tep_display_tax_value($order->products[$i]['tax']) . '%</td>' . "\n" .
            '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format($order->products[$i]['final_price'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
-           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax']), true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
+           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax'], true), true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
            '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format($order->products[$i]['final_price'] * $order->products[$i]['qty'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n" .
-           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax']) * $order->products[$i]['qty'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n";
+           '            <td class="dataTableContent" align="right" valign="top"><b>' . $currencies->format(tep_add_tax($order->products[$i]['final_price'], $order->products[$i]['tax'], true) * $order->products[$i]['qty'], true, $order->info['currency'], $order->info['currency_value']) . '</b></td>' . "\n";
       echo '          </tr>' . "\n";
     }
 ?>
@@ -529,10 +527,10 @@
               </tr>
             </table></td>
             <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
-<!-- googlecheckout Tracking Number -->
+<!-- *** BEGIN GOOGLE CHECKOUT *** -->
 <?php 
-// orders_status == STATE_PROCESSING -> Processing before delivery
-
+// Google Checkout Tracking Number
+//orders_status == STATE_PROCESSING -> Processing before delivery
 	if(strpos($order->info['payment_method'], 'Google')!= -1 && $order->info['orders_status'] == GC_STATE_PROCESSING){
 			echo '<td><table border="0" cellpadding="3" cellspacing="0" width="100%">   
 				<tbody>
@@ -582,10 +580,9 @@
 					</tr>     
 				</tbody> 
 			</table></td>';
-	  
 	}
 ?>
-<!-- end googlecheckout Tracking Number -->
+<!-- *** END GOOGLE CHECKOUT *** -->
           </tr>
         </table></td>
       </form></tr>

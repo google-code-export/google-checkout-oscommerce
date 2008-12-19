@@ -231,7 +231,7 @@ function install_file {
   
   if [[ -f "${install_file}" ]]; then
     echo "Merged changes into ${install_file}"
-    merge_message="$(merge -A -L 'YOURS' -L 'SCOMMERCE' -L 'GOOGLE CHECKOUT' \
+    merge_message="$(merge -A -L 'YOURS' -L 'OSCOMMERCE' -L 'GOOGLE CHECKOUT' \
         ${install_file} ${osc_golden_file} ${source_file} 2>&1)"
     if [[ "${merge_message}" != "" ]]; then
       echo "$(line)"

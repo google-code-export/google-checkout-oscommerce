@@ -30,7 +30,7 @@ class googlecheckout{
   var $schema_url, $base_url, $checkout_url, $checkout_diagnose_url, 
       $request_url, $request_diagnose_url;
   var $table_name = "google_checkout", $table_order = "google_orders";
-  var $ot_ignore;
+  var $order_total_ignore;
   var $mc_shipping_methods, $mc_shipping_methods_names; 
   var $cc_shipping_methods, $cc_shipping_methods_names;
   var $gc_order_states;
@@ -49,12 +49,12 @@ class googlecheckout{
     $this->description = MODULE_PAYMENT_GOOGLECHECKOUT_TEXT_DESCRIPTION;
     $this->sort_order = MODULE_PAYMENT_GOOGLECHECKOUT_SORT_ORDER;
     $this->mode= MODULE_PAYMENT_GOOGLECHECKOUT_STATUS;
-    if(MODULE_PAYMENT_GOOGLECHECKOUT_MODE=='https://sandbox.google.com/checkout/'){
+    if (MODULE_PAYMENT_GOOGLECHECKOUT_MODE == 'https://sandbox.google.com/checkout/') {
       $this->merchantid = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID_SNDBOX);
       $this->merchantkey = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY_SNDBOX);
-    }else {
-    $this->merchantid = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID);
-    $this->merchantkey = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY);
+    } else {
+      $this->merchantid = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID);
+      $this->merchantkey = trim(MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY);
     }
     $this->mode = MODULE_PAYMENT_GOOGLECHECKOUT_MODE;
     $this->enabled = ((MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') ? true : false);
@@ -73,34 +73,35 @@ class googlecheckout{
  	  // These are all the available methods for each shipping provider, 
     // see that you must set flat methods too!}
     // CONSTRAINT: Method's names MUST be UNIQUE
-	// Script to create new shipping methods
-	// http://ur-site/googlecheckot/shipping_generator/
-  // to manually edit, /googlecheckout/shipping_methods.php
-  $this->mc_shipping_methods = $mc_shipping_methods;
-  $this->mc_shipping_methods_names = $mc_shipping_methods_names;
+  	// Script to create new shipping methods
+  	// http://ur-site/googlecheckot/shipping_generator/
+    // to manually edit, /googlecheckout/shipping_methods.php
+    $this->mc_shipping_methods = $mc_shipping_methods;
+    $this->mc_shipping_methods_names = $mc_shipping_methods_names;
 //    // Carrier Calculated shipping methods
     $this->cc_shipping_methods = $cc_shipping_methods;
     $this->cc_shipping_methods_names = $cc_shipping_methods_names;
 
-	$this->ot_ignore = array( 'ot_subtotal',
-                    'ot_shipping',
-                    'ot_coupon',
-                    'ot_tax',
-                    'ot_gv',
-                    'ot_total',
-                  );
+	  $this->order_total_ignore = array( 
+        'ot_subtotal',
+        'ot_shipping',
+        'ot_coupon',
+        'ot_tax',
+        'ot_gv',
+        'ot_total',
+    );
     $this->hash = NULL;
 //    FMyI
 //    Refund y processing son lo mismo
 //    shipped y cancelled tambien
-    $this->gc_order_states = array( '100' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_NEW,
-                                    '101' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_PROCESSING,
-                                    '102' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_SHIPPED,
-                                    '103' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_REFUNDED,
-                                    '104' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_SHIPPED_REFUNDED,
-                                    '105' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_CANCELED
-                                    );
-
+    $this->gc_order_states = array( 
+        '100' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_NEW,
+        '101' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_PROCESSING,
+        '102' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_SHIPPED,
+        '103' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_REFUNDED,
+        '104' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_SHIPPED_REFUNDED,
+        '105' => GOOGLECHECKOUT_CUSTOM_ORDER_STATE_CANCELED
+    );
 
     if(isset($messageStack) && MODULE_PAYMENT_GOOGLECHECKOUT_MODE=='https://sandbox.google.com/checkout/'){
       $messageStack->add_session(GOOGLECHECKOUT_STRING_WARN_USING_SANDBOX, 'warning');

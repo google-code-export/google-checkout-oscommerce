@@ -230,7 +230,7 @@ $order_totals = $order_total_modules->process();
 
 $ot_used = false;
 foreach($order_totals as $order_total){
-  if(!in_array($order_total['code'], $googlepayment->ot_ignore)){
+  if(!in_array($order_total['code'], $googlepayment->ignore_order_total)){
 
 // Cant used this since the OT is passed as an item, and tax cant be calculated
     $tax_class_id = @constant("MODULE_ORDER_TOTAL_" . substr(strtoupper($order_total['code']), 3) . "_TAX_CLASS");

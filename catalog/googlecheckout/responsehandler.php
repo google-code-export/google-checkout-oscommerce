@@ -260,8 +260,8 @@ function process_merchant_calculation_callback_single($google_response) {
       if ($item['merchant-private-item-data']['order_total']['VALUE']) {
         $ot = unserialize(base64_decode($item['merchant-private-item-data']['order_total']['VALUE']));
         $custom_order_totals[] = $ot;
-        $ot_value = $ot['value'] * (strrpos($ot['text'], '-') === false ? 1 : -1);
-        $custom_order_totals_total += $currencies->get_value($gc_data[$root]['order-total']['currency']) * $ot_value;
+        $order_total_value = $ot['value'] * (strrpos($ot['text'], '-') === false ? 1 : -1);
+        $custom_order_totals_total += $currencies->get_value($gc_data[$root]['order-total']['currency']) * $order_total_value;
     } else {
       // For Invoices!
       // Happy BDay ropu, 07/03
@@ -730,10 +730,10 @@ function process_new_order_notification($google_response, $google_checkout) {
     }
   }
   $order_totals = $order_total_modules->process();
-  // Not necessary, OT already disabled 
-//foreach($order_totals as $ot_code => $order_total){
+  // Not necessary, since order totals are already disabled.
+//foreach($order_totals as $order_total_code => $order_total){
 //  if(!in_array($order_total['code'], $google_checkout->ignore_order_total)){
-//    unset($order_totals[$ot_code]);
+//    unset($order_totals[$order_total_code]);
 //  }
 //}
 

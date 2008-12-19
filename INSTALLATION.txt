@@ -1,25 +1,61 @@
 HOW TO INSTALL GOOGLE CHECKOUT MODULE FOR OSC
 
-If you haven't read the README file yet, please read it first.
+If you haven't read README.txt yet, please read it first.
 
-NOTE: This is meant to work with osCommerce Online Merchant v2.2, Release
-  Candidate 2a. Please see:
-
+NOTE: This is meant to work with: 
+  osCommerce Online Merchant v2.2, Release Candidate 2a.
+  
+Please see:
   http://www.oscommerce.com/solutions/downloads
-
+  
 IMPORTANT: Uninstall and re install the module. If not, many new configuration 
-  will not be enabled.
+ will not be enabled.
+
+This file describes how to perform a fresh install of the Google Checkout
+ Module. There are several possible ways to install the module:
+  
+  I. Installer Script
+  II. Manual Installation
+    A. Unmodified osCommerce
+    B. Modified osCommerce
 
 --------------------------------------------------------------------------------
 
-FRESH INSTALL
-=============
+I. INSTALLER SCRIPT
+===================
+
+You can install the module by running install.sh from the root directory of the
+ unzipped Google Checkout Module (i.e., the directory that contains the script).
+ 
+To install, execute:
+
+  ./install.sh install path/to/your/oscommerce
+
+The osCommerce directory you specify should be teh one that contains the
+ 'catalog' directory.
+ 
+To uninstall, execute:
+
+  ./install.sh uninstall path/to/your/oscommerce
+ 
+The install command creates backups of any files it modifies, so you can use
+ the uninstall to revert all those changes.
+ 
+If you use the install script on a modified version of osCommerce, it may
+ run into problems when attempting to merge changes. If this happens, the script
+ will tell you which files need to be manually edited. You can always run
+ uninstall to revert all the changes, or you can manually correct the failed
+ merges using your favorite text editor.
+ 
+II. MANUAL INSTALLATION 
+=======================
 
 There are two installation options you need to choose from, so please read
  carefully to determine which option is right for you.
 
-OPTION A:
-=========
+A. UNMODIFIED OSCOMMERCE
+========================
+
 If you have the basic osCommerce installation without any other modules or
  add-on's, simply copy the provided files into your osCommerce system,
  preserving the file structure. 
@@ -28,11 +64,12 @@ If you have the basic osCommerce installation without any other modules or
  system:
 
   OSC_DIR:
-    CHANGELOG
+    CHANGELOG.txt
+    install.sh
     INSTALLATION.txt
     README.txt
     states.jpg
-    UPGRADE
+    UPGRADE.txt
     
   OSC_DIR/catalog:
     checkout_payment.php
@@ -107,8 +144,8 @@ If you have the basic osCommerce installation without any other modules or
 * Note: If you applied a patch or manually modified the files to disable 
    register_globals, go for Option B.
 
-OPTION B:
-=========
+B. MODIFIED OSCOMMERCE
+======================
 
 If you have other modules installed on your osCommerce installation, replacing 
  your existing files might break your existing installation. In this case, you 
@@ -118,12 +155,14 @@ If you have other modules installed on your osCommerce installation, replacing
 
  I. Copy the following new files into your existing system, preserving the file structure:
  -----------------------------------------------------------------------------------------
+
   OSC_DIR:
-    CHANGELOG
+    CHANGELOG.txt
+    install.sh
     INSTALLATION.txt
     README.txt
     states.jpg
-    UPGRADE
+    UPGRADE.txt
     
   OSC_DIR/catalog:
     gc_return.php
@@ -189,6 +228,7 @@ If you have other modules installed on your osCommerce installation, replacing
 
  II. Manually edit the following files from your system as instructed below:
  ---------------------------------------------------------------------------
+ 
   OSC_DIR/catalog/admin/includes/functions:
     general.php
     

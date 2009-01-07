@@ -205,6 +205,7 @@
             </table></td>
           </tr>
         </table>
+        </form>
 <?php
           // *** BEGIN GOOGLE CHECKOUT ***
           // Checks if the Google Checkout payment module has been enabled and, if so, 
@@ -214,7 +215,7 @@
           }
           // *** END GOOGLE CHECKOUT ***
 ?>         
-        </td>
+        <form></td>
       </tr>
 <?php
     $initialize_checkout_methods = $payment_modules->checkout_initialization_method();

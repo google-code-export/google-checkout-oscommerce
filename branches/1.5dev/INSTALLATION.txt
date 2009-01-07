@@ -529,35 +529,28 @@ If you have other modules installed on your osCommerce installation, replacing
 
 
   ----------------------------------------------------------------------------
-  6. /catalog/shopping_cart.php                                       LINE 214
+  6. /catalog/shopping_cart.php                                       LINE 202
   ============================================================================
   
   REPLACE:
 
-      <tr>
-        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
-      </tr>
-      <tr>
-        <td align="right" class="main" style="padding-right: 50px;"><?php echo TEXT_ALTERNATIVE_CHECKOUT_METHODS; ?></td>
-      </tr>
-<?php
-      reset($initialize_checkout_methods);
-      while (list(, $value) = each($initialize_checkout_methods)) {
-?>
-      <tr>
-        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
-      </tr>
-      <tr>
-        <td align="right" class="main"><?php echo $value; ?></td>
+                <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
+                <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table></td>
       </tr>
 
   WITH:
 
-      <tr>
-        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
-      </tr>
-      <tr>
-        <td align="right" class="main" style="padding-right: 50px;">
+                <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
+                <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table>
+        </form>
 <?php
           // *** BEGIN GOOGLE CHECKOUT ***
           // Checks if the Google Checkout payment module has been enabled and, if so, 
@@ -566,13 +559,6 @@ If you have other modules installed on your osCommerce installation, replacing
             include_once('googlecheckout/gcheckout.php');
           }
           // *** END GOOGLE CHECKOUT ***
-?>
-        </td>
-      </tr>
-<?php
-      reset($initialize_checkout_methods);
-      while (list(, $value) = each($initialize_checkout_methods)) {
-?>
-      <tr>
-        <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
+?>         
+        <form></td>
       </tr>

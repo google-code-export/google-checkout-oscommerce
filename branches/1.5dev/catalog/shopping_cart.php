@@ -204,7 +204,17 @@
               </tr>
             </table></td>
           </tr>
-        </table></td>
+        </table>
+<?php
+          // *** BEGIN GOOGLE CHECKOUT ***
+          // Checks if the Google Checkout payment module has been enabled and, if so, 
+          // includes gcheckout.php to add the Checkout button to the page.
+          if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+            include_once('googlecheckout/gcheckout.php');
+          }
+          // *** END GOOGLE CHECKOUT ***
+?>         
+        </td>
       </tr>
 <?php
     $initialize_checkout_methods = $payment_modules->checkout_initialization_method();
@@ -215,17 +225,7 @@
         <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '10'); ?></td>
       </tr>
       <tr>
-        <td align="right" class="main" style="padding-right: 50px;">
-<?php
-          // *** BEGIN GOOGLE CHECKOUT ***
-          // Checks if the Google Checkout payment module has been enabled and, if so, 
-          // includes gcheckout.php to add the Checkout button to the page.
-          if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
-            include_once('googlecheckout/gcheckout.php');
-          }
-          // *** END GOOGLE CHECKOUT ***
-?>
-        </td>
+        <td align="right" class="main" style="padding-right: 50px;"></td>
       </tr>
 <?php
       reset($initialize_checkout_methods);

@@ -30,7 +30,7 @@ class googlecheckout{
   var $schema_url, $base_url, $checkout_url, $checkout_diagnose_url, 
       $request_url, $request_diagnose_url;
   var $table_name = "google_checkout", $table_order = "google_orders";
-  var $order_total_ignore;
+  var $ignore_order_total;
   var $mc_shipping_methods, $mc_shipping_methods_names; 
   var $cc_shipping_methods, $cc_shipping_methods_names;
   var $gc_order_states;
@@ -82,7 +82,7 @@ class googlecheckout{
     $this->cc_shipping_methods = $cc_shipping_methods;
     $this->cc_shipping_methods_names = $cc_shipping_methods_names;
 
-	  $this->order_total_ignore = array( 
+	  $this->ignore_order_total = array(
         'ot_subtotal',
         'ot_shipping',
         'ot_coupon',

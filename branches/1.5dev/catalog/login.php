@@ -210,6 +210,7 @@ function session_win() {
             </table></td>
           </tr>
         </table>
+        </form>
 <?php
           // *** BEGIN GOOGLE CHECKOUT ***
           // Checks if the Google Checkout payment module has been enabled and, if so, 
@@ -221,7 +222,7 @@ function session_win() {
 ?>
         </td>
       </tr>
-    </table></form></td>
+    </table></td>
 <!-- body_text_eof //-->
     <td width="<?php echo BOX_WIDTH; ?>" valign="top"><table border="0" width="<?php echo BOX_WIDTH; ?>" cellspacing="0" cellpadding="2">
 <!-- right_navigation //-->

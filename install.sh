@@ -33,13 +33,21 @@ DEBUG=true
 
 OSC_GOLDEN_DIR="oscommerce-2.2rc2a"
 CATALOG="catalog"
+GOOGLECHECKOUT="${CATALOG}/googlecheckout"
+TMP_DIR="tmp"
 BACKUP_SUFFIX="google.backup"
 
-RESPONSE_ERROR_LOG=${CATALOG}/googlecheckout/logs/response_error.log
-RESPONSE_MESSAGE_LOG=${CATALOG}/googlecheckout/logs/response_message.log
+# These files have their permissions set to 777 at the end of the installation.
+LOG_FILES=( \
+    "${CATALOG}/googlecheckout/logs/response_error.log" \
+    "${CATALOG}/googlecheckout/logs/response_message.log" \
+    )
 
 # Set via command line parameters.
 OSC_ROOT_DIR=""
+
+MERGE_ERROR=false
+MERGE_ERROR_LIST=()
 
 ########################################
 # Echoes to stdout if DEBUG is set to true.
@@ -145,21 +153,6 @@ function backup {
 }
 
 ########################################
-# Create any missing parent directories for a file.
-# Arguments:
-#   file File for which to create directories.
-########################################
-function set_up_directories_for_file {
-  local file="${1}"
-  local directory
-  directory="$(get_directory ${file})"
-  if [[ ! -d "${directory}" ]]; then
-    echo "Creating ${directory}"
-    mkdir -p ${directory}
-  fi
-}
-
-########################################
 # If the file exists, chmod it and log an appropriate message.
 # Arguments: 
 #   permissions Permissions to set.
@@ -212,7 +205,8 @@ function is_osc_directory {
 }
 
 ########################################
-# Install a single source file.
+# Install a single source file. Assumes that the destination directory
+#   already exists.
 # Arguments:
 #   source_file Source file to install.
 ########################################
@@ -234,8 +228,10 @@ function install_file {
     merge_message="$(merge -A -L 'YOURS' -L 'OSCOMMERCE' -L 'GOOGLE CHECKOUT' \
         ${install_file} ${osc_golden_file} ${source_file} 2>&1)"
     if [[ "${merge_message}" != "" ]]; then
+      MERGE_ERROR=true
+      MERGE_ERROR_LIST=("${MERGE_ERROR_LIST[@]}" "${install_file}")
       echo "$(line)"
-      echo -e "| An error occurred when attempting to merge"
+      echo -e "| An error occurred while attempting to merge"
       echo -e "| "
       echo -e "|   ${source_file}"
       echo -e "| "
@@ -247,11 +243,11 @@ function install_file {
       echo -e "| to remove any remaining merge markers."
       echo -e "$(line)"
     fi
-  else
-    set_up_directories_for_file "${install_file}"
-    local target_install_directory
-    target_install_directory="$(get_directory ${install_file})"
-    cp "${source_file}" "${target_install_directory}"
+  else  
+    cp "${source_file}" "${install_file}"
+    
+    # Make sure the file we copied kept the correct permissions.
+    chmod o+r ${install_file}
   fi
 }
 
@@ -276,6 +272,9 @@ function uninstall_file {
       rm "${install_file}" 
       cp "${backup_file}" "${install_file}"
       rm "${backup_file}"
+      
+      # Make sure the file we copied kept the correct permissions.
+      chmod o+r ${install_file}
     else
       echo "Couldn't find ${backup_file}."
       if [[ -f "${install_file}" ]]; then
@@ -290,7 +289,6 @@ function uninstall_file {
       rm "${install_file}"
     else
       echo "Couldn't find ${install_file}, but was going to remove it anyway."
-      exit 0
     fi
   fi
 }
@@ -318,13 +316,14 @@ function test {
 }
 
 ########################################
-# Sets appropriate permissions on installed files.
+# Sets appropriate permissions on log files.
 # Arguments:
 #   None.
 ########################################
-function set_permissions {
-  chmod_and_log 777 "$(get_install_file ${RESPONSE_MESSAGE_LOG})"
-  chmod_and_log 777 "$(get_install_file ${RESPONSE_ERROR_LOG})"
+function set_log_permissions {
+  for file in ${LOG_FILES[@]}; do
+    chmod_and_log 777 "${file}"
+  done
 }
 
 ########################################
@@ -337,8 +336,24 @@ function install {
     echo "You appear to have already installed. Please uninstall first."
     exit 0
   fi
+  
   local source_files
-	source_files="$(find ${CATALOG} -print)"
+	source_files="$(find ${CATALOG} -print)"	
+	
+	# Before copying any files, create any directories that don't already exist.
+	local source_directory
+  for source_directory in ${source_files}; do
+    if [[ -d "${source_directory}" ]]; then
+      local install_directory="$(get_install_file ${source_directory})"
+      if [[ ! -d "${install_directory}" ]]; then
+        # Note: We depend on 'find' to list parents before their children.
+        mkdir ${install_directory}
+        chmod a+rx ${install_directory}
+      fi
+    fi
+  done 
+	
+	# With directories in place, install the files.
 	local source_file
 	for source_file in ${source_files}; do
 	  if [[ -f "${source_file}" && ! "${source_file}" =~ '.*\.svn.*' ]]; then
@@ -346,7 +361,22 @@ function install {
     fi
   done
   
-  set_permissions
+  # Set the permission on the log files.
+  set_log_permissions
+  
+  # Print error messages for bad merges.
+  if [[ $MERGE_ERROR == true ]]; then
+    echo "$(line)"
+    echo -e "| Merge errors occurred in the following files:"
+    echo -e "| "
+    for file in ${MERGE_ERROR_LIST[@]}; do
+      echo -e "|   ${file}"
+    done
+    echo -e "| "
+    echo -e "| Please manually edit these files"
+    echo -e "| to remove any remaining merge markers."    
+    echo "$(line)"
+  fi
 }
 
 ########################################
@@ -359,18 +389,24 @@ function uninstall {
     echo "You don't appear to have installed yet. Please install first."
     exit 0
   fi
+  
   local source_files
   source_files="$(find $CATALOG -print)"
+  
+  # Uninstall individual files.
   local source_file
   for source_file in ${source_files}; do
     if [[ -f "${source_file}" && ! "${source_file}" =~ '.*\.svn.*' ]]; then
       uninstall_file "${source_file}"
     fi
   done
+  
+  # Remove the installed googlecheckout directory.
+  rm -r "$(get_install_file ${GOOGLECHECKOUT})"
 }
 
 ########################################
-# Are we being run from the right directory?
+# Is this script being run from the right directory?
 # Arguments:
 #   None.
 ########################################

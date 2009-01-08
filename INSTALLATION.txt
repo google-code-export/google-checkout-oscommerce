@@ -514,6 +514,7 @@ If you have other modules installed on your osCommerce installation, replacing
             </table></td>
           </tr>
         </table>
+        </form>
 <?php
           // *** BEGIN GOOGLE CHECKOUT ***
           // Checks if the Google Checkout payment module has been enabled and, if so, 
@@ -525,7 +526,7 @@ If you have other modules installed on your osCommerce installation, replacing
 ?>
         </td>
       </tr>
-    </table></form></td>
+    </table></td>
 
 
   ----------------------------------------------------------------------------

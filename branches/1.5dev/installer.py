@@ -17,7 +17,7 @@ import StringIO
 import subprocess
 
 
-MERGE_MARKER = '<<<<<<<<'
+MERGE_MARKER = '<<<<<<<'
 
 
 def install_file(diff3, plugin, golden, destination):
@@ -47,32 +47,26 @@ def install_file(diff3, plugin, golden, destination):
   TODO(alek.dembowski) Need to fix the file permissions on the files we modify
   and copy... The directories need to be o+rx and the php files need to be o+r
   '''
-  print('Installing %s to %s based on %s' % (plugin, destination, golden))
+  logging.info('Installing %s to %s based on %s' % (plugin, destination, golden))
+
+  if os.path.isdir(plugin):
+    return True
 
   if not os.path.exists(destination):
-    if os.path.isdir(plugin):
-      os.mkdir(destination)
-      return os.path.exists(golden)
-
-    make_dir(os.path.dirname(destination.rstrip('/')))
+    make_dir(os.path.dirname(destination))
     shutil.copy(plugin, destination)
+    os.chmod(destination, 0664)
 
-    if os.path.exists(golden):
-      logging.warning('%s exists in the checkout plugin and the original but not '
-                      'in the installation directory. The original file may have '
-                      'been removed and should be verified' % golden)
-      return False
-    else:
-      return True
+    return os.path.exists(golden)
   elif not os.path.exists(golden):
     # Touchy here... we should only be okay with this case if we know the files
     # are the same...
     if filecmp.cmp(plugin, destination):
       return True
     else:
-      logging.warning('%s unexpectedly exists in the installation directory. '
-                      'This may mean that the plugin has been installed once '
-                      'before already. ' % destination)
+      print('%s unexpectedly exists in the installation directory. '
+            'This may mean that the plugin has been installed once '
+            'before already. ' % destination)
       return False
 
   # Apply the merge to the destination file
@@ -82,24 +76,25 @@ def install_file(diff3, plugin, golden, destination):
   dest = open(destination, mode='w')
   dest.write(output)
   dest.close()
+  os.chmod(destination, 0664)
 
   # Test for merge markers
-  if output.find(MERGE_MARKER):
-    logging.warning('%s had some conflicts during the merge, please check the '
-                    'file file for merge markers and resolve these conflicts')
+  if output.find(MERGE_MARKER) >= 0:
+    print('%s had some conflicts during the merge, please check the '
+          'file file for merge markers and resolve these conflicts' %
+          destination)
     return False
 
   return True
 
 
 def merge(diff3, plugin, golden, destination):
-  print('Running %s on the three input files, %s, %s, and %s' %
-        (diff3, plugin, golden, destination))
+  logging.info('Running %s on the three input files, %s, %s, and %s' %
+               (diff3, plugin, golden, destination))
   merger = subprocess.Popen([diff3, '-m', plugin, golden, destination],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   (out, error) = merger.communicate()
 
-  print('Standard out: %s \n\n Standard error: %s' % (out, error))
   return out
 
 
@@ -118,8 +113,6 @@ def list_files(root):
     if dirpath.find('.svn') < 0:
       # Strip the root from the path so we have the relative dir
       relative_path = remove_left(dirpath, root)
-      print('Root: %s   Original: %s   Relative: %s' % (root, dirpath,
-                                                        relative_path))
 
       for name in filenames:
         files.append(os.path.join(relative_path, name))
@@ -140,6 +133,7 @@ def make_dir(path):
     path = path.rstrip('/')
     make_dir(os.path.dirname(path))
     os.mkdir(path)
+    os.chmod(path, 0755)
 
 
 def backup(install_dir, backup_dir):

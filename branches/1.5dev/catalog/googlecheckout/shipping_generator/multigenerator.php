@@ -11,7 +11,7 @@ $methods_duplicate = array();
 $string = "<?php\n";
 
  $string  .= "/**\n";
- $string  .= "  * File: googlecheckout/shipping_methods.php file\n";
+ $string  .= "  * File: googlecheckout/library/shipping/merchant_calculated_methods.php file\n";
 // $string  .= "  * Add this code to the correct properties\n";
  $string  .= "  */ \n";
  $string  .= '$mc_shipping_methods = array(' . "\n";

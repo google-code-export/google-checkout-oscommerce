@@ -12,8 +12,8 @@ INTRODUCTION
 INSTALLATION NOTES
 ==================
 A
-	0. Upack files in OSC_dir/googlecheckout/shipping_generator/
-	1. Point your browser to http://your-site/googlecheckout/shipping_generator/
+	0. Upack files in OSC_dir/googlecheckout/tools/shipping/method_generator/
+	1. Point your browser to http://your-site/googlecheckout/tools/shipping/method_generator/
 	2. Set a Domestic Address and an Int'l Address (you can use default ones)
 	3. Click Get Shipping Methods
 	4. Wait for the script to use Zencart's Shipping class to get all valid shipping 
@@ -27,7 +27,7 @@ A
 
 	6. This will generate some php code. You must see the 
 			$mc_shipping_methods and $mc_shipping_methods_names
-	7. Replace this code in the file /googlecheckout/shipping_methods.php
+	7. Replace this code in the file /googlecheckout/library/shipping/merchant_calculated_methods.php
 	8. If you are not sure what you are doing, is recommended to do a merge from 
 	    the original file and the one created.
 	    

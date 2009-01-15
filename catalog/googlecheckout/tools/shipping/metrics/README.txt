@@ -1,11 +1,11 @@
 This can be run from shell
 
-ship_metrics is a little bash script to run OSCommerce Shiping Metrics
+ship_metrics.sh is a little bash script to run OSCommerce Shiping Metrics
 every 10 minutes and echo results, run count and times to a log.
 
 how to runit on a linux box
 
-$ ship_metrics &
+$ ship_metrics.sh &
 
 This will make the script run in background. Now is seted to run 1008 times, 
 with intervals of 10 minutes each run.
@@ -18,7 +18,7 @@ md1.atx.tiger@globant.com
 
 Remember to give write permissions to shipping_metrics.log
 
-This script must be located inside googlecheckout/shipping_metrics/
+This script must be located inside googlecheckout/tools/shipping/metrics/
 Right now test 3 quotes fedex1, upsxml and all the quotes. 
 (Note neither fedex1 nor upsxml came by default in osc)
 

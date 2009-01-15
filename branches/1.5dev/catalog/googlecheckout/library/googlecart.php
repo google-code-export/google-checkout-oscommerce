@@ -397,9 +397,9 @@
      * @return string the cart's xml
      */
     function GetXML() {
-      require_once('xml-processing/gc_xmlbuilder.php');
+      require_once('xml/xml_builder.php');
 
-      $xml_data = new gc_XmlBuilder();
+      $xml_data = new XmlBuilder();
 
       $xml_data->Push('checkout-shopping-cart',
           array('xmlns' => $this->schema_url));
@@ -1310,8 +1310,8 @@
                 " onsubmit=\"setUrchinInputCode();\"":"") . ">";
 
         $request = $this->GetXML();
-        require_once('xml-processing/gc_xmlparser.php');
-        $xml_parser = new gc_xmlparser($request);
+        require_once('xml/xml_parser.php');
+        $xml_parser = new XmlParser($request);
         $root = $xml_parser->GetRoot();
         $XMLdata = $xml_parser->GetData();
         $this->xml2html($XMLdata[$root], '', $data);

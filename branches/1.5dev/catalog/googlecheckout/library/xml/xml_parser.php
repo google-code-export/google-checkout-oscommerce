@@ -74,11 +74,11 @@
         )
 
 )
-  * gc_xmlparser returns an empty params array if it encounters 
+  * XmlParser returns an empty params array if it encounters 
   * any error during parsing 
   */
   // XML to Array
-  class gc_xmlparser {
+  class XmlParser {
 
     var $params = array(); //Stores the object representation of XML data
     var $root = NULL;
@@ -88,7 +88,7 @@
    /* Constructor for the class
     * Takes in XML data as input( do not include the <xml> tag
     */
-    function gc_xmlparser($input, $xmlParams=array(XML_OPTION_CASE_FOLDING => 0)) {
+    function XmlParser($input, $xmlParams=array(XML_OPTION_CASE_FOLDING => 0)) {
       $xmlp = xml_parser_create();
       foreach($xmlParams as $opt => $optVal) {
         switch( $opt ) {

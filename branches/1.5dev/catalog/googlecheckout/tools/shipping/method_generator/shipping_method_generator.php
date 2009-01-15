@@ -23,7 +23,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-// NOTE: This script MUST be placed in googlecheckout/shipping_generator/ directory
+// NOTE: This script MUST be placed in googlecheckout/tools/shipping/method_generator/ directory
 
 // Set the shippers code you want to test
 $shippers = array();
@@ -33,7 +33,7 @@ $shippers = array();
 
 if(isset($_POST['country'])) {
 	error_reporting(E_ALL);
-	chdir('./../..');
+	chdir('./../../../..');
 	$curr_dir = getcwd();
 	 
 	include_once('includes/application_top.php');

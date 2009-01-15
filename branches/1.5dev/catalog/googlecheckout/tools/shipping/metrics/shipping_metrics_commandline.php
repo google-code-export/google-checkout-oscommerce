@@ -26,7 +26,7 @@
 /* ** tool to test WS response time
  */
 
-// NOTE: This script MUST be placed in googlecheckout/shipping_metrics/ directory
+// NOTE: This script MUST be placed in googlecheckout/tools/shipping/metrics/ directory
 
 // Set the shippers code you want to test
 $shippers = array();
@@ -35,7 +35,7 @@ $shippers[] = "usps";
 
 error_reporting(0);
 
-chdir('./../..');
+chdir('./../../../..');
 $curr_dir = getcwd();
  
 include_once('includes/application_top.php');

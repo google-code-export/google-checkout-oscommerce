@@ -65,15 +65,19 @@ If you have the basic osCommerce installation without any other modules or
 
   OSC_DIR:
     CHANGELOG.txt
+    install.bat
     install.sh
     INSTALLATION.txt
+    oscommerce-2.2rc2a/
     README.txt
     states.jpg
+    tools/
     UPGRADE.txt
     
   OSC_DIR/catalog:
     checkout_payment.php
     gc_return.php
+    googlecheckout/
     login.php
     shopping_cart.php
     
@@ -84,49 +88,6 @@ If you have the basic osCommerce installation without any other modules or
     
   OSC_DIR/catalog/admin/includes/functions:
     general.php
-    
-  OSC_DIR/catalog/googlecheckout:
-    gcheckout.php
-    index.html
-    responsehandler.php
-    shipping_methods_ccs.php
-    shipping_methods.php
-    
-  OSC_DIR/catalog/googlecheckout/library:
-    googlecart.php
-    googleitem.php
-    googlelog.php
-    googlemerchantcalculations.php
-    googlerequest.php
-    googleresponse.php
-    googleresult.php
-    googleshipping.php
-    googletax.php
-    index.html
-    
-  OSC_DIR/catalog/googlecheckout/library/xml-processing:
-    gc_xmlbuilder.php
-    gc_xmlparser.php
-    index.html
-    
-  OSC_DIR/catalog/googlecheckout/logs:
-    index.html
-    response_error.log
-    response_message.log
-    
-  OSC_DIR/catalog/googlecheckout/shipping_generator:
-    index.php
-    multigenerator.php
-    multishipping_generator.js
-    multishipping_generator.php
-    README
-    shipping_method_generator.php
-    
-  OSC_DIR/catalog/googlecheckout/shipping_metrics:
-    readme
-    ship_metrics
-    shipping_metrics_commandline.php
-    shipping_metrics.log
     
   OSC_DIR/catalog/includes/languages/english/modules/payment:
     googlecheckout.php
@@ -158,60 +119,21 @@ If you have other modules installed on your osCommerce installation, replacing
 
   OSC_DIR:
     CHANGELOG.txt
+    install.bat
     install.sh
     INSTALLATION.txt
+    oscommerce-2.2rc2a/
     README.txt
     states.jpg
+    tools/
     UPGRADE.txt
     
   OSC_DIR/catalog:
     gc_return.php
+    googlecheckout/
     
   OSC_DIR/catalog/admin:
     htaccess.php
-    
-  OSC_DIR/catalog/googlecheckout:
-    gcheckout.php
-    index.html
-    responsehandler.php
-    shipping_methods_ccs.php
-    shipping_methods.php
-    
-  OSC_DIR/catalog/googlecheckout/library:
-    googlecart.php
-    googleitem.php
-    googlelog.php
-    googlemerchantcalculations.php
-    googlerequest.php
-    googleresponse.php
-    googleresult.php
-    googleshipping.php
-    googletax.php
-    index.html
-    
-  OSC_DIR/catalog/googlecheckout/library/xml-processing:
-    gc_xmlbuilder.php
-    gc_xmlparser.php
-    index.html
-    
-  OSC_DIR/catalog/googlecheckout/logs:
-    index.html
-    response_error.log
-    response_message.log
-    
-  OSC_DIR/catalog/googlecheckout/shipping_generator:
-    index.php
-    multigenerator.php
-    multishipping_generator.js
-    multishipping_generator.php
-    README
-    shipping_method_generator.php
-    
-  OSC_DIR/catalog/googlecheckout/shipping_metrics:
-    readme
-    ship_metrics
-    shipping_metrics_commandline.php
-    shipping_metrics.log
     
   OSC_DIR/catalog/includes/languages/english/modules/payment:
     googlecheckout.php
@@ -240,6 +162,7 @@ If you have other modules installed on your osCommerce installation, replacing
 		checkout_payment.php
 		login.php
 		shopping_cart.php
+		
 
   ----------------------------------------------------------------------------
   1. /catalog/admin/includes/functions/general.php                    LINE 759

@@ -47,7 +47,7 @@ def install_file(diff3, plugin, golden, destination):
   TODO(alek.dembowski) Need to fix the file permissions on the files we modify
   and copy... The directories need to be o+rx and the php files need to be o+r
   '''
-  logging.info('Installing %s to %s based on %s' % (plugin, destination, golden))
+  print('Installing %s to %s based on %s' % (plugin, destination, golden))
 
   if os.path.isdir(plugin):
     return True
@@ -124,15 +124,21 @@ def install(diff3, plugin, golden, install):
   plugin_files = list_files(plugin)
 
   for file in plugin_files:
-      install_file(diff3, os.path.join(plugin, file),
-                   os.path.join(golden, file), os.path.join(install, file))
+    print('File: %s, Plugin: %s, golden: %s, install: %s' % (file, plugin, golden, install))
+    install_file(diff3, '%s.%s%s' % (plugin, os.sep, file),
+                 '%s.%s%s' % (golden, os.sep, file),
+		 '%s.%s%s' % (install, os.sep, file))
 
 
 def make_dir(path):
   if not os.path.exists(path):
-    path = path.rstrip('/')
+    print 'Creating path: %s' % path
+    path = path.rstrip(os.sep)
     make_dir(os.path.dirname(path))
     os.mkdir(path)
+    
+    # According to the docs, mkdir grants 777 by default... in practice it 
+    # doesn't seem to honor it. makedirs doesn't either so we have to chmod
     os.chmod(path, 0755)
 
 
@@ -140,7 +146,7 @@ def backup(install_dir, backup_dir):
   if os.path.exists(backup_dir):
     shutil.rmtree(backup_dir)
 
-  make_dir(os.path.dirname(backup_dir.rstrip('/')))
+  make_dir(os.path.dirname(backup_dir.rstrip(os.sep)))
   shutil.copytree(install_dir, backup_dir)
 
 

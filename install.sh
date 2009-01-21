@@ -41,6 +41,7 @@ BACKUP_SUFFIX="google.backup"
 LOG_FILES=( \
     "${CATALOG}/googlecheckout/logs/response_error.log" \
     "${CATALOG}/googlecheckout/logs/response_message.log" \
+    "${CATALOG}/googlecheckout/rss/products-static.xml" \
     )
 
 # Set via command line parameters.
@@ -322,7 +323,7 @@ function test {
 ########################################
 function set_log_permissions {
   for file in ${LOG_FILES[@]}; do
-    chmod_and_log 777 "${file}"
+    chmod_and_log 777 $(get_install_file ${file})
   done
 }
 

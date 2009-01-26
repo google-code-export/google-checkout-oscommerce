@@ -26,12 +26,12 @@
 /**
  * Generates xml data
  */
-class XmlBuilder {
+class GoogleXmlBuilder {
   var $xml;
   var $indent;
   var $stack = array();
 
-  function XmlBuilder($indent = '  ') {
+  function GoogleXmlBuilder($indent = '  ') {
     $this->indent = $indent;
     $this->xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
   }

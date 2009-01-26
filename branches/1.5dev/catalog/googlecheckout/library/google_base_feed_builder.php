@@ -70,7 +70,7 @@
  * @author Ed Davisson (ed.davisson@gmail.com)
  */
 
-require_once(DIR_FS_CATALOG . 'googlecheckout/library/xml/xml_builder.php');
+require_once(DIR_FS_CATALOG . 'googlecheckout/library/xml/google_xml_builder.php');
 
 class GoogleBaseFeedBuilder {
   
@@ -82,7 +82,7 @@ class GoogleBaseFeedBuilder {
    * Constructor.
    */
   function GoogleBaseFeedBuilder($languages_id) {
-    $this->xml = new XmlBuilder();
+    $this->xml = new GoogleXmlBuilder();
     $this->languages_id = $languages_id;
     $this->categories_tree = $this->build_categories_tree();
   }

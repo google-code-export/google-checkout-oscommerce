@@ -124,9 +124,9 @@
           return array($status, $body);
       } else {
         ini_set('include_path', ini_get('include_path').PATH_SEPARATOR.'.');
-        require_once('xml/xml_parser.php');
+        require_once('xml/google_xml_parser.php');
   
-        $xml_parser = new XmlParser($body);
+        $xml_parser = new GoogleXmlParser($body);
         $root = $xml_parser->GetRoot();
         $data = $xml_parser->GetData();
         

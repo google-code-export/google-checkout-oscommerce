@@ -210,9 +210,9 @@
         $this->log->LogRequest($request);
         $this->response = $request;
         ini_set('include_path', ini_get('include_path').PATH_SEPARATOR.'.');
-        require_once('xml/xml_parser.php');
+        require_once('xml/google_xml_parser.php');
   
-        $this->xml_parser = new XmlParser($request);
+        $this->xml_parser = new GoogleXmlParser($request);
         $this->root = $this->xml_parser->GetRoot();
         $this->data = $this->xml_parser->GetData();
       }

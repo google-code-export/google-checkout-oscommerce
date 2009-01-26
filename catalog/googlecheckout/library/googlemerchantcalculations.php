@@ -60,9 +60,9 @@
      * @return string the response xml
      */
     function GetXML() {
-      require_once('xml/xml_builder.php');
+      require_once('xml/google_xml_builder.php');
 
-      $xml_data = new XmlBuilder();
+      $xml_data = new GoogleXmlBuilder();
       $xml_data->Push('merchant-calculation-results', 
           array('xmlns' => $this->schema_url));
       $xml_data->Push('results');

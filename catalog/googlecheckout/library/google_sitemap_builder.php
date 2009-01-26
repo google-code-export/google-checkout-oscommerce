@@ -25,7 +25,7 @@
  * @author Ed Davisson (ed.davisson@gmail.com)
  */
 
-require_once(DIR_FS_CATALOG . 'googlecheckout/library/xml/xml_builder.php');
+require_once(DIR_FS_CATALOG . 'googlecheckout/library/xml/google_xml_builder.php');
 
 class GoogleSitemapBuilder {
   
@@ -49,7 +49,7 @@ class GoogleSitemapBuilder {
    * Constructor.
    */
   function GoogleSitemapBuilder() {
-    $this->xml = new XmlBuilder();
+    $this->xml = new GoogleXmlBuilder();
     
     // TODO(eddavisson): Initialize outside of constructor?
     $this->product_changefreq = $this->priorities['weekly'];

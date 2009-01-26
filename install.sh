@@ -31,7 +31,7 @@
 
 DEBUG=true
 
-OSC_GOLDEN_DIR="oscommerce-2.2rc2a"
+OSC_GOLDEN_DIR="tools/golden/oscommerce-2.2rc2a"
 CATALOG="catalog"
 GOOGLECHECKOUT="${CATALOG}/googlecheckout"
 TMP_DIR="tmp"
@@ -41,7 +41,8 @@ BACKUP_SUFFIX="google.backup"
 LOG_FILES=( \
     "${CATALOG}/googlecheckout/logs/response_error.log" \
     "${CATALOG}/googlecheckout/logs/response_message.log" \
-    "${CATALOG}/googlecheckout/rss/products-static.xml" \
+    "${CATALOG}/googlecheckout/feeds/products-static.xml" \
+    "${CATALOG}/googlecheckout/feeds/sitemap-static.xml" \
     )
 
 # Set via command line parameters.

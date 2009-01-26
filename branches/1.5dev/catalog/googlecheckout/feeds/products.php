@@ -24,7 +24,7 @@
  * then "products.xml" in this same directory will generate the same
  * feed and meet the .xml file extension requirement.
  * 
- * Otherwise, this page generate a feed and copy it into
+ * Otherwise, this page generates a feed and copies it into
  * "products-static.xml" (also in this directory).
  * 
  * TODO(eddavisson): Tie regeneration of products-static.xml to some
@@ -44,7 +44,7 @@ $google_base_feed_builder = new GoogleBaseFeedBuilder($languages_id);
 $feed = $google_base_feed_builder->get_xml();
 
 // Write it to the static file.
-$file = fopen(DIR_FS_CATALOG . 'googlecheckout/rss/products-static.xml', "w");
+$file = fopen(DIR_FS_CATALOG . 'googlecheckout/feeds/products-static.xml', "w");
 fwrite($file, $google_base_feed_builder->get_xml());
 fclose($file);
 

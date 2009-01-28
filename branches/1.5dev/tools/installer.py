@@ -109,10 +109,10 @@ class WizardBuilder(object):
     backup_dir = tempfile.mkdtemp(prefix='checkout-osc-plugin')
     logging.info('Backup dir %s' % backup_dir)
 
-    plugin_dir = os.path.join(self.plugin_entry.get(), 'catalog/')
-    install_dir = os.path.join(self.install_entry.get(), 'catalog/')
-    golden_dir = os.path.join(self.plugin_entry.get(),
-                              'tools/golden/oscommerce-2.2rc2a/catalog/')
+    plugin_dir = os.path.join(self.plugin_entry.get(), 'catalog%s' % os.sep)
+    install_dir = os.path.join(self.install_entry.get(), 'catalog%s' % os.sep)
+    golden_dir = os.path.join(self.plugin_entry.get(), 'tools', 'golden',
+                              'oscommerce-2.2rc2a', 'catalog%s' % os.sep)
 
     if not os.path.exists(plugin_dir):
       return tkMessageBox.showerror(title='Unable to find directory',
@@ -258,8 +258,8 @@ def install(diff3, plugin, golden, install):
   # but is currently how the plugin is written. Should think of better ways to
   # do this going forward.
   writable_files = [
-    '%s%s' % (install, './googlecheckout/logs/response_error.log'),
-    '%s%s' % (install, './googlecheckout/logs/response_message.log'),
+    os.path.join(install, 'googlecheckout', 'logs', 'response_error.log'),
+    os.path.join(install, 'googlecheckout', 'logs', 'response_message.log'),
   ]
 
   errors = []

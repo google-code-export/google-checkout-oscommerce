@@ -36,9 +36,6 @@ class WizardBuilder(object):
     self.window.title('Checkout Plugin Installer')
 
     self.welcome_screen = self.build_config_screen(self.window)
-#        self.buildProgressScreen(window),
-#        self.buildSuccessScreen(window),
-#        self.buildFailureScreen(window)
 
     self.welcome_screen.pack()
 
@@ -56,34 +53,38 @@ class WizardBuilder(object):
     text = ScrolledText.ScrolledText(window)
     text.insert('1.0', error_text)
     text.pack(side=Tkinter.BOTTOM, fill=Tkinter.BOTH, expand=1)
-#    self.add_button(window, 2, 4, 'Close', window.withdraw)
 
   def build_config_screen(self, window):
     screen = Tkinter.Frame(window)
+    screen.grid_columnconfigure(1, minsize=200, weight=100)
 
     self.add_row(screen, 0,
                  'Welcome to the Google Checkout installer for OS Commerce!')
     self.add_row(screen, 1,
                  'This installer works with OS Commerce version 2.2rc2')
 
-    self.plugin_entry = self.add_directory_row(screen, 2, 'Plugin Directory')
+    self.plugin_entry = self.add_directory_row(screen, 2, 'Plugin Directory',
+                                               os.getcwd())
     self.install_entry = self.add_directory_row(screen, 3, 'OSCommerce Direcory')
 
     self.add_button(screen, 4, 2, 'Install', self.confirm)
     self.add_button(screen, 4, 3, 'Cancel', sys.exit)
+    screen.pack(fill=Tkinter.BOTH, expand=1)
 
     return screen
 
   def add_row(self, frame, row, text):
     label = Tkinter.Label(frame, text=text)
-    label.grid(row=row, column=0, columnspan=4)
+    label.grid(row=row, column=0, columnspan=4, pady=5)
 
-  def add_directory_row(self, frame, row, label_text):
+  def add_directory_row(self, frame, row, label_text, default=''):
     label = Tkinter.Label(frame, text=label_text)
-    label.grid(row=row, column=0)
+    label.grid(row=row, column=0, sticky=Tkinter.W, padx=5, pady=5)
 
     entry = Tkinter.Entry(frame)
-    entry.grid(row=row, column=1, columnspan=2)
+    entry.config(bg='white')
+    entry.insert(Tkinter.END, default)
+    entry.grid(row=row, column=1, columnspan=2, sticky=Tkinter.W + Tkinter.E)
 
     def update():
       entry.delete(0, Tkinter.END)
@@ -94,7 +95,7 @@ class WizardBuilder(object):
 
   def add_button(self, frame, row, column, text, command):
     button = Tkinter.Button(frame, text=text, command=command)
-    button.grid(row=row, column=column)
+    button.grid(row=row, column=column, sticky=Tkinter.E, padx=5, pady=3)
     return button
 
   def confirm(self):
@@ -110,7 +111,7 @@ class WizardBuilder(object):
     logging.info('Backup dir %s' % backup_dir)
 
     plugin_dir = os.path.join(self.plugin_entry.get(), 'catalog%s' % os.sep)
-    install_dir = os.path.join(self.install_entry.get(), 'catalog%s' % os.sep)
+    install_dir = self.install_entry.get()
     golden_dir = os.path.join(self.plugin_entry.get(), 'tools', 'golden',
                               'oscommerce-2.2rc2a', 'catalog%s' % os.sep)
 
@@ -118,9 +119,10 @@ class WizardBuilder(object):
       return tkMessageBox.showerror(title='Unable to find directory',
           message='Unable to find the checkout plugin. Please check '
                   'the directory and try again.')
-    elif not os.path.exists(install_dir):
+    elif (not os.path.exists(os.path.join(install_dir, 'index.php')) or
+          not os.path.exists(os.path.join(install_dir, 'shopping_cart.php'))):
       return tkMessageBox.showerror(title='Unable to find directory',
-          message='Unable to find the OS Commerce installation. '
+          message='Unable to verify the OS Commerce installation. '
                   'Please check the directory and try again.')
     elif not os.path.exists(golden_dir):
       return tkMessageBox.showerror(title='Unable to find directory',
@@ -142,7 +144,7 @@ class WizardBuilder(object):
       return
 
     shutil.rmtree(backup_dir)
-    tkMessageBox.showinfo(title='Installation Sucessful', 
+    tkMessageBox.showinfo(title='Installation Sucessful',
                           message='The Google Checkout plugin for OS Commerce '
                           'installed successfully. Please verify and activate '
                           'it through the OS Commerce admin interface.')
@@ -269,18 +271,20 @@ def install(diff3, plugin, golden, install):
     try:
       plugin_file = '%s.%s%s' % (plugin, os.sep, file)
       golden_file = '%s.%s%s' % (golden, os.sep, file)
-      existing_file = '%s.%s%s' % (install, os.sep, file)
+      installation_file = '%s%s%s%s%s' % (install, os.sep, '.', os.sep, file)
 
-      error = install_file(diff3, plugin_file, golden_file, existing_file)
+      logging.info('Installing %s to %s' % (plugin_file, installation_file))
+
+      error = install_file(diff3, plugin_file, golden_file, installation_file)
 
       if error:
         errors.append(error)
-      elif os.path.exists(existing_file) and existing_file in writable_files:
-        os.chmod(existing_file, 0777)
+      elif os.path.exists(installation_file) and installation_file in writable_files:
+        os.chmod(installation_file, 0777)
 
     except Exception, error:
       logging.error('Error while installing file: %s' % file, exc_info=error)
-      errors.append(('Error occured: %s' % error, existing_file))
+      errors.append(('Error occured: %s' % error, installation_file))
 
   return errors
 

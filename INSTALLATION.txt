@@ -1,17 +1,17 @@
-HOW TO INSTALL THE GOOGLE CHECKOUT MODULE FOR OSCOMMERCE
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.5.0 - INSTALLATION INSTRUCTIONS
 
 If you haven't read README.txt yet, please read it first.
 
-NOTE: This plug-in works with: 
+NOTE: This module only works with: 
 
   osCommerce Online Merchant v2.2, Release Candidate 2a.
   
-To download, please see:
+To download osCommerce, please see:
   
   http://www.oscommerce.com/solutions/downloads
 
 This file describes how to perform a fresh install of the Google Checkout
-module. There are several possible ways to install the plug-in:
+module. There are several possible ways to install the module:
   
   I. Installer Script
   II. Manual Installation
@@ -22,7 +22,7 @@ module. There are several possible ways to install the plug-in:
 
 I. INSTALLER SCRIPT
 ===================
-If you are running and unmodified or slightly-modified version of 
+If you are running an unmodified or slightly-modified version of 
 osCommerce v2.2, RC 2a, you can install the module using a script.
 
 A. Windows
@@ -36,58 +36,56 @@ TODO(eddavisson)
  
 II. MANUAL INSTALLATION 
 =======================
-There are two installation options you need to choose from, so please read
+There are two manual installation options you to choose from, so please read
 carefully to determine which option is right for you.
 
 
 A. UNMODIFIED OSCOMMERCE
 ========================
-If you have the basic osCommerce installation without any other modules or
-add-ons, simply copy the provided files into your osCommerce system,
-preserving the file structure. 
+If you are using the basic osCommerce installation without any other modules or
+add-ons, simply copy the provided files into your osCommerce directory,
+preserving the file structure.
+
+Note: If you applied a patch or manually modified the files to disable 
+register_globals, you should use Option B.
 
 For your reference, here is the list of files you need to copy over to your
 system:
 
-  OSC_DIR:
+  <osc-directory>/
     CHANGELOG.txt
     install.bat
-    install.sh
     INSTALLATION.txt
     README.txt
     tools/
     UPGRADE.txt
     
-  OSC_DIR/catalog:
+  <osc-directory>/catalog/
     checkout_payment.php
     gc_return.php
     googlecheckout/
     login.php
     shopping_cart.php
     
-  OSC_DIR/catalog/admin:
+  <osc-directory>/catalog/admin/
     htaccess.php
     modules.php
     orders.php
     
-  OSC_DIR/catalog/admin/includes/functions:
+  <osc-directory>/catalog/admin/includes/functions/
     general.php
     
-  OSC_DIR/catalog/includes/languages/english/modules/payment:
+  <osc-directory>/catalog/includes/languages/english/modules/payment/
     googlecheckout.php
     
-  OSC_DIR/catalog/includes/languages/espanol/modules/payment:
+  <osc-directory>/catalog/includes/languages/espanol/modules/payment/
     googlecheckout.php
     
-  OSC_DIR/catalog/includes/languages/german/modules/payment:
+  <osc-directory>/catalog/includes/languages/german/modules/payment/
     googlecheckout.php
     
-  OSC_DIR/catalog/includes/modules/payment:
+  <osc-directory>/catalog/includes/modules/payment/
     googlecheckout.php
-
-
-* Note: If you applied a patch or manually modified the files to disable 
-register_globals, go for Option B.
 
 
 B. MODIFIED OSCOMMERCE
@@ -101,53 +99,52 @@ For this option, follow the instructions below:
 I. Copy the following new files into your existing system, preserving the file structure:
 -----------------------------------------------------------------------------------------
 
-  OSC_DIR:
+  <osc-directory>/
     CHANGELOG.txt
     install.bat
-    install.sh
     INSTALLATION.txt
     README.txt
     tools/
     UPGRADE.txt
     
-  OSC_DIR/catalog:
+  <osc-directory>/catalog/
     gc_return.php
     googlecheckout/
     
-  OSC_DIR/catalog/admin:
+  <osc-directory>/catalog/admin/
     htaccess.php
     
-  OSC_DIR/catalog/includes/languages/english/modules/payment:
+  <osc-directory>/catalog/includes/languages/english/modules/payment/
     googlecheckout.php
     
-  OSC_DIR/catalog/includes/languages/espanol/modules/payment:
+  <osc-directory>/catalog/includes/languages/espanol/modules/payment/
     googlecheckout.php
     
-  OSC_DIR/catalog/includes/languages/german/modules/payment:
+  <osc-directory>/catalog/includes/languages/german/modules/payment/
     googlecheckout.php
     
-  OSC_DIR/catalog/includes/modules/payment:
+  <osc-directory>/catalog/includes/modules/payment/
     googlecheckout.php
 
 
- II. Manually edit the following files from your system as instructed below:
- ---------------------------------------------------------------------------
+II. Manually edit the following files from your system as instructed below:
+---------------------------------------------------------------------------
  
-  OSC_DIR/catalog/admin/includes/functions:
+  <osc-directory>/catalog/admin/includes/functions/
     general.php
     
-  OSC_DIR/catalog/admin:
+  <osc-directory>/catalog/admin/
     modules.php
     orders.php
 
-  OSC_DIR/catalog:
+  <osc-directory>/catalog/
     checkout_payment.php
     login.php
     shopping_cart.php
 		
 
   ----------------------------------------------------------------------------
-  1. /catalog/admin/includes/functions/general.php                    LINE 759
+  1. <osc-directory>/catalog/admin/includes/functions/general.php     LINE 759
   ============================================================================
 
   ADD:
@@ -158,7 +155,7 @@ I. Copy the following new files into your existing system, preserving the file s
     
 
   ----------------------------------------------------------------------------
-  2a. /catalog/admin/modules.php                                       LINE 45
+  2a. <osc-directory>/catalog/admin/modules.php                        LINE 45
   ============================================================================
   
   REPLACE:
@@ -194,7 +191,7 @@ I. Copy the following new files into your existing system, preserving the file s
 
 
   ----------------------------------------------------------------------------
-  2b. /catalog/admin/modules.php                                       LINE 15
+  2b. <osc-directory>/catalog/admin/modules.php                                       LINE 15
   ============================================================================
 
   ADD:
@@ -209,7 +206,7 @@ I. Copy the following new files into your existing system, preserving the file s
 
 
   ----------------------------------------------------------------------------
-  3a. /catalog/admin/orders.php                                       LINE 318
+  3a. <osc-directory>/catalog/admin/orders.php                        LINE 318
   ============================================================================
   
   REPLACE:
@@ -284,7 +281,7 @@ I. Copy the following new files into your existing system, preserving the file s
 
 
   ----------------------------------------------------------------------------
-  3b. /catalog/admin/orders.php                                        LINE 40
+  3b. <osc-directory>/catalog/admin/orders.php                         LINE 40
   ============================================================================
   
   REPLACE:
@@ -356,7 +353,7 @@ I. Copy the following new files into your existing system, preserving the file s
 
 
   ----------------------------------------------------------------------------
-  3c. /catalog/admin/orders.php                                        LINE 14
+  3c. <osc-directory>/catalog/admin/orders.php                         LINE 14
   ============================================================================
   
   ADD:
@@ -367,7 +364,7 @@ I. Copy the following new files into your existing system, preserving the file s
   
   
   ----------------------------------------------------------------------------
-  4. /catalog/checkout_payment.php                                    LINE 224
+  4. <osc-directory>/catalog/checkout_payment.php                     LINE 224
   ============================================================================
   
   REPLACE:
@@ -390,7 +387,7 @@ I. Copy the following new files into your existing system, preserving the file s
 
 
   ----------------------------------------------------------------------------
-  5. /catalog/login.php                                               LINE 203
+  5. <osc-directory>/catalog/login.php                                LINE 203
   ============================================================================
   
   REPLACE:
@@ -436,7 +433,7 @@ I. Copy the following new files into your existing system, preserving the file s
 
 
   ----------------------------------------------------------------------------
-  6. /catalog/shopping_cart.php                                       LINE 202
+  6. <osc-directory>/catalog/shopping_cart.php                        LINE 202
   ============================================================================
   
   REPLACE:

@@ -1,13 +1,13 @@
 <?php
 /*
  * Copyright (C) 2007 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,9 @@
  */
 
   define('MAX_DIGITAL_DESC', 1024);
-  
+
  /**
-  * Creates a Google Checkout shopping cart and posts it 
+  * Creates a Google Checkout shopping cart and posts it
   * to the google checkout sandbox or production environment
   * Refer demo/cartdemo.php for different use case scenarios for this code
   */
@@ -58,13 +58,13 @@
     var $default_tax_rules_arr;
     var $alternate_tax_tables_arr;
     var $xml_data;
-    
+
     var $googleAnalytics_id = false;
     var $thirdPartyTackingUrl = false;
     var $thirdPartyTackingParams = array();
-    
-		// For HTML API Conversion
-		
+
+    // For HTML API Conversion
+
     // This tags are those that can be used more than once as a sub tag
     // so a "-#" must be added always
     /**
@@ -73,30 +73,30 @@
      * ("-#" suffix)
      */
     var $multiple_tags = array(
-                          'flat-rate-shipping' => array(), 
-                          'merchant-calculated-shipping' => array(), 
-                          'pickup' => array(), 
-                          'parameterized-url' => array(), 
-                          'url-parameter' => array(), 
-                          'item' => array(), 
-                          'us-state-area' => array('tax-area'), 
-                          'us-zip-area' => array('tax-area'), 
-                          'us-country-area' => array('tax-area'), 
-                          'postal-area' => array('tax-area'), 
-                          'alternate-tax-table' => array(), 
-                          'world-area' => array('tax-area'),                      
-                          'default-tax-rule' => array(), 
-                          'alternate-tax-rule' => array(), 
-                          'gift-certificate-adjustment' => array(), 
-                          'coupon-adjustment' => array(), 
-                          'coupon-result' => array(), 
-                          'gift-certificate-result' => array(), 
-                          'method' => array(), 
-                          'anonymous-address' => array(), 
-                          'result' => array(), 
-                          'string' => array(), 
+                          'flat-rate-shipping' => array(),
+                          'merchant-calculated-shipping' => array(),
+                          'pickup' => array(),
+                          'parameterized-url' => array(),
+                          'url-parameter' => array(),
+                          'item' => array(),
+                          'us-state-area' => array('tax-area'),
+                          'us-zip-area' => array('tax-area'),
+                          'us-country-area' => array('tax-area'),
+                          'postal-area' => array('tax-area'),
+                          'alternate-tax-table' => array(),
+                          'world-area' => array('tax-area'),
+                          'default-tax-rule' => array(),
+                          'alternate-tax-rule' => array(),
+                          'gift-certificate-adjustment' => array(),
+                          'coupon-adjustment' => array(),
+                          'coupon-result' => array(),
+                          'gift-certificate-result' => array(),
+                          'method' => array(),
+                          'anonymous-address' => array(),
+                          'result' => array(),
+                          'string' => array(),
                           );
-    
+
     var $ignore_tags = array(
                         'xmlns' => true,
                         'checkout-shopping-cart' => true,
@@ -107,19 +107,19 @@
 
 
 
-		/**
-		 * Has all the logic to build the cart's xml (or html) request to be 
-		 * posted to google's servers.
-		 * 
-		 * @param string $id the merchant id
-		 * @param string $key the merchant key
-		 * @param string $server_type the server type of the server to be used, one 
-		 *                            of 'sandbox' or 'production'.
-		 *                            defaults to 'sandbox'
-		 * @param string $currency the currency of the items to be added to the cart
+    /**
+     * Has all the logic to build the cart's xml (or html) request to be
+     * posted to google's servers.
+     *
+     * @param string $id the merchant id
+     * @param string $key the merchant key
+     * @param string $server_type the server type of the server to be used, one
+     *                            of 'sandbox' or 'production'.
+     *                            defaults to 'sandbox'
+     * @param string $currency the currency of the items to be added to the cart
      *                         , as of now values can be 'USD' or 'GBP'.
      *                         defaults to 'USD'
-		 */
+     */
     function GoogleCart($id, $key, $server_type="sandbox", $currency="USD") {
       $this->merchant_id = $id;
       $this->merchant_key = $key;
@@ -128,29 +128,29 @@
       if(strtolower($server_type) == "sandbox") {
         $this->server_url = "https://sandbox.google.com/checkout/";
       } else {
-        $this->server_url=  "https://checkout.google.com/";  
+        $this->server_url=  "https://checkout.google.com/";
       }
 
 
       $this->schema_url = "http://checkout.google.com/schema/2";
-      $this->base_url = $this->server_url . "api/checkout/v2/"; 
+      $this->base_url = $this->server_url . "api/checkout/v2/";
       $this->checkout_url = $this->base_url . "checkout/Merchant/" . $this->merchant_id;
       $this->checkoutForm_url = $this->base_url . "checkoutForm/Merchant/" . $this->merchant_id;
 
       //The item, shipping and tax table arrays are initialized
       $this->item_arr = array();
-      $this->shipping_arr = array(); 
+      $this->shipping_arr = array();
       $this->alternate_tax_tables_arr = array();
     }
 
     /**
      * Sets the cart's expiration date
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_good-until-date <good-until-date>}
-     * 
-     * @param string $cart_expire a string representing a date in the 
+     *
+     * @param string $cart_expire a string representing a date in the
      *         iso 8601 date and time format: {@link http://www.w3.org/TR/NOTE-datetime}
-     * 
+     *
      * @return void
      */
     function SetCartExpiration($cart_expire) {
@@ -159,16 +159,16 @@
 
     /**
      * Sets the merchant's private data.
-     * 
+     *
      * Google Checkout will return this data in the
-     * <merchant-calculation-callback> and the 
+     * <merchant-calculation-callback> and the
      * <new-order-notification> for the order.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_merchant-private-data <merchant-private-data>}
-     * 
-     * @param MerchantPrivateData $data an object which contains the data to be 
+     *
+     * @param MerchantPrivateData $data an object which contains the data to be
      *                                  sent as merchant-private-data
-     * 
+     *
      * @return void
      */
     function SetMerchantPrivateData($data) {
@@ -177,9 +177,9 @@
 
     /**
      * Sets the url where the customer can edit his cart.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_edit-cart-url <edit-cart-url>}
-     * 
+     *
      * @param string $url the merchant's site edit cart url
      * @return void
      */
@@ -188,11 +188,11 @@
     }
 
     /**
-     * Sets the continue shopping url, which allows the customer to return 
+     * Sets the continue shopping url, which allows the customer to return
      * to the merchant's site after confirming an order.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_continue-shopping-url <continue-shopping-url>}
-     * 
+     *
      * @param string $url the merchant's site continue shopping url
      * @return void
      */
@@ -204,9 +204,9 @@
      * Sets whether the customer must enter a phone number to complete an order.
      * If set to true, the customer must enter a number, which Google Checkout
      * will return in the new order notification for the order.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_request-buyer-phone-number <request-buyer-phone-number>}
-     * 
+     *
      * @param bool $req true if the customer's phone number is *required*
      *                  to complete an order.
      *                  defaults to false.
@@ -217,11 +217,11 @@
     }
 
     /**
-     * Sets the information about calculations that will be performed by the 
+     * Sets the information about calculations that will be performed by the
      * merchant.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_merchant-calculations <merchant-calculations>}
-     * 
+     *
      * @param string $url the merchant calculations callback url
      * @param bool $tax_option true if the merchant has to do tax calculations.
      *                         defaults to false.
@@ -241,12 +241,12 @@
 
     /**
      * Add an item to the cart.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_item <item>}
-     * 
-     * @param GoogleItem $google_item an object that represents an item 
+     *
+     * @param GoogleItem $google_item an object that represents an item
      *                                (defined in googleitem.php)
-     * 
+     *
      * @return void
      */
     function AddItem($google_item) {
@@ -255,12 +255,12 @@
 
     /**
      * Add a shipping method to the cart.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_shipping-methods <shipping-methods>}
-     * 
-     * @param object $ship an object that represents a shipping method, must be 
+     *
+     * @param object $ship an object that represents a shipping method, must be
      *                     one of the methods defined in googleshipping.php
-     * 
+     *
      * @return void
      */
     function AddShipping($ship) {
@@ -269,12 +269,12 @@
 
     /**
      * Add a default tax rule to the cart.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_default-tax-rule <default-tax-rule>}
-     * 
+     *
      * @param GoogleDefaultTaxRule $rules an object that represents a default
      *                                    tax rule (defined in googletax.php)
-     * 
+     *
      * @return void
      */
     function AddDefaultTaxRules($rules) {
@@ -284,13 +284,13 @@
 
     /**
      * Add an alternate tax table to the cart.
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_alternate-tax-table <alternate-tax-table>}
-     * 
-     * @param GoogleAlternateTaxTable $tax an object that represents an 
-     *                                     alternate tax table 
+     *
+     * @param GoogleAlternateTaxTable $tax an object that represents an
+     *                                     alternate tax table
      *                                     (defined in googletax.php)
-     * 
+     *
      * @return void
      */
     function AddAlternateTaxTables($tax) {
@@ -301,13 +301,13 @@
      * Set the policy to be used to round monetary values.
      * Rounding policy explanation here:
      * {@link http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html}
-     * 
+     *
      * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_rounding-policy <rounding-policy>}
-     * 
-     * @param string $mode one of "UP", "DOWN", "CEILING", "HALF_DOWN" 
+     *
+     * @param string $mode one of "UP", "DOWN", "CEILING", "HALF_DOWN"
      *                     or "HALF_EVEN", described here: {@link http://java.sun.com/j2se/1.5.0/docs/api/java/math/RoundingMode.html}
      * @param string $rule one of "PER_LINE", "TOTAL"
-     * 
+     *
      * @return void
      */
     function AddRoundingPolicy($mode, $rule) {
@@ -332,40 +332,40 @@
             break;
       }
     }
-    
+
     /**
      * Set the google analytics data.
-     * 
+     *
      * {@link http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html info on Checkout and Analytics integration}
-     * 
+     *
      * @param string $data the analytics data
-     * 
+     *
      * @return void
      */
     function SetAnalyticsData($data) {
       $this->analytics_data = $data;
     }
-    
+
     /**
      * Add a google analytics tracking id.
-     * 
+     *
      * {@link http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html info on Checkout and Analytics integration}
-     * 
+     *
      * @param string $GA_id the google analytics id
-     * 
+     *
      * @return void
      */
     function AddGoogleAnalyticsTracking($GA_id) {
-    	$this->googleAnalytics_id = $GA_id;
+      $this->googleAnalytics_id = $GA_id;
     }
-    
+
     /**
      * Add third-party tracking to the cart
-     * 
+     *
      * Described here:
      * {@link http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html#googleCheckoutAnalyticsIntegrationAlternate}
-     * 
-     * @param $tracking_attr_types attributes to be tracked, one of 
+     *
+     * @param $tracking_attr_types attributes to be tracked, one of
      *                            ('buyer-id',
      *                             'order-id',
      *                             'order-subtotal',
@@ -393,7 +393,7 @@
 
     /**
      * Builds the cart's xml to be sent to Google Checkout.
-     * 
+     *
      * @return string the cart's xml
      */
     function GetXML() {
@@ -423,12 +423,12 @@
         $xml_data->Element('quantity', $item->quantity);
         if($item->merchant_private_item_data != '') {
 //          echo get_class($item->merchant_private_item_data);
-          if(is_a($item->merchant_private_item_data, 
+          if(is_a($item->merchant_private_item_data,
                                               'merchantprivate')) {
             $item->merchant_private_item_data->AddMerchantPrivateToXML($xml_data);
           }
           else {
-            $xml_data->Element('merchant-private-item-data', 
+            $xml_data->Element('merchant-private-item-data',
                                              $item->merchant_private_item_data);
           }
         }
@@ -455,10 +455,10 @@
             }
           }
           else {
-            $xml_data->element('email-delivery', 
+            $xml_data->element('email-delivery',
                       $this->_GetBooleanValue($item->email_delivery, "true"));
           }
-          $xml_data->pop('digital-content');          
+          $xml_data->pop('digital-content');
         }
         $xml_data->Pop('item');
       }
@@ -492,7 +492,7 @@
         if($ship->type == "flat-rate-shipping" ||
            $ship->type == "merchant-calculated-shipping"
 //  If shipping-company calc support addr-filtering and shipping restrictions as a subatag of shipping-company-calculated-shipping
-//           ||$ship->type == "shipping-company-calculated-shipping" 
+//           ||$ship->type == "shipping-company-calculated-shipping"
            ) {
           $xml_data->Push($ship->type, array('name' => $ship->name));
           $xml_data->Element('price', $ship->price,
@@ -541,14 +541,14 @@
               $xml_data->Pop('allowed-areas');
             }
 
-            if($shipping_restrictions->excluded_restrictions) { 
+            if($shipping_restrictions->excluded_restrictions) {
               if (!$shipping_restrictions->allowed_restrictions) {
                 $xml_data->EmptyElement('allowed-areas');
               }
               $xml_data->Push('excluded-areas');
               if($shipping_restrictions->excluded_country_area != "")
                 $xml_data->EmptyElement('us-country-area',
-                    array('country-area' => 
+                    array('country-area' =>
                     $shipping_restrictions->excluded_country_area));
               foreach($shipping_restrictions->excluded_state_areas_arr as $current) {
                 $xml_data->Push('us-state-area');
@@ -619,14 +619,14 @@
                 $xml_data->Pop('allowed-areas');
               }
 
-              if($address_filters->excluded_restrictions) { 
+              if($address_filters->excluded_restrictions) {
                 if (!$address_filters->allowed_restrictions) {
                   $xml_data->EmptyElement('allowed-areas');
                 }
                 $xml_data->Push('excluded-areas');
                 if($address_filters->excluded_country_area != "")
                   $xml_data->EmptyElement('us-country-area',
-                      array('country-area' => 
+                      array('country-area' =>
                       $address_filters->excluded_country_area));
                 foreach($address_filters->excluded_state_areas_arr as $current) {
                   $xml_data->Push('us-state-area');
@@ -662,14 +662,14 @@
           $CCSoptions = $ship->CarrierCalculatedShippingOptions;
           foreach($CCSoptions as $CCSoption){
             $xml_data->Push('carrier-calculated-shipping-option');
-            $xml_data->Element('price', $CCSoption->price, 
+            $xml_data->Element('price', $CCSoption->price,
                 array('currency' => $this->currency));
             $xml_data->Element('shipping-company', $CCSoption->shipping_company);
             $xml_data->Element('shipping-type', $CCSoption->shipping_type);
             $xml_data->Element('carrier-pickup', $CCSoption->carrier_pickup);
             if(!empty($CCSoption->additional_fixed_charge)) {
               $xml_data->Element('additional-fixed-charge',
-                  $CCSoption->additional_fixed_charge, 
+                  $CCSoption->additional_fixed_charge,
                   array('currency' => $this->currency));
             }
             if(!empty($CCSoption->additional_variable_charge_percent)) {
@@ -703,11 +703,11 @@
           $xml_data->Pop('shipping-package');
           $xml_data->Pop('shipping-packages');
 
-          $xml_data->Pop($ship->type);          
+          $xml_data->Pop($ship->type);
         }
         else if ($ship->type == "pickup") {
           $xml_data->Push('pickup', array('name' => $ship->name));
-          $xml_data->Element('price', $ship->price, 
+          $xml_data->Element('price', $ship->price,
               array('currency' => $this->currency));
           $xml_data->Pop('pickup');
         }
@@ -716,19 +716,19 @@
         $xml_data->Pop('shipping-methods');
 
       if($this->request_buyer_phone != "")
-        $xml_data->Element('request-buyer-phone-number', 
+        $xml_data->Element('request-buyer-phone-number',
             $this->request_buyer_phone);
 
       if($this->merchant_calculations_url != "") {
         $xml_data->Push('merchant-calculations');
-        $xml_data->Element('merchant-calculations-url', 
+        $xml_data->Element('merchant-calculations-url',
             $this->merchant_calculations_url);
         if($this->accept_merchant_coupons != "") {
-          $xml_data->Element('accept-merchant-coupons', 
+          $xml_data->Element('accept-merchant-coupons',
               $this->accept_merchant_coupons);
         }
         if($this->accept_gift_certificates != "") {
-          $xml_data->Element('accept-gift-certificates', 
+          $xml_data->Element('accept-gift-certificates',
               $this->accept_gift_certificates);
         }
         $xml_data->Pop('merchant-calculations');
@@ -736,12 +736,12 @@
       //Set Third party Tracking
       if($this->thirdPartyTackingUrl) {
         $xml_data->push('parameterized-urls');
-        $xml_data->push('parameterized-url', 
+        $xml_data->push('parameterized-url',
            array('url' => $this->thirdPartyTackingUrl));
-        if(is_array($this->thirdPartyTackingParams) 
+        if(is_array($this->thirdPartyTackingParams)
             && count($this->thirdPartyTackingParams)>0) {
           $xml_data->push('parameters');
-          foreach($this->thirdPartyTackingParams as $tracking_param_name => 
+          foreach($this->thirdPartyTackingParams as $tracking_param_name =>
                                                           $tracking_param_type) {
             $xml_data->emptyElement('url-parameter',
               array('name' => $tracking_param_name,
@@ -754,10 +754,10 @@
       }
 
       //Set Default and Alternate tax tables
-      if( (count($this->alternate_tax_tables_arr) != 0) 
+      if( (count($this->alternate_tax_tables_arr) != 0)
             || (count($this->default_tax_rules_arr) != 0)) {
         if($this->merchant_calculated_tax != "") {
-          $xml_data->Push('tax-tables', 
+          $xml_data->Push('tax-tables',
             array('merchant-calculated' => $this->merchant_calculated_tax));
         }
         else {
@@ -773,7 +773,7 @@
               $xml_data->Element('shipping-taxed', $curr_rule->shipping_taxed);
               $xml_data->Element('rate', $curr_rule->tax_rate);
               $xml_data->Push('tax-area');
-              $xml_data->EmptyElement('us-country-area', 
+              $xml_data->EmptyElement('us-country-area',
                 array('country-area' => $curr_rule->country_area));
               $xml_data->Pop('tax-area');
               $xml_data->Pop('default-tax-rule');
@@ -837,7 +837,7 @@
         if(count($this->alternate_tax_tables_arr) != 0) {
           $xml_data->Push('alternate-tax-tables');
           foreach($this->alternate_tax_tables_arr as $curr_table) {
-            $xml_data->Push('alternate-tax-table', 
+            $xml_data->Push('alternate-tax-table',
               array('standalone' => $curr_table->standalone,
                     'name' => $curr_table->name));
             $xml_data->Push('alternate-tax-rules');
@@ -847,7 +847,7 @@
                 $xml_data->Push('alternate-tax-rule');
                 $xml_data->Element('rate', $curr_rule->tax_rate);
                 $xml_data->Push('tax-area');
-                $xml_data->EmptyElement('us-country-area', 
+                $xml_data->EmptyElement('us-country-area',
                   array('country-area' => $curr_rule->country_area));
                 $xml_data->Pop('tax-area');
                 $xml_data->Pop('alternate-tax-rule');
@@ -914,7 +914,7 @@
         $xml_data->Element('rule', $this->rounding_rule);
         $xml_data->Pop('rounding-policy');
       }
-      if($this->analytics_data != ''){ 
+      if($this->analytics_data != ''){
         $xml_data->Element('analytics-data', $this->analytics_data);
       }
 
@@ -922,16 +922,16 @@
       $xml_data->Pop('checkout-flow-support');
       $xml_data->Pop('checkout-shopping-cart');
 
-      return $xml_data->GetXML();  
+      return $xml_data->GetXML();
     }
-    
+
     /**
      * Set the Google Checkout button's variant.
      * {@link http://code.google.com/apis/checkout/developer/index.html#google_checkout_buttons}
-     * 
-     * @param bool $variant true for an enabled button, false for a 
+     *
+     * @param bool $variant true for an enabled button, false for a
      *                      disabled one
-     * 
+     *
      * @return void
      */
     function SetButtonVariant($variant) {
@@ -945,53 +945,53 @@
             break;
       }
     }
-    
+
     /**
      * Submit a server-to-server request.
-     * Creates a GoogleRequest object (defined in googlerequest.php) and sends 
+     * Creates a GoogleRequest object (defined in googlerequest.php) and sends
      * it to the Google Checkout server.
-     * 
+     *
      * more info:
      * {@link http://code.google.com/apis/checkout/developer/index.html#alternate_technique}
-     * 
-     * @return array with the returned http status code (200 if OK) in index 0 
+     *
+     * @return array with the returned http status code (200 if OK) in index 0
      *               and the redirect url returned by the server in index 1
      */
     function CheckoutServer2Server($proxy=array(), $certPath='') {
       ini_set('include_path', ini_get('include_path').PATH_SEPARATOR.'.');
       require_once('library/googlerequest.php');
-      $GRequest = new GoogleRequest($this->merchant_id, 
-                      $this->merchant_key, 
+      $GRequest = new GoogleRequest($this->merchant_id,
+                      $this->merchant_key,
                       $this->server_url=="https://checkout.google.com/"?
                                                          "Production":"sandbox",
                       $this->currency);
       $GRequest->SetProxy($proxy);
       $GRequest->SetCertificatePath($certPath);
-                      
+
       return $GRequest->SendServer2ServerCart($this->GetXML());
     }
 
     /**
      * Get the Google Checkout button's html to be used in a server-to-server
      * request.
-     * 
+     *
      * {@link http://code.google.com/apis/checkout/developer/index.html#google_checkout_buttons}
-     * 
-     * @param string $url the merchant's site url where the form will be posted 
+     *
+     * @param string $url the merchant's site url where the form will be posted
      *                    to
      * @param string $size the size of the button, one of 'large', 'medium' or
      *                     'small'.
      *                     defaults to 'large'
-     * @param bool $variant true for an enabled button, false for a 
+     * @param bool $variant true for an enabled button, false for a
      *                      disabled one. defaults to true. will be ignored if
      *                      SetButtonVariant() was used before.
      * @param string $loc the locale of the button's text, the only valid value
      *                    is 'en_US' (used as default)
-     * @param bool $showtext whether to show Google Checkout text or not, 
+     * @param bool $showtext whether to show Google Checkout text or not,
      *                       defaults to true.
      * @param string $style the background style of the button, one of 'white'
      *                      or 'trans'. defaults to "trans"
-     * 
+     *
      * @return string the button's html
      */
     function CheckoutServer2ServerButton($url, $size="large", $variant=true,
@@ -1027,20 +1027,20 @@
       }
       $data = "<div style=\"width: ".$width."px\">";
       if ($this->variant == "text") {
-        $data .= "<div align=center><form method=\"POST\" action=\"". 
+        $data .= "<div align=center><form method=\"POST\" action=\"".
                 $url . "\"" . ($this->googleAnalytics_id?
                 " onsubmit=\"setUrchinInputCode();\"":"") . ">
-                <input type=\"image\" name=\"Checkout\" alt=\"Checkout\" 
+                <input type=\"image\" name=\"Checkout\" alt=\"Checkout\"
                 src=\"". $this->server_url."buttons/checkout.gif?merchant_id=" .
                 $this->merchant_id."&w=".$width. "&h=".$height."&style=".
-                $style."&variant=".$this->variant."&loc=".$loc."\" 
+                $style."&variant=".$this->variant."&loc=".$loc."\"
                 height=\"".$height."\" width=\"".$width. "\" />";
-                
+
         if($this->googleAnalytics_id) {
           $data .= "<input type=\"hidden\" name=\"analyticsdata\" value=\"\">";
-        }                
+        }
         $data .= "</form></div>";
-        if($this->googleAnalytics_id) {                
+        if($this->googleAnalytics_id) {
             $data .= "<!-- Start Google analytics -->
             <script src=\"https://ssl.google-analytics.com/urchin.js\" type=\"".
                 "text/javascript\">
@@ -1050,7 +1050,7 @@
             urchinTracker();
             </script>
             <script src=\"https://checkout.google.com/files/digital/urchin_po" .
-                "st.js\" type=\"text/javascript\"></script>  
+                "st.js\" type=\"text/javascript\"></script>
             <!-- End Google analytics -->";
         }      } else {
         $data .= "<div><img alt=\"Checkout\" src=\"" .
@@ -1058,7 +1058,7 @@
                 "".$this->merchant_id."&w=".$width. "&h=".$height."&style=".$style.
                 "&variant=".$this->variant."&loc=".$loc."\" height=\"".$height."\"".
                 " width=\"".$width. "\" /></div>";
-        
+
       }
       $data .= "</div>";
       return $data;
@@ -1066,22 +1066,22 @@
 
     /**
      * Get the Google Checkout button's html.
-     * 
+     *
      * {@link http://code.google.com/apis/checkout/developer/index.html#google_checkout_buttons}
-     * 
+     *
      * @param string $size the size of the button, one of 'large', 'medium' or
      *                     'small'.
      *                     defaults to 'large'
-     * @param bool $variant true for an enabled button, false for a 
+     * @param bool $variant true for an enabled button, false for a
      *                      disabled one. defaults to true. will be ignored if
      *                      SetButtonVariant() was used before.
      * @param string $loc the locale of the button's text, the only valid value
      *                    is 'en_US' (used as default)
-     * @param bool $showtext whether to show Google Checkout text or not, 
+     * @param bool $showtext whether to show Google Checkout text or not,
      *                       defaults to true.
      * @param string $style the background style of the button, one of 'white'
      *                      or 'trans'. defaults to "trans"
-     * 
+     *
      * @return string the button's html
      */
     function CheckoutButtonCode($size="large", $variant=true, $loc="en_US",
@@ -1116,27 +1116,27 @@
         }
       }
 
-      
+
       $data = "<div style=\"width: ".$width."px\">";
       if ($this->variant == "text") {
-        $data .= "<div align=center><form method=\"POST\" action=\"". 
+        $data .= "<div align=center><form method=\"POST\" action=\"".
                 $this->checkout_url . "\"" . ($this->googleAnalytics_id?
                 " onsubmit=\"setUrchinInputCode();\"":"") . ">
-                <input type=\"hidden\" name=\"cart\" value=\"". 
+                <input type=\"hidden\" name=\"cart\" value=\"".
                 base64_encode($this->GetXML()) ."\">
-                <input type=\"hidden\" name=\"signature\" value=\"". 
-                base64_encode($this->CalcHmacSha1($this->GetXML())). "\"> 
-                <input type=\"image\" name=\"Checkout\" alt=\"Checkout\" 
+                <input type=\"hidden\" name=\"signature\" value=\"".
+                base64_encode($this->CalcHmacSha1($this->GetXML())). "\">
+                <input type=\"image\" name=\"Checkout\" alt=\"Checkout\"
                 src=\"". $this->server_url."buttons/checkout.gif?merchant_id=" .
                 $this->merchant_id."&w=".$width. "&h=".$height."&style=".
-                $style."&variant=".$this->variant."&loc=".$loc."\" 
+                $style."&variant=".$this->variant."&loc=".$loc."\"
                 height=\"".$height."\" width=\"".$width. "\" />";
-                
+
         if($this->googleAnalytics_id) {
           $data .= "<input type=\"hidden\" name=\"analyticsdata\" value=\"\">";
-        }                
+        }
         $data .= "</form></div>";
-        if($this->googleAnalytics_id) {                
+        if($this->googleAnalytics_id) {
             $data .= "<!-- Start Google analytics -->
             <script src=\"https://ssl.google-analytics.com/urchin.js\" type=\"".
                 "text/javascript\">
@@ -1146,7 +1146,7 @@
             urchinTracker();
             </script>
             <script src=\"https://checkout.google.com/files/digital/urchin_po" .
-                "st.js\" type=\"text/javascript\"></script>  
+                "st.js\" type=\"text/javascript\"></script>
             <!-- End Google analytics -->";
         }
       } else {
@@ -1167,7 +1167,7 @@
       $data .= "</div>";
       return $data;
     }
-        //Code for generating Checkout button 
+        //Code for generating Checkout button
     //@param $variant will be ignored if SetButtonVariant() was used before
     function CheckoutButtonNowCode($size="large", $variant=true, $loc="en_US",
                                                $showtext=true, $style="trans") {
@@ -1197,26 +1197,26 @@
       }
 
 
-      
+
       $data = "<div style=\"width: ".$width."px\">";
       if ($this->variant == "text") {
-        $data .= "<div align=center><form method=\"POST\" action=\"". 
+        $data .= "<div align=center><form method=\"POST\" action=\"".
                 $this->checkout_url . "\"" . ($this->googleAnalytics_id?
                 " onsubmit=\"setUrchinInputCode();\"":"") . ">
-                <input type=\"hidden\" name=\"buyButtonCart\" value=\"". 
+                <input type=\"hidden\" name=\"buyButtonCart\" value=\"".
                 base64_encode($this->GetXML()) ."//separator//" .
                 base64_encode($this->CalcHmacSha1($this->GetXML())) . "\">
-                <input type=\"image\" name=\"Checkout\" alt=\"BuyNow\" 
+                <input type=\"image\" name=\"Checkout\" alt=\"BuyNow\"
                 src=\"". $this->server_url."buttons/buy.gif?merchant_id=" .
                 $this->merchant_id."&w=".$width. "&h=".$height."&style=".
-                $style."&variant=".$this->variant."&loc=".$loc."\" 
+                $style."&variant=".$this->variant."&loc=".$loc."\"
                 height=\"".$height."\" width=\"".$width. "\" />";
-                
+
         if($this->googleAnalytics_id) {
           $data .= "<input type=\"hidden\" name=\"analyticsdata\" value=\"\">";
-        }                
+        }
         $data .= "</form></div>";
-        if($this->googleAnalytics_id) {                
+        if($this->googleAnalytics_id) {
             $data .= "<!-- Start Google analytics -->
             <script src=\"https://ssl.google-analytics.com/urchin.js\" type=\"".
                 "text/javascript\">
@@ -1226,7 +1226,7 @@
             urchinTracker();
             </script>
             <script src=\"https://checkout.google.com/files/digital/urchin_po" .
-                "st.js\" type=\"text/javascript\"></script>  
+                "st.js\" type=\"text/javascript\"></script>
             <!-- End Google analytics -->";
         }
 //        ask for link to BuyNow disable button
@@ -1248,26 +1248,26 @@
       $data .= "</div>";
       return $data;
     }
-    
+
 
     /**
      * Get the Google Checkout button's html to be used with the html api.
-     * 
+     *
      * {@link http://code.google.com/apis/checkout/developer/index.html#google_checkout_buttons}
-     * 
+     *
      * @param string $size the size of the button, one of 'large', 'medium' or
      *                     'small'.
      *                     defaults to 'large'
-     * @param bool $variant true for an enabled button, false for a 
+     * @param bool $variant true for an enabled button, false for a
      *                      disabled one. defaults to true. will be ignored if
      *                      SetButtonVariant() was used before.
      * @param string $loc the locale of the button's text, the only valid value
      *                    is 'en_US' (used as default)
-     * @param bool $showtext whether to show Google Checkout text or not, 
+     * @param bool $showtext whether to show Google Checkout text or not,
      *                       defaults to true.
      * @param string $style the background style of the button, one of 'white'
      *                      or 'trans'. defaults to "trans"
-     * 
+     *
      * @return string the button's html
      */
     function CheckoutHTMLButtonCode($size="large", $variant=true, $loc="en_US",
@@ -1302,10 +1302,10 @@
         }
       }
 
-      
+
       $data = "<div style=\"width: ".$width."px\">";
       if ($this->variant == "text") {
-        $data .= "<div align=\"center\"><form method=\"POST\" action=\"". 
+        $data .= "<div align=\"center\"><form method=\"POST\" action=\"".
                 $this->checkoutForm_url . "\"" . ($this->googleAnalytics_id?
                 " onsubmit=\"setUrchinInputCode();\"":"") . ">";
 
@@ -1318,14 +1318,14 @@
         $data .= "<input type=\"image\" name=\"Checkout\" alt=\"Checkout\" " .
                 "src=\"". $this->server_url."buttons/checkout.gif?merchant_id=".
                 $this->merchant_id."&w=".$width. "&h=".$height."&style=".
-                $style."&variant=".$this->variant."&loc=".$loc."\" 
+                $style."&variant=".$this->variant."&loc=".$loc."\"
                 height=\"".$height."\" width=\"".$width. "\" />";
-                
+
         if($this->googleAnalytics_id) {
           $data .= "<input type=\"hidden\" name=\"analyticsdata\" value=\"\">";
-        }                
+        }
         $data .= "</form></div>";
-        if($this->googleAnalytics_id) {                
+        if($this->googleAnalytics_id) {
             $data .= "<!-- Start Google analytics -->
             <script src=\"https://ssl.google-analytics.com/urchin.js\" type=\"".
                 "text/javascript\">
@@ -1335,7 +1335,7 @@
             urchinTracker();
             </script>
             <script src=\"https://checkout.google.com/files/digital/urchin_po" .
-                "st.js\" type=\"text/javascript\"></script>  
+                "st.js\" type=\"text/javascript\"></script>
             <!-- End Google analytics -->";
         }
       } else {
@@ -1357,7 +1357,7 @@
 
 
       return $data;
-      
+
     }
 
     /**
@@ -1365,7 +1365,7 @@
      */
     function xml2html($data, $path = '', &$rta){
 //      global $multiple_tags,$ignore_tags;
-    //    $arr = gc_get_arr_result($data);  
+    //    $arr = gc_get_arr_result($data);
       foreach($data as $tag_name => $tag) {
         if(isset($this->ignore_tags[$tag_name])){
           continue;
@@ -1376,9 +1376,9 @@
             $new_path = $path . '-' . ($tag_name +1);
           } else {
             if(isset($this->multiple_tags[$tag_name])
-                && $this->is_associative_array($tag) 
+                && $this->is_associative_array($tag)
                 && !$this->isChildOf($path, $this->multiple_tags[$tag_name])){
-              $tag_name .= '-1'; 
+              $tag_name .= '-1';
             }
             $new_path = $path . (empty($path)?'':'.') . $tag_name;
           }
@@ -1387,37 +1387,37 @@
         else {
           $new_path = $path;
           if($tag_name != 'VALUE'){
-            $new_path = $path . "." . $tag_name;  
+            $new_path = $path . "." . $tag_name;
           }
           $rta .= '<input type="hidden" name="' .
                     $new_path . '" value="' .$tag . '"/>'."\n";
         }
       }
     }
-        
+
     // Returns true if a given variable represents an associative array
     /**
      * @access private
      */
     function is_associative_array($var) {
       return is_array($var) && !is_numeric(implode('', array_keys($var)));
-    } 
-    
+    }
+
     /**
      * @access private
      */
     function isChildOf($path='', $parents=array()){
-      $intersect =array_intersect(explode('.',$path), $parents); 
-      return !empty($intersect);  
+      $intersect =array_intersect(explode('.',$path), $parents);
+      return !empty($intersect);
     }
 
     /**
      * Get the Google Checkout acceptance logos html
-     * 
+     *
      * {@link http://checkout.google.com/seller/acceptance_logos.html}
-     * 
+     *
      * @param integer $type the acceptance logo type, valid values: 1, 2, 3
-     * 
+     *
      * @return string the logo's html
      */
     function CheckoutAcceptanceLogo($type=1) {
@@ -1441,7 +1441,7 @@
                 'alt="Google Checkout Acceptance Mark" /></noscript>';
           break;
         case 1:
-      	default:
+        default:
             return '<link rel="stylesheet" href="https://checkout.google.com/' .
                 'seller/accept/s.css" type="text/css" media="screen" /><scrip' .
                 't type="text/javascript" src="https://checkout.google.com/se' .
@@ -1449,16 +1449,16 @@
                 'owMark(3);</script><noscript><img src="https://checkout.goog' .
                 'le.com/seller/accept/images/sc.gif" width="72" height="73" a' .
                 'lt="Google Checkout Acceptance Mark" /></noscript>';
-      		break;
+          break;
       }
     }
 
     /**
-     * Calculates the cart's hmac-sha1 signature, this allows google to verify 
+     * Calculates the cart's hmac-sha1 signature, this allows google to verify
      * that the cart hasn't been tampered by a third-party.
-     * 
+     *
      * {@link http://code.google.com/apis/checkout/developer/index.html#create_signature}
-     * 
+     *
      * @param string $data the cart's xml
      * @return string the cart's signature (in binary format)
      */
@@ -1481,7 +1481,7 @@
                             )
                     )
                 );
-      return $hmac; 
+      return $hmac;
     }
 
     //Method used internally to set true/false cart variables
@@ -1514,13 +1514,13 @@
         eval('$this->'.$string.'="'.$default.'";');
     }
   }
-  
+
   /**
    * @abstract
    * Abstract class that represents the merchant-private-data.
-   * 
+   *
    * See {@link MerchantPrivateData} and {@link MerchantPrivateItemData}
-   * 
+   *
    * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_merchant-private-data <merchant-private-data>}
    */
   class MerchantPrivate {
@@ -1528,7 +1528,7 @@
     var $type = "Abstract";
     function MerchantPrivate() {
     }
-    
+
     function AddMerchantPrivateToXML(&$xml_data) {
       if(is_array($this->data)) {
         $xml_data->Push($this->type);
@@ -1539,7 +1539,7 @@
         $xml_data->Element($this->type, (string)$this->data);
       }
     }
-    
+
     /**
      * @access private
      */
@@ -1548,7 +1548,7 @@
         if(is_array($value)) {
           $xml_data->Push($name);
           $this->_recursiveAdd($xml_data, $name);
-          $xml_data->Pop($name);        
+          $xml_data->Pop($name);
         }
         else {
           $xml_data->Element($name, (string)$value);
@@ -1556,15 +1556,15 @@
       }
     }
   }
-  
+
   /**
    * Class that represents the merchant-private-data.
-   * 
+   *
    * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_merchant-private-data <merchant-private-data>}
    */
   class MerchantPrivateData extends MerchantPrivate {
     /**
-     * @param mixed $data a string with the data that will go in the 
+     * @param mixed $data a string with the data that will go in the
      *                    merchant-private-data tag or an array that will
      *                    be mapped to xml, formatted like (e.g.):
      *                    array('my-order-id' => 34234,
@@ -1586,12 +1586,12 @@
 
   /**
    * Class that represents a merchant-private-item-data.
-   * 
+   *
    * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_merchant-private-item-data <merchant-private-data>}
    */
   class MerchantPrivateItemData extends MerchantPrivate {
     /**
-     * @param mixed $data a string with the data that will go in the 
+     * @param mixed $data a string with the data that will go in the
      *                    merchant-private-item-data tag or an array that will
      *                    be mapped to xml, formatted like:
      *                    array('my-item-id' => 34234,

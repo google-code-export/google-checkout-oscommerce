@@ -32,38 +32,38 @@ $shippers = array();
 
 
 if(isset($_POST['country'])) {
-	error_reporting(E_ALL);
-	chdir('./../../../..');
-	$curr_dir = getcwd();
-	 
-	include_once('includes/application_top.php');
-	// serialized cart, to avoid needing one in session
-	$cart = unserialize('O:12:"shoppingcart":5:{s:8:"contents";a:1:{i:6;a:1:{s:3:"qty";i:1;}}s:5:"total";d:30;s:6:"weight";d:7;s:6:"cartID";s:5:"62209";s:12:"content_type";s:8:"physical";}');
-//	print_r($cart);
-  
+  error_reporting(E_ALL);
+  chdir('./../../../..');
+  $curr_dir = getcwd();
+
+  include_once('includes/application_top.php');
+  // serialized cart, to avoid needing one in session
+  $cart = unserialize('O:12:"shoppingcart":5:{s:8:"contents";a:1:{i:6;a:1:{s:3:"qty";i:1;}}s:5:"total";d:30;s:6:"weight";d:7;s:6:"cartID";s:5:"62209";s:12:"content_type";s:8:"physical";}');
+//  print_r($cart);
+
   $cart->total = $_POST['price'];
   $cart->weight = $_POST['weight'];
   $cart->contents[6]['qty'] = $_POST['cant'];
 //  print_r($cart);
 //die;
-	require(DIR_WS_CLASSES .'order.php');
-	$order = new order;
-	
-	// Register a random ID in the session to check throughout the checkout procedure
-	// against alterations in the shopping cart contents.
-	if (!tep_session_is_registered('cartID')) {
-	  tep_session_register('cartID');
-	}
-	
-	
-	$total_weight = $cart->show_weight();
-	$total_count = $cart->count_contents();
-	
-	// Get all the enabled shipping methods.
-	require(DIR_WS_CLASSES .'shipping.php');
-	
-	// Required for some shipping methods (ie. USPS).
-	require_once('includes/classes/http_client.php');
+  require(DIR_WS_CLASSES .'order.php');
+  $order = new order;
+
+  // Register a random ID in the session to check throughout the checkout procedure
+  // against alterations in the shopping cart contents.
+  if (!tep_session_is_registered('cartID')) {
+    tep_session_register('cartID');
+  }
+
+
+  $total_weight = $cart->show_weight();
+  $total_count = $cart->count_contents();
+
+  // Get all the enabled shipping methods.
+  require(DIR_WS_CLASSES .'shipping.php');
+
+  // Required for some shipping methods (ie. USPS).
+  require_once('includes/classes/http_client.php');
 }
 ?>
 <html>
@@ -180,16 +180,16 @@ if(isset($_POST['country'])) {
       </tr>
     </table>
   </form>
-  
+
 <?php
 if(isset($_POST['country'])) {
-	$mc_shipping_methods = array();
+  $mc_shipping_methods = array();
   $mc_shipping_methods_names = array();
-  
+
   $methods_duplicate = array();
-  
-	list($start_m, $start_s) = explode(' ', microtime());
-	$start = $start_m + $start_s;
+
+  list($start_m, $start_s) = explode(' ', microtime());
+  $start = $start_m + $start_s;
 
     // Set up the order address.
 // Domestic
@@ -197,19 +197,19 @@ if(isset($_POST['country'])) {
   $city = mysql_escape_string($_POST['city']);
   $region = mysql_escape_string($_POST['region']);
   $postal_code = mysql_escape_string($_POST['postalcode']);
-  
+
   $row = tep_db_fetch_array(tep_db_query("select * from ". TABLE_COUNTRIES ." where countries_iso_code_2 = '". $country ."'"));
-  $order->delivery['country'] = array('id' => $row['countries_id'], 
-                                      'title' => $row['countries_name'], 
-                                      'iso_code_2' => $country, 
+  $order->delivery['country'] = array('id' => $row['countries_id'],
+                                      'title' => $row['countries_name'],
+                                      'iso_code_2' => $country,
                                       'iso_code_3' => $row['countries_iso_code_3']);
   $order->delivery['country_id'] = $row['countries_id'];
   $order->delivery['format_id'] = $row['address_format_id'];
-  
+
   $row = tep_db_fetch_array(tep_db_query("select * from ". TABLE_ZONES ." where zone_code = '" . $region."'"));
   $order->delivery['zone_id'] = $row['zone_id'];
   $order->delivery['state'] = $row['zone_name'];
-  
+
   $order->delivery['city'] = $city;
   $order->delivery['postcode'] = $postal_code;
   $shipping_modules = new shipping();
@@ -226,11 +226,11 @@ if(isset($_POST['country'])) {
         else {
           $methods_duplicate[$method['title']] = 1;
         }
-        $methods[$method['id']] = array('title' => htmlentities($method['title']), 
+        $methods[$method['id']] = array('title' => htmlentities($method['title']),
                                         'cost' => $method['cost']);
-      }    
+      }
       $mc_shipping_methods[$shipper['id']]['domestic_types'] = $methods;
-      if (class_exists($shipper['id'])) {               
+      if (class_exists($shipper['id'])) {
         $GLOBALS[$shipper['id']] = new $shipper['id'];
       }
       $mc_shipping_methods_names[$shipper['id']] = htmlentities($shipper['module']);
@@ -242,19 +242,19 @@ if(isset($_POST['country'])) {
     $city = mysql_escape_string($_POST['i_city']);
     $region = mysql_escape_string($_POST['i_region']);
     $postal_code = mysql_escape_string($_POST['i_postalcode']);
-    
+
     $row = tep_db_fetch_array(tep_db_query("select * from ". TABLE_COUNTRIES ." where countries_iso_code_2 = '". $country ."'"));
-    $order->delivery['country'] = array('id' => $row['countries_id'], 
-                                        'title' => $row['countries_name'], 
-                                        'iso_code_2' => $country, 
+    $order->delivery['country'] = array('id' => $row['countries_id'],
+                                        'title' => $row['countries_name'],
+                                        'iso_code_2' => $country,
                                         'iso_code_3' => $row['countries_iso_code_3']);
     $order->delivery['country_id'] = $row['countries_id'];
     $order->delivery['format_id'] = $row['address_format_id'];
-    
+
     $row = tep_db_fetch_array(tep_db_query("select * from ". TABLE_ZONES ." where zone_code = '" . $region."'"));
     $order->delivery['zone_id'] = $row['zone_id'];
     $order->delivery['state'] = $row['zone_name'];
-    
+
     $order->delivery['city'] = $city;
     $order->delivery['postcode'] = $postal_code;
 //    $shipping_modules = new shipping();
@@ -269,19 +269,19 @@ if(isset($_POST['country'])) {
           else {
             $methods_duplicate[$method['title']] = 1;
           }
-          $methods[$method['id']] = array('title' => htmlentities($method['title']), 
+          $methods[$method['id']] = array('title' => htmlentities($method['title']),
                                           'cost' => $method['cost']);
-        }    
+        }
         $mc_shipping_methods[$shipper['id']]['international_types'] = $methods;
-        if (class_exists($shipper['id'])) {               
+        if (class_exists($shipper['id'])) {
           $GLOBALS[$shipper['id']] = new $shipper['id'];
         }
         $mc_shipping_methods_names[$shipper['id']] = htmlentities($shipper['module']);
       }
     }
   }
-	list($end_m, $end_s) = explode(' ', microtime());
-	$end = $end_m + $end_s;
+  list($end_m, $end_s) = explode(' ', microtime());
+  $end = $end_m + $end_s;
   echo "<h3>It took (Average) <b>".(number_format(($end-$start)/2, 5))."</b> Secs.</td></h3><br/>";
   include('multishipping_generator.php');
   echo "<script language='javascript'>show_help(4);</script>";

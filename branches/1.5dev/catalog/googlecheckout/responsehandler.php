@@ -19,14 +19,14 @@
 
 /**
  * Script invoked for any callback notifications from the Checkout server.
- * 
- * Can be used to process new order notifications, order state changes, 
+ *
+ * Can be used to process new order notifications, order state changes,
  * risk notifications, and merchant-calculaged shipping.
- * 
+ *
  * See: {@link http://code.google.com/apis/checkout/developer/index.html}
- * 
+ *
  * Basic flow:
- * 
+ *
  *   1. Set up the log file.
  *   2. Parse the HTTP header to verify the source.
  *   3. Parse the XML message.
@@ -41,7 +41,7 @@
 //  case E_USER_ERROR: {
 //    $err = "USER ERROR: [$errno] $errstr\n"
 //              . "  Fatal error on line $errline in file $errfile\n"
-//              . "Process aborted\n"; 
+//              . "Process aborted\n";
 //    $google_response->log->logError($err);
 //    $google_response->SendServerErrorStatus($err);
 //    break;
@@ -49,7 +49,7 @@
 //  case E_USER_WARNING: {
 //    $err = "WARNING: [$errno] $errstr\n"
 //              . "  Error on line $errline in file $errfile\n"
-//              . "Process aborted\n"; 
+//              . "Process aborted\n";
 //    $google_response->log->logError($err);
 //    $google_response->SendServerErrorStatus($err);
 //    break;
@@ -106,7 +106,7 @@ $google_response->SetLogFiles(API_CALLBACK_ERROR_LOG, API_CALLBACK_MESSAGE_LOG, 
 //set_error_handler("ErrorHandler");
 
 // Retrieve the XML sent in the HTTP POST request to the ResponseHandler
-$xml_response = 
+$xml_response =
     isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : file_get_contents("php://input");
 if (get_magic_quotes_gpc()) {
   $xml_response = stripslashes($xml_response);
@@ -115,7 +115,7 @@ list($root, $gc_data) = $google_response->GetParsedXML($xml_response);
 
 // Session variables.
 if (isset($gc_data[$root]['shopping-cart']['merchant-private-data']['session-data']['VALUE'])) {
-  list ($sess_id, $sess_name) = 
+  list ($sess_id, $sess_name) =
       explode(";", $gc_data[$root]['shopping-cart']['merchant-private-data']['session-data']['VALUE']);
   // If session management is supported by this PHP version.
   if (function_exists('session_id')) {
@@ -125,7 +125,7 @@ if (isset($gc_data[$root]['shopping-cart']['merchant-private-data']['session-dat
     session_name($sess_name);
   }
 }
-   
+
 include('includes/application_top.php');
 include('includes/modules/payment/googlecheckout.php');
 
@@ -133,10 +133,10 @@ if(tep_session_is_registered('cart') && is_object($cart)) {
   $cart->restore_contents();
 } else {
   $google_response->SendServerErrorStatus("Shopping cart not obtained from session.");
-}	
+}
 
 $google_checkout = new googlecheckout();
-$google_response->SetMerchantAuthentication($google_checkout->merchantid, 
+$google_response->SetMerchantAuthentication($google_checkout->merchantid,
                                             $google_checkout->merchantkey);
 
 // Check if this is CGI-installed; if so .htaccess is needed.
@@ -170,7 +170,7 @@ switch ($root) {
 //  }
 //}
 //case "merchant-calculation-callback-single" : {
-//  set_time_limit(5); 
+//  set_time_limit(5);
     process_merchant_calculation_callback_single($google_response);
     break;
   }
@@ -238,14 +238,14 @@ function process_checkout_redirect($google_response) {
  */
 function process_merchant_calculation_callback_single($google_response) {
   global $google_checkout, $order, $cart, $total_weight, $total_count;
-	list($root, $gc_data) = $google_response->GetParsedXML();
+  list($root, $gc_data) = $google_response->GetParsedXML();
   $currencies = new currencies();
 
-	// Get a hash array with the description of each shipping method 
-	$shipping_methods = $google_checkout->getMethods();
+  // Get a hash array with the description of each shipping method
+  $shipping_methods = $google_checkout->getMethods();
 
-	require(DIR_WS_CLASSES .'order.php');
-	$order = new order;
+  require(DIR_WS_CLASSES .'order.php');
+  $order = new order;
 
   $items = gc_get_arr_result($gc_data[$root]['shopping-cart']['items']['item']);
 
@@ -285,9 +285,9 @@ function process_merchant_calculation_callback_single($google_response) {
   }
   $ex_cart = $cart;
   $cart = new shoppingCart();
-  
+
   $prod_attr = gc_get_prattr($order->products);
-  
+
   foreach($prod_attr as $product_id => $item_data){
 //$products_id, $qty = '1', $attributes = '
     $cart->add_cart($product_id, $item_data['qty'] , $item_data['attr']);
@@ -305,13 +305,13 @@ function process_merchant_calculation_callback_single($google_response) {
   $total_count = $cart->count_contents();
 
   // Create the results and send it
-	$merchant_calc = new GoogleMerchantCalculations(DEFAULT_CURRENCY);
+  $merchant_calc = new GoogleMerchantCalculations(DEFAULT_CURRENCY);
 
   // Loop through the list of address ids from the callback.
   $addresses = gc_get_arr_result($gc_data[$root]['calculate']['addresses']['anonymous-address']);
-	// Get all the enabled shipping methods.
+  // Get all the enabled shipping methods.
   require(DIR_WS_CLASSES .'shipping.php');
-	
+
   // Required for some shipping methods (ie. USPS).
   require_once('includes/classes/http_client.php');
   foreach ($addresses as $curr_address) {
@@ -323,13 +323,13 @@ function process_merchant_calculation_callback_single($google_response) {
     $postal_code = $curr_address['postal-code']['VALUE'];
 
     $row = tep_db_fetch_array(tep_db_query("select * from ". TABLE_COUNTRIES ." where countries_iso_code_2 = '". gc_make_sql_string($country) ."'"));
-    $order->delivery['country'] = array('id' => $row['countries_id'], 
-                                        'title' => $row['countries_name'], 
-                                        'iso_code_2' => $country, 
+    $order->delivery['country'] = array('id' => $row['countries_id'],
+                                        'title' => $row['countries_name'],
+                                        'iso_code_2' => $country,
                                         'iso_code_3' => $row['countries_iso_code_3']);
     $order->delivery['country_id'] = $row['countries_id'];
     $order->delivery['format_id'] = $row['address_format_id'];
-	
+
     $row = tep_db_fetch_array(tep_db_query("select * from ". TABLE_ZONES ." where zone_code = '" . gc_make_sql_string($region) ."'"));
     $order->delivery['zone_id'] = $row['zone_id'];
     $order->delivery['state'] = $row['zone_name'];
@@ -337,85 +337,85 @@ function process_merchant_calculation_callback_single($google_response) {
     $order->delivery['city'] = $city;
     $order->delivery['postcode'] = $postal_code;
   //print_r($order);
-		$shipping_modules = new shipping();
-	
+    $shipping_modules = new shipping();
+
     // Loop through each shipping method if merchant-calculated shipping
     // support is to be provided
     //print_r($gc_data[$root]['calculate']['shipping']['method']);
-	 if (isset($gc_data[$root]['calculate']['shipping'])) {
+   if (isset($gc_data[$root]['calculate']['shipping'])) {
       $shipping = gc_get_arr_result($gc_data[$root]['calculate']['shipping']['method']);
 
-			if(MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET == 'True') {
+      if(MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET == 'True') {
         // Single.
-				// Get all the enabled shipping methods.
-       	$name = $shipping[0]['name'];
+        // Get all the enabled shipping methods.
+         $name = $shipping[0]['name'];
         // Compute the price for this shipping method and address id
         list($a, $method_name) = explode(': ',$name);
-				if ((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY) && ($shipping_methods[$method_name][1] == 'domestic_types'))
-						||
-					(($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY) && ($shipping_methods[$method_name][1] == 'international_types'))){
+        if ((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY) && ($shipping_methods[$method_name][1] == 'domestic_types'))
+            ||
+          (($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY) && ($shipping_methods[$method_name][1] == 'international_types'))){
               // Reset the shipping class to set the new address
-							if (class_exists($shipping_methods[$method_name][2])) {			        	
-		        		$GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
-							}
-				}
-      	$quotes =  $shipping_modules->quote('', $shipping_methods[$method_name][2]);
-			}
-			else {
+              if (class_exists($shipping_methods[$method_name][2])) {
+                $GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
+              }
+        }
+        $quotes =  $shipping_modules->quote('', $shipping_methods[$method_name][2]);
+      }
+      else {
         // Standard
         foreach($shipping as $curr_ship) {
-         	$name = $curr_ship['name'];
+           $name = $curr_ship['name'];
           // Compute the price for this shipping method and address id
-	        list($a, $method_name) = explode(': ',$name);
-					if((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY) 
+          list($a, $method_name) = explode(': ',$name);
+          if((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY)
               && ($shipping_methods[$method_name][1] == 'domestic_types'))
-							||
-						(($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY) 
+              ||
+            (($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY)
               && ($shipping_methods[$method_name][1] == 'international_types'))){
                 // Reset the shipping class to set the new address.
-								if (class_exists($shipping_methods[$method_name][2])) {			        	
-			        		$GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
-								}
-					}
+                if (class_exists($shipping_methods[$method_name][2])) {
+                  $GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
+                }
+          }
         }
-				$quotes =  $shipping_modules->quote();
-			}
-			reset($shipping);
+        $quotes =  $shipping_modules->quote();
+      }
+      reset($shipping);
       foreach ($shipping as $curr_ship) {
-       	$name = $curr_ship['name'];
+         $name = $curr_ship['name'];
         // Compute the price for this shipping method and address id
         list($a, $method_name) = explode(': ',$name);
-				unset($quote_povider);
-				unset($quote_method);
-				if ((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY) 
+        unset($quote_povider);
+        unset($quote_method);
+        if ((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY)
             && ($shipping_methods[$method_name][1] == 'domestic_types'))
-						||
-					(($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY) 
+            ||
+          (($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY)
             && ($shipping_methods[$method_name][1] == 'international_types'))) {
-					foreach ($quotes as $key_provider => $shipping_provider) {
-						// privider name (class)
-						if ($shipping_provider['id'] == $shipping_methods[$method_name][2]) {
-							// method name			
-							$quote_povider = $key_provider;
-							if (is_array($shipping_provider['methods']))
-							foreach ($shipping_provider['methods'] as $key_method => $shipping_method) {
-								if ($shipping_method['id'] == $shipping_methods[$method_name][0]){
-									$quote_method = $key_method;
-									break;
-								}										
-							}
-							break;
-						}
-					}
-				}
+          foreach ($quotes as $key_provider => $shipping_provider) {
+            // privider name (class)
+            if ($shipping_provider['id'] == $shipping_methods[$method_name][2]) {
+              // method name
+              $quote_povider = $key_provider;
+              if (is_array($shipping_provider['methods']))
+              foreach ($shipping_provider['methods'] as $key_method => $shipping_method) {
+                if ($shipping_method['id'] == $shipping_methods[$method_name][0]){
+                  $quote_method = $key_method;
+                  break;
+                }
+              }
+              break;
+            }
+          }
+        }
         //if there is a problem with the method, i mark it as non-shippable
         if (isset($quotes[$quote_povider]['error']) ||
             !isset($quotes[$quote_povider]['methods'][$quote_method]['cost'])) {
-        	$price = "9999.09";
-        	$shippable = "false";
+          $price = "9999.09";
+          $shippable = "false";
         } else {
-        	$price = $quotes[$quote_povider]['methods'][$quote_method]['cost'];
-        	$shippable = "true";
+          $price = $quotes[$quote_povider]['methods'][$quote_method]['cost'];
+          $shippable = "true";
         }
         $merchant_result = new GoogleResult($curr_id);
         $merchant_result->SetShippingDetails($name, $currencies->get_value(DEFAULT_CURRENCY) * $price, $shippable);
@@ -425,7 +425,7 @@ function process_merchant_calculation_callback_single($google_response) {
           $amount = 15; // Modify this to the actual tax value
           $merchant_result->SetTaxDetails($currencies->get_value(DEFAULT_CURRENCY) * $amount);
         }
-        
+
         if (isset($gc_data[$root]['calculate']['merchant-code-strings']['merchant-code-string'])){
           $codes = gc_get_arr_result($gc_data[$root]['calculate']['merchant-code-strings']['merchant-code-string']);
           foreach($codes as $curr_code) {
@@ -448,31 +448,31 @@ function process_merchant_calculation_callback_single($google_response) {
     }
    }
    $cart = $ex_cart;
-   
+
    $google_response->ProcessMerchantCalculations($merchant_calc);
 }
 
 /**
  * Process a <new-order-notification>.
- * 
+ *
  * If the email user does not exist, create the user and log in.
- * 
+ *
  * If the user does not exist as a Google Checkout user, add them
  * to the google_checkout table to match the buyer_id and customer_id.
- * 
+ *
  * Add the order to the logged-in user.
- * 
+ *
  * TODO(eddavisson): This function is way too long. Split into pieces.
  */
-function process_new_order_notification($google_response, $google_checkout) {   
+function process_new_order_notification($google_response, $google_checkout) {
   global $order;
-  
+
   list($root, $gc_data) = $google_response->GetParsedXML();
-  
+
   // Check if the order was already processed.
   $google_order = tep_db_fetch_array(tep_db_query("select orders_id ".
       " from " . $google_checkout->table_order . " " .
-      " where google_order_number = " . 
+      " where google_order_number = " .
       $gc_data[$root]['google-order-number']['VALUE'] ));
 
   // Check if order was alread processed.
@@ -482,9 +482,9 @@ function process_new_order_notification($google_response, $google_checkout) {
         sprintf(GOOGLECHECKOUT_ERR_DUPLICATED_ORDER,
                 $gc_data[$root]['google-order-number']['VALUE'],
                 $google_order['orders_id']));
-    $google_response->SendAck(); 
+    $google_response->SendAck();
   }
- 
+
   // Check if the email exists.
   $customer_exists = tep_db_fetch_array(tep_db_query("select customers_id from " .
       TABLE_CUSTOMERS . " where customers_email_address = '" .
@@ -509,7 +509,7 @@ function process_new_order_notification($google_response, $google_checkout) {
     tep_session_register('customer_id');
   }
   else {
-    list ($firstname, $lastname) = 
+    list ($firstname, $lastname) =
         explode(' ', gc_make_sql_string($gc_data[$root]['buyer-billing-address']['contact-name']['VALUE']), 2);
     $sql_data_array = array (
         'customers_firstname' => $firstname,
@@ -536,7 +536,7 @@ function process_new_order_notification($google_response, $google_checkout) {
         $gc_data[$root]['buyer-id']['VALUE'] . ")");
     $new_user = true;
   }
-  
+
   // The user exists and is logged in.
   // Check database to see if the address exist.
   $address_book = tep_db_query(
@@ -546,13 +546,13 @@ function process_new_order_notification($google_response, $google_checkout) {
               and entry_suburb = '" . gc_make_sql_string($gc_data[$root]['buyer-shipping-address']['address2']['VALUE']) . "'
               and entry_postcode = '" . gc_make_sql_string($gc_data[$root]['buyer-shipping-address']['postal-code']['VALUE']) . "'
               and entry_city = '" . gc_make_sql_string($gc_data[$root]['buyer-shipping-address']['city']['VALUE']) . "'");
-            
+
   // If not, add the address as the default.
   if (!tep_db_num_rows($address_book)) {
     $buyer_state = $gc_data[$root]['buyer-shipping-address']['region']['VALUE'];
     $zone_answer = tep_db_fetch_array(tep_db_query("select zone_id, zone_country_id from " .
         TABLE_ZONES . " where zone_code = '" . $buyer_state . "'"));
-    list ($firstname, $lastname) = 
+    list ($firstname, $lastname) =
         explode(' ', gc_make_sql_string($gc_data[$root]['buyer-shipping-address']['contact-name']['VALUE']), 2);
     $sql_data_array = array (
       'customers_id' => $customer_id,
@@ -591,7 +591,7 @@ function process_new_order_notification($google_response, $google_checkout) {
 
   list($shipping_cost, $shipping_method_name, $shipping_method_code) =
       get_shipping_info($google_checkout, $gc_data[$root]);
-  
+
   $tax_amt = $gc_data[$root]['order-adjustment']['total-tax']['VALUE'];
 //$order_total = $gc_data[$root]['order-total']['VALUE'];
 
@@ -601,7 +601,7 @@ function process_new_order_notification($google_response, $google_checkout) {
   $payment_method = $google_checkout->title;
   if (MODULE_PAYMENT_GOOGLECHECKOUT_MODE == 'https://sandbox.google.com/checkout/') {
     $payment_method .= " - SANDBOX";
-  }      
+  }
 //$method_name = '';
 //if (!empty($shipping)) {
 //  require (DIR_WS_CLASSES . 'shipping.php');
@@ -621,7 +621,7 @@ function process_new_order_notification($google_response, $google_checkout) {
   $order->customer['telephone'] = $gc_data[$root]['buyer-billing-address']['phone']['VALUE'];
   $order->customer['email_address'] = $gc_data[$root]['buyer-billing-address']['email']['VALUE'];
   $order->customer['format_id'] = 2;
-  list ($order->delivery['firstname'], $order->delivery['lastname']) = 
+  list ($order->delivery['firstname'], $order->delivery['lastname']) =
       explode(' ', $gc_data[$root]['buyer-shipping-address']['contact-name']['VALUE'], 2);
   $order->delivery['company'] = $gc_data[$root]['buyer-shipping-address']['company-name']['VALUE'];
   $order->delivery['street_address'] = $gc_data[$root]['buyer-shipping-address']['address1']['VALUE'];
@@ -631,7 +631,7 @@ function process_new_order_notification($google_response, $google_checkout) {
   $order->delivery['state'] = $gc_data[$root]['buyer-shipping-address']['region']['VALUE'];
   $order->delivery['country']['title'] = $gc_data[$root]['buyer-shipping-address']['country-code']['VALUE'];
   $order->delivery['format_id'] = 2;
-  list ($order->billing['firstname'], $order->billing['lastname']) = 
+  list ($order->billing['firstname'], $order->billing['lastname']) =
       explode(' ', $gc_data[$root]['buyer-billing-address']['contact-name']['VALUE'], 2);
   $order->billing['company'] = $gc_data[$root]['buyer-billing-address']['company-name']['VALUE'];
   $order->billing['street_address'] = $gc_data[$root]['buyer-billing-address']['address1']['VALUE'];
@@ -703,16 +703,16 @@ function process_new_order_notification($google_response, $google_checkout) {
   }
   $cart = new shoppingCart();
   $prod_attr = gc_get_prattr($order->products);
-  
+
   foreach($prod_attr as $product_id => $item_data){
 //$products_id, $qty = '1', $attributes = '
     $cart->add_cart($product_id, $item_data['qty'] , $item_data['attr']);
   }
   // Update values so that order_total modules get the correct values.
   $order->info['total'] = $gc_data[$root]['order-total']['VALUE'];
-  $order->info['subtotal'] = $gc_data[$root]['order-total']['VALUE'] - 
-                            ($ship_cost + $tax_amt) + 
-                            @$coupons[0]['applied-amount']['VALUE'] - 
+  $order->info['subtotal'] = $gc_data[$root]['order-total']['VALUE'] -
+                            ($ship_cost + $tax_amt) +
+                            @$coupons[0]['applied-amount']['VALUE'] -
                             $custom_order_totals_total;
   $order->info['coupon_code'] = @$coupons[0]['code']['VALUE'];
   $order->info['shipping_method'] = $shipping;
@@ -744,7 +744,7 @@ function process_new_order_notification($google_response, $google_checkout) {
       'code' => 'ot_coupon',
       'title' => "<b>" . MODULE_ORDER_TOTAL_COUPON_TITLE .
       " " . @$coupons[0]['code']['VALUE'] . ":</b>",
-      'text' => $currencies->format(@$coupons[0]['applied-amount']['VALUE']*-1, 
+      'text' => $currencies->format(@$coupons[0]['applied-amount']['VALUE']*-1,
                     false,@$coupons[0]['applied-amount']['currency'])
       ,
       'value' => @$coupons[0]['applied-amount']['VALUE'],
@@ -767,38 +767,38 @@ function process_new_order_notification($google_response, $google_checkout) {
                           'customers_street_address' => $order->customer['street_address'],
                           'customers_suburb' => $order->customer['suburb'],
                           'customers_city' => $order->customer['city'],
-                          'customers_postcode' => $order->customer['postcode'], 
-                          'customers_state' => $order->customer['state'], 
-                          'customers_country' => $order->customer['country']['title'], 
-                          'customers_telephone' => $order->customer['telephone'], 
+                          'customers_postcode' => $order->customer['postcode'],
+                          'customers_state' => $order->customer['state'],
+                          'customers_country' => $order->customer['country']['title'],
+                          'customers_telephone' => $order->customer['telephone'],
                           'customers_email_address' => $order->customer['email_address'],
-                          'customers_address_format_id' => $order->customer['format_id'], 
-                          'delivery_name' => $order->delivery['firstname'] . ' ' . $order->delivery['lastname'], 
+                          'customers_address_format_id' => $order->customer['format_id'],
+                          'delivery_name' => $order->delivery['firstname'] . ' ' . $order->delivery['lastname'],
                           'delivery_company' => $order->delivery['company'],
-                          'delivery_street_address' => $order->delivery['street_address'], 
-                          'delivery_suburb' => $order->delivery['suburb'], 
-                          'delivery_city' => $order->delivery['city'], 
-                          'delivery_postcode' => $order->delivery['postcode'], 
-                          'delivery_state' => $order->delivery['state'], 
-                          'delivery_country' => $order->delivery['country']['title'], 
-                          'delivery_address_format_id' => $order->delivery['format_id'], 
-                          'billing_name' => $order->billing['firstname'] . ' ' . $order->billing['lastname'], 
+                          'delivery_street_address' => $order->delivery['street_address'],
+                          'delivery_suburb' => $order->delivery['suburb'],
+                          'delivery_city' => $order->delivery['city'],
+                          'delivery_postcode' => $order->delivery['postcode'],
+                          'delivery_state' => $order->delivery['state'],
+                          'delivery_country' => $order->delivery['country']['title'],
+                          'delivery_address_format_id' => $order->delivery['format_id'],
+                          'billing_name' => $order->billing['firstname'] . ' ' . $order->billing['lastname'],
                           'billing_company' => $order->billing['company'],
-                          'billing_street_address' => $order->billing['street_address'], 
-                          'billing_suburb' => $order->billing['suburb'], 
-                          'billing_city' => $order->billing['city'], 
-                          'billing_postcode' => $order->billing['postcode'], 
-                          'billing_state' => $order->billing['state'], 
-                          'billing_country' => $order->billing['country']['title'], 
-                          'billing_address_format_id' => $order->billing['format_id'], 
-                          'payment_method' => $order->info['payment_method'], 
-                          'cc_type' => $order->info['cc_type'], 
-                          'cc_owner' => $order->info['cc_owner'], 
-                          'cc_number' => $order->info['cc_number'], 
-                          'cc_expires' => $order->info['cc_expires'], 
-                          'date_purchased' => 'now()', 
-                          'orders_status' => $order->info['order_status'], 
-                          'currency' => $order->info['currency'], 
+                          'billing_street_address' => $order->billing['street_address'],
+                          'billing_suburb' => $order->billing['suburb'],
+                          'billing_city' => $order->billing['city'],
+                          'billing_postcode' => $order->billing['postcode'],
+                          'billing_state' => $order->billing['state'],
+                          'billing_country' => $order->billing['country']['title'],
+                          'billing_address_format_id' => $order->billing['format_id'],
+                          'payment_method' => $order->info['payment_method'],
+                          'cc_type' => $order->info['cc_type'],
+                          'cc_owner' => $order->info['cc_owner'],
+                          'cc_number' => $order->info['cc_number'],
+                          'cc_expires' => $order->info['cc_expires'],
+                          'date_purchased' => 'now()',
+                          'orders_status' => $order->info['order_status'],
+                          'currency' => $order->info['currency'],
                           'currency_value' => $order->info['currency_value']);
   tep_db_perform(TABLE_ORDERS, $sql_data_array);
   $insert_id = tep_db_insert_id();
@@ -806,16 +806,16 @@ function process_new_order_notification($google_response, $google_checkout) {
     $sql_data_array = array('orders_id' => $insert_id,
                             'title' => $order_totals[$i]['title'],
                             'text' => $order_totals[$i]['text'],
-                            'value' => $order_totals[$i]['value'], 
-                            'class' => $order_totals[$i]['code'], 
+                            'value' => $order_totals[$i]['value'],
+                            'class' => $order_totals[$i]['code'],
                             'sort_order' => $order_totals[$i]['sort_order']);
     tep_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
   }
 
   $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
-  $sql_data_array = array('orders_id' => $insert_id, 
-                          'orders_status_id' => $order->info['order_status'], 
-                          'date_added' => 'now()', 
+  $sql_data_array = array('orders_id' => $insert_id,
+                          'orders_status_id' => $order->info['order_status'],
+                          'date_added' => 'now()',
                           'customer_notified' => $customer_notification,
                           'comments' => $order->info['comments']);
   tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
@@ -828,13 +828,13 @@ function process_new_order_notification($google_response, $google_checkout) {
   $total_products_price = 0;
   $products_tax = 0;
   $total_cost = 0;
-  
+
 
   for ($i = 0, $n = sizeof($order->products); $i < $n; $i++) {
     // Stock Update - Joao Correia.
     if (STOCK_LIMITED == 'true') {
       if (DOWNLOAD_ENABLED == 'true') {
-        $stock_query_raw = "SELECT products_quantity, pad.products_attributes_filename 
+        $stock_query_raw = "SELECT products_quantity, pad.products_attributes_filename
                             FROM " . TABLE_PRODUCTS . " p
                             LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                              ON p.products_id=pa.products_id
@@ -869,13 +869,13 @@ function process_new_order_notification($google_response, $google_checkout) {
     // Update products_ordered (for bestsellers list)
     tep_db_query("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%d', $order->products[$i]['qty']) . " where products_id = '" . tep_get_prid($order->products[$i]['id']) . "'");
 
-    $sql_data_array = array('orders_id' => $insert_id, 
-                            'products_id' => tep_get_prid($order->products[$i]['id']), 
-                            'products_model' => $order->products[$i]['model'], 
-                            'products_name' => $order->products[$i]['name'], 
-                            'products_price' => $order->products[$i]['price'], 
-                            'final_price' => $order->products[$i]['final_price'], 
-                            'products_tax' => $order->products[$i]['tax'], 
+    $sql_data_array = array('orders_id' => $insert_id,
+                            'products_id' => tep_get_prid($order->products[$i]['id']),
+                            'products_model' => $order->products[$i]['model'],
+                            'products_name' => $order->products[$i]['name'],
+                            'products_price' => $order->products[$i]['price'],
+                            'final_price' => $order->products[$i]['final_price'],
+                            'products_tax' => $order->products[$i]['tax'],
                             'products_quantity' => $order->products[$i]['qty']);
     tep_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
     $order_products_id = tep_db_insert_id();
@@ -887,16 +887,16 @@ function process_new_order_notification($google_response, $google_checkout) {
       $attributes_exist = '1';
       for ($j=0, $n2=sizeof($order->products[$i]['attributes']); $j<$n2; $j++) {
         if (DOWNLOAD_ENABLED == 'true') {
-          $attributes_query = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix, pad.products_attributes_maxdays, pad.products_attributes_maxcount , pad.products_attributes_filename 
-                               from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa 
+          $attributes_query = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix, pad.products_attributes_maxdays, pad.products_attributes_maxcount , pad.products_attributes_filename
+                               from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                                left join " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
                                 on pa.products_attributes_id=pad.products_attributes_id
-                               where pa.products_id = '" . $order->products[$i]['id'] . "' 
-                                and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' 
-                                and pa.options_id = popt.products_options_id 
-                                and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' 
-                                and pa.options_values_id = poval.products_options_values_id 
-                                and popt.language_id = '" . $languages_id . "' 
+                               where pa.products_id = '" . $order->products[$i]['id'] . "'
+                                and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "'
+                                and pa.options_id = popt.products_options_id
+                                and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "'
+                                and pa.options_values_id = poval.products_options_values_id
+                                and popt.language_id = '" . $languages_id . "'
                                 and poval.language_id = '" . $languages_id . "'";
           $attributes = tep_db_query($attributes_query);
         } else {
@@ -904,19 +904,19 @@ function process_new_order_notification($google_response, $google_checkout) {
         }
         $attributes_values = tep_db_fetch_array($attributes);
 
-        $sql_data_array = array('orders_id' => $insert_id, 
-                                'orders_products_id' => $order_products_id, 
+        $sql_data_array = array('orders_id' => $insert_id,
+                                'orders_products_id' => $order_products_id,
                                 'products_options' => $attributes_values['products_options_name'],
-                                'products_options_values' => $attributes_values['products_options_values_name'], 
-                                'options_values_price' => $attributes_values['options_values_price'], 
+                                'products_options_values' => $attributes_values['products_options_values_name'],
+                                'options_values_price' => $attributes_values['options_values_price'],
                                 'price_prefix' => $attributes_values['price_prefix']);
         tep_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
 
         if ((DOWNLOAD_ENABLED == 'true') && isset($attributes_values['products_attributes_filename']) && tep_not_null($attributes_values['products_attributes_filename'])) {
-          $sql_data_array = array('orders_id' => $insert_id, 
-                                  'orders_products_id' => $order_products_id, 
-                                  'orders_products_filename' => $attributes_values['products_attributes_filename'], 
-                                  'download_maxdays' => $attributes_values['products_attributes_maxdays'], 
+          $sql_data_array = array('orders_id' => $insert_id,
+                                  'orders_products_id' => $order_products_id,
+                                  'orders_products_filename' => $attributes_values['products_attributes_filename'],
+                                  'download_maxdays' => $attributes_values['products_attributes_maxdays'],
                                   'download_count' => $attributes_values['products_attributes_maxcount']);
           tep_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
         }
@@ -979,7 +979,7 @@ function process_new_order_notification($google_response, $google_checkout) {
  */
 function process_order_state_change_notification($google_response, $google_checkout) {
   list($root, $gc_data) = $google_response->GetParsedXML();
-  
+
   $new_financial_state = $gc_data[$root]['new-financial-order-state']['VALUE'];
   $new_fulfillment_state = $gc_data[$root]['new-fulfillment-order-state']['VALUE'];
 
@@ -987,11 +987,11 @@ function process_order_state_change_notification($google_response, $google_check
   $previous_fulfillment_state = $gc_data[$root]['previous-fulfillment-order-state']['VALUE'];
 
   $google_order_number = $gc_data[$root]['google-order-number']['VALUE'];
-    
-  $google_order = tep_db_fetch_array(tep_db_query("select orders_id from " . 
-                  $google_checkout->table_order . " where google_order_number = '" . 
+
+  $google_order = tep_db_fetch_array(tep_db_query("select orders_id from " .
+                  $google_checkout->table_order . " where google_order_number = '" .
                   gc_make_sql_string($google_order_number) . "'"));
-	
+
   // Handle change in financial state.
   $do_financial_state_update = false;
   if ($previous_financial_state != $new_financial_state) {
@@ -1000,57 +1000,57 @@ function process_order_state_change_notification($google_response, $google_check
         break;
       }
       case 'CHARGEABLE': {
-				$do_financial_state_update = true;
+        $do_financial_state_update = true;
         $orders_status_id = GC_STATE_NEW;
-				$comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n".
+        $comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n".
                     GOOGLECHECKOUT_STATE_STRING_NEW_STATE . $new_financial_state . "\n".
                     GOOGLECHECKOUT_STATE_STRING_ORDER_READY_CHARGE;
-				$customer_notified = 0;
+        $customer_notified = 0;
         break;
       }
       case 'CHARGING': {
         break;
       }
       case 'CHARGED': {
-				$do_financial_state_update = true;
+        $do_financial_state_update = true;
         $orders_status_id = GC_STATE_PROCESSING;
-				$comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n" .
+        $comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n" .
                     GOOGLECHECKOUT_STATE_STRING_NEW_STATE . $new_financial_state ;
-				$customer_notified = 0;
+        $customer_notified = 0;
         break;
       }
       case 'PAYMENT-DECLINED': {
-				$do_financial_state_update = true;
+        $do_financial_state_update = true;
         $orders_status_id = GC_STATE_NEW;
-				$comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n" .
+        $comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n" .
                     GOOGLECHECKOUT_STATE_STRING_NEW_STATE . $new_financial_state .
-                    GOOGLECHECKOUT_STATE_STRING_PAYMENT_DECLINED; 
-				$customer_notified = 1;
+                    GOOGLECHECKOUT_STATE_STRING_PAYMENT_DECLINED;
+        $customer_notified = 1;
         break;
       }
       case 'CANCELLED': {
-				$do_financial_state_update = true;
-				$orders_status_id = GC_STATE_CANCELED;
-				$customer_notified = 1;
-				$comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n" .
+        $do_financial_state_update = true;
+        $orders_status_id = GC_STATE_CANCELED;
+        $customer_notified = 1;
+        $comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n" .
                     GOOGLECHECKOUT_STATE_STRING_NEW_STATE . $new_financial_state . "\n" .
                     GOOGLECHECKOUT_STATE_STRING_ORDER_CANCELED;
         break;
       }
       case 'CANCELLED_BY_GOOGLE': {
-				$do_financial_state_update = true;
+        $do_financial_state_update = true;
         $orders_status_id = GC_STATE_CANCELED;
-				$comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n".
+        $comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n".
                     GOOGLECHECKOUT_STATE_STRING_NEW_STATE. $new_financial_state . "\n" .
                     GOOGLECHECKOUT_STATE_STRING_ORDER_CANCELED_BY_GOOG;
-				$customer_notified = 1;
+        $customer_notified = 1;
         break;
       }
       default: {
         break;
       }
     }
-  }  
+  }
 
   // Change financial state in table if required.
   if ($do_financial_state_update) {
@@ -1058,13 +1058,13 @@ function process_order_state_change_notification($google_response, $google_check
                             'orders_status_id' => $orders_status_id,
                             'date_added' => 'now()',
                             'customer_notified' => $customer_notified,
-	                          'comments' => $comments);
+                            'comments' => $comments);
     tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
     tep_db_query("update ". TABLE_ORDERS . " set orders_status = '".
-                  $orders_status_id."' where orders_id = '". 
+                  $orders_status_id."' where orders_id = '".
                   gc_make_sql_integer($google_order['orders_id']) ."'");
   }
-  
+
   // Handle change in fulfillment state.
   $do_fulfillment_state_update = false;
   if ($previous_fulfillment_state != $new_fulfillment_state) {
@@ -1074,14 +1074,14 @@ function process_order_state_change_notification($google_response, $google_check
       }
       case 'PROCESSING': {
       //$google_response->SendAck(false);
-        $google_request = new GoogleRequest($google_checkout->merchantid, 
+        $google_request = new GoogleRequest($google_checkout->merchantid,
                                             $google_checkout->merchantkey,
                                             sandbox_or_prod(),
                                             DEFAULT_CURRENCY);
         $google_request->SetLogFiles(API_CALLBACK_ERROR_LOG, API_CALLBACK_MESSAGE_LOG);
         $google_answer = tep_db_fetch_array(tep_db_query(
             "SELECT go.google_order_number, go.order_amount, o.customers_email_address, gc.buyer_id, o.customers_id
-                FROM " . $google_checkout->table_order . " go 
+                FROM " . $google_checkout->table_order . " go
                 inner join " . TABLE_ORDERS . " o on go.orders_id = o.orders_id
                 inner join " . $google_checkout->table_name . " gc on gc.customers_id = o.customers_id
                 WHERE go.orders_id = '" . (int)$google_order['orders_id'] ."'
@@ -1089,41 +1089,41 @@ function process_order_state_change_notification($google_response, $google_check
 
         $first_order = tep_db_fetch_array(tep_db_query(
             "SELECT customers_id, count(*) cant_orders
-                FROM  " . TABLE_ORDERS . " 
+                FROM  " . TABLE_ORDERS . "
                 WHERE customers_id = '".$google_answer['customers_id']."'
                 group by customers_id"));
-                
+
         // If this is the first time the buyer has used Google Checkout in the site,
-        // send them their email and password(for the store).       
+        // send them their email and password(for the store).
         if ($first_order['cant_orders'] == 1) {
           list($http_status_code,) = $google_request->sendBuyerMessage(
               $google_answer['google_order_number'],
               sprintf(GOOGLECHECKOUT_NEW_CREDENTIALS_MESSAGE,
                       STORE_NAME,
-                      $google_answer['customers_email_address'], 
+                      $google_answer['customers_email_address'],
                       $google_answer['buyer_id']), "true", 2);
 
           $comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE'] . "\n" .
                       GOOGLECHECKOUT_STATE_STRING_NEW_STATE . $new_fulfillment_state. "\n";
-  
+
           if ($http_status_code == 200) {
             $comments .= GOOGLECHECKOUT_SUCCESS_SEND_NEW_USER_CREDENTIALS . "\n";
             $customer_notified = '1';
-          } else {            
+          } else {
             $comments .= "\n" . GOOGLECHECKOUT_ERR_SEND_NEW_USER_CREDENTIALS . "\n";
             $customer_notified = '0';
           }
 
-          $comments .=  "Messsage:\n" . 
+          $comments .=  "Messsage:\n" .
               sprintf(GOOGLECHECKOUT_NEW_CREDENTIALS_MESSAGE,
                       STORE_NAME,
-                      $google_answer['customers_email_address'], 
+                      $google_answer['customers_email_address'],
                       $google_answer['buyer_id']);
-          
+
           $do_fulfillment_state_update = true;
           $orders_status_id = GC_STATE_PROCESSING;
         }
-        
+
         // Send the internal order number to Google.
         $google_request->SendMerchantOrderNumber($google_answer['google_order_number'],
                                                  $google_order['orders_id'],
@@ -1146,11 +1146,11 @@ function process_order_state_change_notification($google_response, $google_check
           }
         }
 
-				$do_fulfillment_state_update = true;
-				$comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE']. "\n".
+        $do_fulfillment_state_update = true;
+        $comments = GOOGLECHECKOUT_STATE_STRING_TIME . $gc_data[$root]['timestamp']['VALUE']. "\n".
                     GOOGLECHECKOUT_STATE_STRING_NEW_STATE. $new_fulfillment_state ."\n".
-                    GOOGLECHECKOUT_STATE_STRING_ORDER_DELIVERED."\n"; 
-				$customer_notified = 1;
+                    GOOGLECHECKOUT_STATE_STRING_ORDER_DELIVERED."\n";
+        $customer_notified = 1;
         break;
       }
       case 'WILL_NOT_DELIVER': {
@@ -1173,28 +1173,28 @@ function process_order_state_change_notification($google_response, $google_check
     $sql_data_array = array('orders_id' => $google_order['orders_id'],
                             'orders_status_id' => $orders_status_id,
                             'date_added' => 'now()',
-	                          'customer_notified' => $customer_notified,
-	                          'comments' => $comments);
+                            'customer_notified' => $customer_notified,
+                            'comments' => $comments);
     tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-    tep_db_query("update ". TABLE_ORDERS ." set orders_status = '". 
-                    $orders_status_id ."' WHERE orders_id = '". 
+    tep_db_query("update ". TABLE_ORDERS ." set orders_status = '".
+                    $orders_status_id ."' WHERE orders_id = '".
                     gc_make_sql_integer($google_order['orders_id']) ."'");
   }
 
-  $google_response->SendAck();	  
+  $google_response->SendAck();
 }
 
 /**
  * Process a <charge-amount-notification>.
- * 
+ *
  * Update the order status upon completion of payment.
  */
 // Update the order status upon completion of payment.
 function process_charge_amount_notification($google_response, $google_checkout) {
   list($root, $gc_data) = $google_response->GetParsedXML();
   $google_order_number = $gc_data[$root]['google-order-number']['VALUE'];
-  $google_order = tep_db_fetch_array(tep_db_query("select orders_id from ". 
-                  $google_checkout->table_order ." where google_order_number = '". 
+  $google_order = tep_db_fetch_array(tep_db_query("select orders_id from ".
+                  $google_checkout->table_order ." where google_order_number = '".
                   gc_make_sql_string($google_order_number) ."'"));
 
   $sql_data_array = array('orders_id' => $google_order['orders_id'],
@@ -1203,12 +1203,12 @@ function process_charge_amount_notification($google_response, $google_checkout) 
                           'customer_notified' => 0,
                           'comments' => GOOGLECHECKOUT_STATE_STRING_LATEST_CHARGE .
                               $gc_data[$root]['latest-charge-amount']['currency'] .
-                              ' ' . $gc_data[$root]['latest-charge-amount']['VALUE'] . "\n" . 
+                              ' ' . $gc_data[$root]['latest-charge-amount']['VALUE'] . "\n" .
                               GOOGLECHECKOUT_STATE_STRING_TOTAL_CHARGE .
                               $gc_data[$root]['latest-charge-amount']['currency'] . ' ' .
                               $gc_data[$root]['total-charge-amount']['VALUE']);
   tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-  
+
   // Adjust the orders_status value here if you need it to move to a different status upon payment.
   tep_db_query("update ". TABLE_ORDERS ." set orders_status = " . GC_STATE_PROCESSING . " where orders_id = '".
       gc_make_sql_integer($google_order['orders_id']) ."'");
@@ -1220,7 +1220,7 @@ function process_charge_amount_notification($google_response, $google_checkout) 
  * Process a <chargeback-amount-notification>.
  */
 function process_chargeback_amount_notification($google_response) {
-  $google_response->SendAck(); 
+  $google_response->SendAck();
 }
 
 /**
@@ -1258,12 +1258,12 @@ function process_refund_amount_notification($google_response, $google_checkout) 
       'comments' => GOOGLECHECKOUT_STATE_STRING_TIME .
           $gc_data[$root]['timestamp']['VALUE'] . "\n" .
           GOOGLECHECKOUT_STATE_STRING_LATEST_REFUND .
-          $currencies->format($gc_data[$root]['latest-refund-amount']['VALUE'], 
-                              false, 
+          $currencies->format($gc_data[$root]['latest-refund-amount']['VALUE'],
+                              false,
                               $gc_data[$root]['latest-refund-amount']['currency']). "\n".
           GOOGLECHECKOUT_STATE_STRING_TOTAL_REFUND .
-          $currencies->format($gc_data[$root]['total-refund-amount']['VALUE'], 
-                              false, 
+          $currencies->format($gc_data[$root]['total-refund-amount']['VALUE'],
+                              false,
                               $gc_data[$root]['total-refund-amount']['currency'])
   );
   tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
@@ -1272,8 +1272,8 @@ function process_refund_amount_notification($google_response, $google_checkout) 
       'orders_id' => $google_order['orders_id'],
       'title' => GOOGLECHECKOUT_STATE_STRING_GOOGLE_REFUND,
       'text' => '<font color="#800000">' .
-          $currencies->format($gc_data[$root]['latest-refund-amount']['VALUE'] * -1, 
-                              false, 
+          $currencies->format($gc_data[$root]['latest-refund-amount']['VALUE'] * -1,
+                              false,
                               $gc_data[$root]['latest-refund-amount']['currency']). "\n".
       '</font>',
       'value' => $gc_data[$root]['latest-refund-amount']['VALUE'],
@@ -1297,10 +1297,10 @@ function process_refund_amount_notification($google_response, $google_checkout) 
       'title' => '<b>' . GOOGLECHECKOUT_STATE_STRING_NET_REVENUE . '</b>',
       'text' => '<b>' .
           $currencies->format(
-              ($total['value'] - ((double) $gc_data[$root]['total-refund-amount']['VALUE'])), 
-              false, 
-              $gc_data[$root]['total-refund-amount']['currency']) . '</b>', 
-      'value' => ($total['value'] - ((double) $gc_data[$root]['total-refund-amount']['VALUE'])), 
+              ($total['value'] - ((double) $gc_data[$root]['total-refund-amount']['VALUE'])),
+              false,
+              $gc_data[$root]['total-refund-amount']['currency']) . '</b>',
+      'value' => ($total['value'] - ((double) $gc_data[$root]['total-refund-amount']['VALUE'])),
       'class' => 'ot_goog_net_rev',
       'sort_order' => 1010
   );
@@ -1308,25 +1308,25 @@ function process_refund_amount_notification($google_response, $google_checkout) 
   if ($net_rev['orders_total_id'] == '') {
     tep_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
   } else {
-    tep_db_perform(TABLE_ORDERS_TOTAL, 
-                   $sql_data_array, 
+    tep_db_perform(TABLE_ORDERS_TOTAL,
+                   $sql_data_array,
                    'update', "orders_total_id = '" . $net_rev['orders_total_id'] . "'");
   }
 
-  $google_response->SendAck(); 
+  $google_response->SendAck();
 }
 
 /**
  * Process a <risk-information-notification>.
- * 
+ *
  * Set an order back to pending if there's a problem with payment.
  */
 function process_risk_information_notification($google_response, $google_checkout) {
   list($root, $gc_data) = $google_response->GetParsedXML();
   $google_order_number = $gc_data[$root]['google-order-number']['VALUE'];
   $google_order = tep_db_fetch_array(tep_db_query(
-      "select orders_id from ". 
-          $google_checkout->table_order . " where google_order_number = '" . 
+      "select orders_id from ".
+          $google_checkout->table_order . " where google_order_number = '" .
           gc_make_sql_string($google_order_number) . "'"));
 
 
@@ -1346,8 +1346,8 @@ function process_risk_information_notification($google_response, $google_checkou
           GOOGLECHECKOUT_STATE_STRING_RISK_CC_NUM.
           $gc_data[$root]['risk-information']['partial-cc-number']['VALUE']."\n" .
           GOOGLECHECKOUT_STATE_STRING_RISK_ACC_AGE.
-          $gc_data[$root]['risk-information']['buyer-account-age']['VALUE']."\n" 
-  );    
+          $gc_data[$root]['risk-information']['buyer-account-age']['VALUE']."\n"
+  );
   tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
   tep_db_query(
       "update ". TABLE_ORDERS ." set orders_status = '". GC_STATE_NEW .
@@ -1360,7 +1360,7 @@ function process_risk_information_notification($google_response, $google_checkou
 /**
  * A function to prevent SQL injection attacks.
  * TODO(eddavisson): Do we really need our own implementation of this?
- */  
+ */
 //Functions to prevent SQL injection attacks
 function gc_make_sql_string($str) {
   return tep_db_input($str);
@@ -1370,27 +1370,27 @@ function gc_make_sql_string($str) {
 /**
  * A function to prevent SQL injection attacks.
  * TODO(eddavisson): Do we really need our own implementation of this?
- */  
+ */
 function gc_make_sql_integer($val) {
-  return ((settype($val, 'integer')) ? ($val) : 0); 
+  return ((settype($val, 'integer')) ? ($val) : 0);
 }
 
 /**
  * A function to prevent SQL injection attacks.
  * TODO(eddavisson): Do we really need our own implementation of this?
- */  
+ */
 function gc_make_sql_float($val) {
-  return ((settype($val, 'float')) ? ($val) : 0); 
+  return ((settype($val, 'float')) ? ($val) : 0);
 }
 
 /**
  * In case the XML API contains multiple open tags
  * with the same value, then invoke this function and
  * perform a foreach on the resultant array.
- * 
+ *
  * This takes care of cases when there is only one unique tag
  * or multiple tags.
- * 
+ *
  * Examples of this are "anonymous-address" and "merchant-code-string"
  * from the merchant-calculations-callback API.
  */
@@ -1415,7 +1415,7 @@ function gc_get_arr_result($child_node) {
  */
 function gc_is_associative_array($var) {
   return is_array($var) && !is_numeric(implode('', array_keys($var)));
-} 
+}
 
 function gc_get_prattr($order_items) {
   $rta = array();

@@ -5,13 +5,13 @@
  *
  * These must be kept in sync with the shipping companies and shipping types
  * supported by the Google Checkout Carrier Calculated Shipping XML API.
- * 
+ *
  * For more information, see:
- * 
+ *
  *   {@link http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping#tag_shipping-company}
- * 
- * and: 
- * 
+ *
+ * and:
+ *
  *   {@link http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping#tag_shipping-type}
  */
 
@@ -54,8 +54,8 @@ $cc_shipping_methods = array(
     'international_types' => array(
     ),
   ),
-);   
-                                                                                     
+);
+
 $cc_shipping_methods_names = array(
   'fedex' => 'FedEx',
   'ups' => 'UPS',

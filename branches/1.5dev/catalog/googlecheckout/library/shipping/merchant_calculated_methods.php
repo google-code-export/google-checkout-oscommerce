@@ -4,26 +4,26 @@
  * Merchant Calculated Shipping Methods.
  *
  * This class is a hack.
- * 
+ *
  * It contains the hard-coded names of the shipping companies and
  * methods for the most popular osCommerce shipping modules, including
- * the built-in modules (flat, per item, etc.) 
- * 
- * We should eventually figure out how to dynamically poll the modules to 
+ * the built-in modules (flat, per item, etc.)
+ *
+ * We should eventually figure out how to dynamically poll the modules to
  * determine the shipping methods they offer.
  *
  * In the mean time, if you want to install a shipping module not listed
  * here, you'll need to manually edit this file in order for Google Checkout
  * to use it for merchant calculated shipping.
- * 
+ *
  * You can also use the Shipping Method Generator script located
  * in catalog/googlecheckout/shipping_generator/shipping_method_generator.php
  * (you can access it in your browser).
- * 
+ *
  * The shipping method names must be unique.
  * TODO(eddavisson): Unique across all methods or unique per shipping company?
  */
- 
+
 $mc_shipping_methods = array(
   'usps' => array(
     'domestic_types' => array(
@@ -128,5 +128,5 @@ $mc_shipping_methods_names = array(
   'itemint' => 'Item Inter',
   'table' => 'Table',
 );
- 
+
 ?>

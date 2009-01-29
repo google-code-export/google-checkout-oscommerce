@@ -19,8 +19,8 @@
 
 /**
  * Classes used to generate XML data
- * 
- * Based on sample code available at http://simon.incutio.com/code/php/XmlWriter.class.php.txt 
+ *
+ * Based on sample code available at http://simon.incutio.com/code/php/XmlWriter.class.php.txt
  */
 
 /**
@@ -55,7 +55,7 @@ class GoogleXmlBuilder {
   }
 
   //Used when an element has no subelements.
-  //Data within the open and close tags are provided with the 
+  //Data within the open and close tags are provided with the
   //contents variable
   function Element($element, $content, $attributes = array()) {
     $this->_indent();
@@ -79,7 +79,7 @@ class GoogleXmlBuilder {
   function Pop($pop_element) {
     $element = array_pop($this->stack);
     $this->_indent();
-    if($element !== $pop_element) 
+    if($element !== $pop_element)
       die('XML Error: Tag Mismatch when trying to close "'. $pop_element. '"');
     else
       $this->xml .= "</$element>\n";

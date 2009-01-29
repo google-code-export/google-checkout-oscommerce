@@ -1,7 +1,11 @@
-GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.5.0
+GOOGLE CHECKOUT MODULE FOR OSCOMMERCE v1.5.0 - README
 
-NOTE: This module will only work with osCommerce v2.2 RC 2a:
+NOTE: This module only works with: 
 
+  osCommerce Online Merchant v2.2, Release Candidate 2a.
+  
+To download osCommerce, please see:
+  
   http://www.oscommerce.com/solutions/downloads
 
 
@@ -13,12 +17,12 @@ merchants using osCommerce to offer Google Checkout as a payment method.
 The module provides Level 2 integration of Google Checkout with osCommerce.
 
 Features include:
-1. Posting shopping carts to Google Checkout
-2. Shipping support (include merchant-calculated shipping)
-3. Tax support
-4. User and order updates within OSC
-5. Order processing using OSC Admin UI
-6. Order totals support
+  1. Posting shopping carts to Google Checkout
+  2. Shipping support (include merchant-calculated shipping)
+  3. Tax support
+  4. User and order updates within osCommerce
+  5. Order processing using the osCommerce admin console
+  6. Order totals support
 
 For support, please visit the forum:
 
@@ -37,15 +41,15 @@ INSTALLATION NOTES
 
 1. Follow instructions contained in INSTALLATION.txt.
 
-2. Verify that installation succeeded from the osCommerce admin page by 
-   selecting MODULES->PAYMENTS and checking if Google Checkout is listed.
+2. Verify that installation succeeded from the osCommerce admin console by 
+   selecting 'Modules->Payment' and checking if 'GoogleCheckout' is listed.
 
-3. Point your browser to 
+3. Point your browser to:
 
       http://<your-domain>/catalog/googlecheckout/responsehandler.php
 
-   If you get a 'Invalid or not supported Message', go to the next section.  
-   If you get any errors,  you must correct all errors before proceeding.  
+   If you get an 'Invalid or not supported Message', go to the next section.  
+   If you get any errors, you must correct all errors before proceeding.  
    Refer to the troubleshooting section below or go to the support forum for 
    help.
 
@@ -53,8 +57,8 @@ INSTALLATION NOTES
 CONFIGURATION
 =============
 
-In the OSC admin UI, select and install the Google Checkout payment module. The 
-following are some of the fields you can update:
+In the osCommerce admin console, select and install the Google Checkout payment 
+module. The following are some of the fields you can update:
 
 0. Installed GC module version
 
@@ -141,10 +145,11 @@ following are some of the fields you can update:
     expiration time, this may not be accuate.
 
 13. Also send Notification with OSC: If enabled, the module will send an email 
-    using the OSC internal email system if the comment in an order is longer 
-    than 254 characters, the limit for a Google Checkout message. If this 
-    happens, a warning will be shown in the Admin UI. It will also send emails 
-    to the merchant account when orders states are changed in the Admin UI.
+    using the osCommerce internal email system if the comment in an order is 
+    longer than 254 characters, the limit for Google Checkout messages. If this 
+    happens, a warning will be shown in the osCommerce admin console. It will 
+    also send emails to the merchant account when orders states are changed in 
+    the admin console.
 
 14. Google Analytics Id: Add Google Analytics to your osCommerce store.
     For more info, see below "Enabling E-Commerce Reporting for Google Analytics"
@@ -180,10 +185,13 @@ website in your Google Analytics account. The following steps explain how to
 enable e-commerce reporting for your website:
 
 1. Log in to your Google Analytics account.
+
 2. Click the Edit link next to the profile you want to enable. This link     
    appears in the Settings column.
+   
 3. On the Profile Settings page, click the Edit link in the Main Website 
    Profile Information box.
+   
 4. Change the selected E-Commerce Website radio button from No to Yes.
 
 For more info, see: 
@@ -223,8 +231,8 @@ DIGITAL DELIVERY
 
 All products marked as maked as "Product is Virtual" will be included in the 
 digital delivery API. This means that at the end of the Google Checkout 
-transaction, a link to the OSC checkout_success.php page will be shown as well 
-as a description of the product.
+transaction, a link to the osCommerce checkout_success.php page will be shown 
+as well as a description of the product.
 
 If the whole cart is virtual, no options will be shown in the Google Checkout 
 Place Order Page.
@@ -302,25 +310,25 @@ The Sandbox server accepts non-SSL callback URLs.
 You can view your Google Checkout customers and their orders in the Reports tab. 
 For each order, the default starting state is Google New. 
 
-Explanation of Google Checkout order states in the OSC admin:
+Explanation of Google Checkout order states in the osCommerce admin console:
 
 The instructions below assume you have enabled "Automatically authorize and
 charge the buyer's credit card" in your Google Checkout merchant account 
 (Settings->Preferences).
 
 1. When an order for a regular (non-download) product is submitted through
-   Google Checkout the order state in OSC admin will be automatically set to 
-   "Google_Processing". When following up on (shipping) these orders you will 
-   need to change the order status to "Google_Shipped".
+   Google Checkout the order state in osCommerce admin console will be 
+   automatically set to "Google_Processing". When following up on (shipping) 
+   these orders, you will need to change the order status to "Google_Shipped".
 
 2. When an order for a download product is submitted via Google Checkout, the 
-   order status in the OSC admin will be auto set to "Google_Shipped" 
-   (whether the customer has attempted to download or not). When following up 
-   on download orders keep the status "Google_Shipped"; there is no need to 
-   change the state.
+   order status in the osCommerce admin console will be automatically set to 
+   "Google_Shipped" (whether the customer has attempted to download or not). 
+   When following up on download orders keep the status "Google_Shipped"; 
+   there is no need to change the state.
 
 3. Refunding/canceling "total" Google Checkout orders also works from within the 
-   OSC admin.
+   osCommerce admin console.
 
   a. If you have not yet changed a non-download order from "Google_Processing"
      to "Google_Shipped" you can directly cancel/refund the TOTAL order by
@@ -339,9 +347,9 @@ charge the buyer's credit card" in your Google Checkout merchant account
      example if customer ordered two items and you want to refund the amount for 
      only one item) then you will need to log in to your Google Checkout 
      merchant account and process the partial refund. Google will automatically 
-     change the order status in OSC admin to "Google_Refunded" or 
+     change the order status in osCommerce admin console to "Google_Refunded" or 
      "Google_Shipped and Refunded", and you won't have to change the state 
-     in the OSC admin.
+     in the osCommerce admin console.
 
   d. To reiterate: you should never need to manually change the order state
      to "Google_Refunded" or "Google_Shipped and Refunded." These states are 
@@ -357,7 +365,7 @@ charge the buyer's credit card" in your Google Checkout merchant account
 All statechanges are added as notes in the Admin UI. All request and response 
 messages will be logged to the file: 
 
-  catalog/googlecheckout/logs/response_message.log.
+  <osc-directory>/catalog/googlecheckout/logs/response_message.log.
 
 Refunds and cancellations are both added as new order totals in each order as 
 well as part of the history of the order.
@@ -381,8 +389,8 @@ with osCommerce, please visit the form:
   http://groups.google.com/group/google-checkout-for-osc-mod-support
 
 
-MOST COMMON MISTAKES
-====================
+COMMON MISTAKES
+===============
 
 1. Make sure you set 777 permissions on the following files: 
     
@@ -401,7 +409,8 @@ MOST COMMON MISTAKES
      http://checkout.google.com/support/sell/bin/answer.py?answer=57856
 
 3. Make sure you are using the correct combination of Merchant ID and 
-   Merchant Key. Remember that Sandbox and Production Mode have different ones.
+   Merchant Key. Remember that Sandbox and Production Modes have different keys
+   and IDs.
   
 
 TROUBLESHOOTING
@@ -414,21 +423,24 @@ TROUBLESHOOTING
 
    Solution: 
 
-     Set the file attribute to 777 for:
+     Set the file attributes to 777 for:
        
-       catalog/googlecheckout/logs/response_error.log 
-       catalog/googlecheckout/logs/response_message.log
+       <osc-directory>/catalog/googlecheckout/logs/response_error.log 
+       <osc-directory>/catalog/googlecheckout/logs/response_message.log
 
 2. Problem: 
 
-     Test order shows up on Google Checkout but not in OSC admin.
+     Test order shows up on Google Checkout but not in the osCommerce admin 
+     console.
 
    Solution: 
 
-     There is an error somewhere in the file 
-     catalog/googlecheckout/responsehandler.php or you have set a wrong API 
-     callback function in your seller Google account under the 
-     Settings->Integration tab.
+     There is an error somewhere in the file:
+     
+       <osc-directory>/catalog/googlecheckout/responsehandler.php 
+     
+     or you have set a wrong API callback function in your Google
+     Checkout Account Settings under the 'Settings->Integration' tab.
 
 3. Problem: 
 
@@ -438,8 +450,9 @@ TROUBLESHOOTING
   Solution: 
 
     You have an extra space after your Google Merchant ID. Go to 
-    Admin->Payment. Edit the Google Checkout module. The extra space should 
-    disappear. Click the update button to save changes.
+    'Admin->Payment' in the osCommerce admin console. Edit the Google Checkout 
+    module. The extra space should disappear. Click the update button to save 
+    the changes.
 
 4. Problem: 
 
@@ -447,8 +460,8 @@ TROUBLESHOOTING
    
    Solution: 
 
-     Wrong merchant id. Sandbox merchant id can only be use with 
-     sandbox accounts. Sandbox and Live mode use different merchant id. 
+     Wrong Google Merchant ID. The Sandbox Merchant ID can only be used with 
+     sandbox accounts. Sandbox and Live modes use different Merchant IDs. 
 
 5. Problem: 
 
@@ -470,7 +483,7 @@ TROUBLESHOOTING
 
    Solution: 
 
-     Incorrect Merchant key.
+     Incorrect Merchant Key.
 
 7. Problem: 
 
@@ -479,12 +492,13 @@ TROUBLESHOOTING
    
    Solution: 
 
-     Set to False admin->configuration->session->Prevent Spider Sessions
-     configuration. Side effects: You'll see spiders as active users.
+     Go to 'Admin->Configuration->Session' in the osCommerce admin console
+     and set 'Prevent Spider Sessions' to 'False'. Side effects: You may see 
+     spiders as active users.
 
    Solution 2 (Recommended): 
 
-     Remove any string like 'jakarta' in the includes/spider.txt
+     Remove any string like 'jakarta' in the includes/spider.txt.
 
 8. Problem:
     
@@ -498,8 +512,13 @@ TROUBLESHOOTING
    
    Solution:
 
-     Change googlecheckout/gcheckout.php Line 34 'admin' for the modified admin
-     directory require_once('admin/includes/configure.php');      
+     Change
+     
+       <osc-directory>/googlecheckout/gcheckout.php, 
+       
+     line 33 to:
+       
+       directory require_once('admin/includes/configure.php');      
 
 9. Problem:
 
@@ -519,14 +538,22 @@ TROUBLESHOOTING
       Check that the DIR_FS_CATALOG and DIR_WS_MODULES constants have the 
       correct values set in:
       
-        catalog/includes/configre.php
+        <osc-directory>/catalog/includes/configre.php
 
-      Try adding an echo in catalog/googlecheckout/gcheckout.php:
+      Try adding an echo in:
+      
+        <osc-directory>/catalog/googlecheckout/gcheckout.php:
+        
+      such as:
 
         echo $module_directory = DIR_FS_CATALOG . DIR_WS_MODULES . 'shipping/';
      
-     and vist catalog/shopping_cart.php page see if the string you see is the 
-     correct directory for the shipping files.
+      and vist 
+       
+         http://<your-domain>/catalog/shopping_cart.php 
+         
+      to see if the string you see is the correct directory for the shipping 
+      files.
 
 
 KNOWN BUGS
@@ -534,7 +561,7 @@ KNOWN BUGS
 
 Please report bugs at: 
 
-  http://groups.google.com/group/google-checkout-for-osc-mod-support)
+  http://groups.google.com/group/google-checkout-for-osc-mod-support
 
 
 CHANGE LOG

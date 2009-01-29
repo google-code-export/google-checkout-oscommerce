@@ -37,7 +37,7 @@ error_reporting(0);
 
 chdir('./../../../..');
 $curr_dir = getcwd();
- 
+
 include_once('includes/application_top.php');
 // serialized cart, to avoid needing one in session
 $cart = unserialize('O:12:"shoppingcart":5:{s:8:"contents";a:1:{i:6;a:1:{s:3:"qty";i:1;}}s:5:"total";d:30;s:6:"weight";d:7;s:6:"cartID";s:5:"62209";s:12:"content_type";s:8:"physical";}');
@@ -68,9 +68,9 @@ $region = 'FL';
 $postal_code = '33102';
 
 $row = tep_db_fetch_array(tep_db_query("select * from ". TABLE_COUNTRIES ." where countries_iso_code_2 = '". $country ."'"));
-$order->delivery['country'] = array('id' => $row['countries_id'], 
-                                    'title' => $row['countries_name'], 
-                                    'iso_code_2' => $country, 
+$order->delivery['country'] = array('id' => $row['countries_id'],
+                                    'title' => $row['countries_name'],
+                                    'iso_code_2' => $country,
                                     'iso_code_3' => $row['countries_iso_code_3']);
 $order->delivery['country_id'] = $row['countries_id'];
 $order->delivery['format_id'] = $row['address_format_id'];
@@ -83,13 +83,13 @@ $order->delivery['city'] = $city;
 $order->delivery['postcode'] = $postal_code;
 $shipping_modules = new shipping();
 
-foreach($shippers as $shipper) {	
-	list($start_m, $start_s) = explode(' ', microtime());
-	$start = $start_m + $start_s;
-	$quotes =  $shipping_modules->quote('', $shipper);
-	list($end_m, $end_s) = explode(' ', microtime());
-	$end = $end_m + $end_s;
- 	echo $shipper." took ".(number_format($end-$start, 5))." Secs\n";
+foreach($shippers as $shipper) {
+  list($start_m, $start_s) = explode(' ', microtime());
+  $start = $start_m + $start_s;
+  $quotes =  $shipping_modules->quote('', $shipper);
+  list($end_m, $end_s) = explode(' ', microtime());
+  $end = $end_m + $end_s;
+   echo $shipper." took ".(number_format($end-$start, 5))." Secs\n";
 }
 
 list($start_m, $start_s) = explode(' ', microtime());

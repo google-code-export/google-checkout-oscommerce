@@ -19,26 +19,26 @@
 
 /**
  * Generates a feed (RSS 2.0) compatible with Google Base for products.
- * 
+ *
  * See http://base.google.com/support/bin/answer.py?answer=73932
- * 
+ *
  * osCommerce MySQL tables of interest:
  *   categories
- *   categories_description 
+ *   categories_description
  *   products
  *   products_descriptions
- *   products_to_categories 
+ *   products_to_categories
  *   manufacturers
- * 
+ *
  * Mapping of XML elements to table->columns:
- * 
+ *
  * Required:
  *   description: products_description->products_description
  *   id: products->products_id
  *   link: products_description->products_url
  *   price: products->products_price
  *   title: products_description->products_name
- * 
+ *
  * Recommended:
  *   brand: manufacturers->manufacturers_name
  *   condition: (not supported)
@@ -47,7 +47,7 @@
  *   mpn: (not supported)
  *   upc: (not supported)
  *   weight: products->products_weight
- * 
+ *
  * Optional:
  *   color:
  *   expiration_date
@@ -64,16 +64,16 @@
  *   tax: TODO(eddavisson)
  *   width: (not supported)
  *   year: (not supported)
- * 
+ *
  * TODO(eddavisson): How many more of these fields can we include?
- * 
+ *
  * @author Ed Davisson (ed.davisson@gmail.com)
  */
 
 require_once(DIR_FS_CATALOG . 'googlecheckout/library/xml/google_xml_builder.php');
 
 class GoogleBaseFeedBuilder {
-  
+
   var $xml;
   var $languages_id;
   var $categories_tree;
@@ -94,16 +94,16 @@ class GoogleBaseFeedBuilder {
     $this->xml->Push("rss", array("version" => "2.0",
                                   "xmlns:g" => "http://base.google.com/ns/1.0"));
     $this->xml->Push("channel");
-   
+
     $this->add_feed_info();
     $this->add_items();
-    
+
     $this->xml->Pop("channel");
     $this->xml->Pop("rss");
-    
+
     return $this->xml->GetXml();
   }
-  
+
   /**
    * Adds feed info (title, link, description) to the XML.
    */
@@ -114,13 +114,13 @@ class GoogleBaseFeedBuilder {
         . "where configuration_key = \"STORE_NAME\"");
     $row = tep_db_fetch_array($title_query);
     $title = $row['configuration_value'];
-    
+
     $this->xml->Element('title', $title);
     $this->xml->Element('link', HTTP_SERVER . DIR_WS_HTTP_CATALOG);
     // osCommerce doesn't store a description of the store.
     $this->xml->Element('description', $title);
   }
-  
+
   /**
    * Adds items (products) to the XML.
    */
@@ -130,23 +130,23 @@ class GoogleBaseFeedBuilder {
       $this->add_item($product);
     }
   }
-  
+
   /**
    * Adds a single item (product) to the XML.
    */
   function add_item($product) {
     $this->xml->Push('item');
-    
+
     // Required, global namespace.
     $this->add_title($product);
     $this->add_link($product);
     $this->add_description($product);
-    
+
     // Required, Google namespace.
     $this->add_brand($product);
     $this->add_id($product);
     $this->add_price($product);
-    
+
     // Optional.
     $this->add_image_link($product);
     $this->add_weight($product);
@@ -154,18 +154,18 @@ class GoogleBaseFeedBuilder {
     $this->add_payment_notes($product);
     $this->add_product_type($product);
     $this->add_quantity($product);
-    
+
     $this->xml->Pop('item');
   }
-  
+
   /**
    * Builds the categories tree.
    */
   function build_categories_tree() {
-  	$categories_tree = array();
+    $categories_tree = array();
     $categories_query = $this->get_categories_query();
     while ($category = tep_db_fetch_array($categories_query)) {
-    	$categories_tree[$category['categories_id']] = array(
+      $categories_tree[$category['categories_id']] = array(
           'name' => $category['categories_name'],
           'parent_id' => $category['parent_id']);
     }
@@ -186,23 +186,23 @@ class GoogleBaseFeedBuilder {
       . "where c.categories_id = cd.categories_id "
       . "and cd.language_id = " . (int) $this->languages_id . " ");
   }
-  
+
   /**
    * Traverses the categories tree to construct an array of the
    * categories containing the provided category_id.
    */
   function create_category_array($category_id, &$array) {
-  	$name = $this->categories_tree[$category_id]['name'];
+    $name = $this->categories_tree[$category_id]['name'];
     array_push($array, $name);
     $parent_id = $this->categories_tree[$category_id]['parent_id'];
     if ($parent_id == 0) {
       $array = array_reverse($array);
-    	return;
+      return;
     } else {
-    	$this->create_category_array($parent_id, $array);
+      $this->create_category_array($parent_id, $array);
     }
   }
-  
+
   /**
    * Returns a query over all products containing the columns
    * needed to generate the field.
@@ -221,7 +221,7 @@ class GoogleBaseFeedBuilder {
       . "pd.products_name, "
       . "m.manufacturers_name, "
       . "ptc.categories_id "
-      . "from " . TABLE_PRODUCTS . " p, " 
+      . "from " . TABLE_PRODUCTS . " p, "
       . TABLE_PRODUCTS_DESCRIPTION . " pd, "
       . TABLE_MANUFACTURERS . " m, "
       . TABLE_PRODUCTS_TO_CATEGORIES . " ptc "
@@ -230,7 +230,7 @@ class GoogleBaseFeedBuilder {
       . "and ptc.products_id = p.products_id "
       . "and pd.language_id = " . (int) $this->languages_id . " ");
   }
-  
+
   /**
    * Adds an element to the XML if content is non-empty.
    */
@@ -239,7 +239,7 @@ class GoogleBaseFeedBuilder {
       $this->xml->Element($element, $content);
     }
   }
-  
+
   /**
    * Adds the 'title' element.
    */
@@ -265,28 +265,28 @@ class GoogleBaseFeedBuilder {
     $brand = $product['manufacturers_name'];
     $this->add_if_not_empty('g:brand', $brand);
   }
-  
+
   /**
    * Adds the 'description' element.
-   * 
+   *
    * As of 1/13/09, HTML is only supported in individually
    * posted items.
-   * 
+   *
    * See http://base.google.com/support/bin/answer.py?answer=46116.
    */
   function add_description($product) {
     $description = strip_tags($product['products_description']);
     $this->add_if_not_empty('description', $description);
   }
-  
+
   /**
    * Adds the 'id' element.
    */
   function add_id($product) {
     $id = $product['products_id'];
     $this->add_if_not_empty('g:id', $id);
-  }  
-  
+  }
+
   /**
    * Adds the 'price' element.
    */
@@ -294,16 +294,16 @@ class GoogleBaseFeedBuilder {
     $price = round($product['products_price'], 2);
     $this->add_if_not_empty('g:price', $price);
   }
-  
+
   /**
    * Adds the 'image_link' element.
    */
   function add_image_link($product) {
-    $image_link = HTTP_SERVER . DIR_WS_HTTP_CATALOG 
+    $image_link = HTTP_SERVER . DIR_WS_HTTP_CATALOG
         . DIR_WS_IMAGES . $product['products_image'];
     $this->add_if_not_empty('g:image_link', $image_link);
   }
-  
+
   /**
    * Adds the 'weight' element.
    */
@@ -311,7 +311,7 @@ class GoogleBaseFeedBuilder {
     $weight = $product['products_weight'];
     $this->add_if_not_empty('g:weight', $weight);
   }
-  
+
   /**
    * Adds the 'model_number' element.
    */
@@ -319,33 +319,33 @@ class GoogleBaseFeedBuilder {
     $model_number = $product['products_model'];
     $this->add_if_not_empty('g:model_number', $model_number);
   }
-  
+
   /**
    * Adds the 'payment_notes' element.
    */
   function add_payment_notes($product) {
     // TODO(eddavisson): What should we actually say here?
-  	$payment_notes = "Google Checkout";
+    $payment_notes = "Google Checkout";
     $this->add_if_not_empty('g:payment_notes', $payment_notes);
   }
-  
+
   function add_product_type($product) {
-  	$category_id = $product['categories_id'];
+    $category_id = $product['categories_id'];
     $category_array = array();
     $this->create_category_array($category_id, $category_array);
-    
+
     $product_type = "";
     $length = count($category_array);
     for ($i = 0; $i < $length; $i++) {
-    	$product_type .= $category_array[$i];
+      $product_type .= $category_array[$i];
       if ($i != $length - 1) {
         $product_type .= " > ";
       }
     }
-    
+
     $this->add_if_not_empty('g:product_type', $product_type);
   }
-  
+
   /**
    * Adds the 'quantity' element.
    */

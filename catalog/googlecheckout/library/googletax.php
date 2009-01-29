@@ -2,30 +2,30 @@
 
 /*
  * Copyright (C) 2006 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
  /**
   * Classes used to handle tax rules and tables
   */
 
   /**
    * Represents a tax rule
-   * 
+   *
    * @see GoogleDefaultTaxRule
    * @see GoogleAlternateTaxRule
-   * 
+   *
    * @abstract
    */
   class GoogleTaxRule {
@@ -81,7 +81,7 @@
 
   /**
    * Represents a default tax rule
-   * 
+   *
    * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_default-tax-rule <default-tax-rule>}
    */
   class GoogleDefaultTaxRule extends GoogleTaxRule {
@@ -98,10 +98,10 @@
       $this->zip_patterns_arr = array();
     }
   }
-  
+
   /**
    * Represents an alternate tax rule
-   * 
+   *
    * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_alternate-tax-rule <alternate-tax-rule>}
    */
   class GoogleAlternateTaxRule extends GoogleTaxRule {
@@ -120,7 +120,7 @@
 
   /**
    * Represents an alternate tax table
-   * 
+   *
    * GC tag: {@link http://code.google.com/apis/checkout/developer/index.html#tag_alternate-tax-table <alternate-tax-table>}
    */
   class GoogleAlternateTaxTable {

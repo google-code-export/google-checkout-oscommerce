@@ -17,8 +17,9 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-/* **GOOGLE CHECKOUT ** v1.4.5
- * @version $Id: gcheckout.php 5499 2007-09-27 14:58:57Z ropu $
+/**
+ * $Id$
+ * 
  * Script invoked when Google Checkout payment option has been enabled
  * It uses phpGCheckout library so it can work with PHP4 and PHP5
  * Generates the cart xml, shipping and tax options and adds them as hidden fields

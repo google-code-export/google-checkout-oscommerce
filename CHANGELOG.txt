@@ -91,7 +91,7 @@ CHANGELOG
    - Added GC Module Installed and Configured Version check.
    - Slipt README and CHANGELOG
  	 
-17/07/2007 v1.4beta1 (ropu)
+07/17/2007 v1.4beta1 (ropu)
     - Refactor new-order-notification handling
     - Merged the GC return page with the OSC default one, checkout_success.php 
        used as continue-shopping URL. Buyer will return with his logged in to OSC
@@ -121,7 +121,7 @@ CHANGELOG
        with GC using sandbox.
     - Added a warning under the GC Button when in Sandbox mode.
     - Added a warning in the Payment Modules page in the Admin UI when in Sandbox mode.    
-    - Disalbe merchant Calculation Shipping methods from the Admin UI by setting 
+    - Disable merchant Calculation Shipping methods from the Admin UI by setting 
        Default value to 0.
     - Added Google Checkout Custom Order States that match Google Checkout ones.
     	(Check INSTALLATION, an SQL must be run to update old GC order status)
@@ -140,4 +140,9 @@ CHANGELOG
     - Added Cancel Order feature.
     - Added shipping_methods_uk.php with UK pre-configured shipping methods.
     - Admin UI configuration regroupment
-    - Added Recommended Default Values to Shipping_generator
+    - Added Recommended Default Values to Shipping_generator\
+
+01/28/2008 v1.5.0
+    - Added installer scripts
+    - Updated to use osCommerce v2.2 RC 2a
+    - Lots of code cleanup

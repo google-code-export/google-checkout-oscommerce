@@ -44,7 +44,7 @@ function gc_selfURL() {
 }
 
 // Used by selfURL.
-function gc_strleft($s1, $s2)
+function gc_strleft($s1, $s2) {
   return substr($s1, 0, strpos($s1, $s2));
 }
 

@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * Generates a Sitemap feed.
  *
  * See: http://www.sitemaps.org/protocol.php

@@ -16,15 +16,19 @@
  * limitations under the License.
  */
 
- /**
-  * Used to create the merchant callback results when a
-  * merchant-calculated feedback structure is received.
-  *
-  * Multiple results are generated depending on the possible
-  * combinations for shipping options and address ids
-  *
-  * More info: {@link http://code.google.com/apis/checkout/developer/index.html#understanding_merchant_calculation_results}
-  */
+/**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
+ * Used to create the merchant callback results when a
+ * merchant-calculated feedback structure is received.
+ *
+ * Multiple results are generated depending on the possible
+ * combinations for shipping options and address ids
+ *
+ * More info: {@link http://code.google.com/apis/checkout/developer/index.html#understanding_merchant_calculation_results}
+ */
+ 
   // refer to demo/responsehandler.php for generating these results
   class GoogleMerchantCalculations {
      var $results_arr;

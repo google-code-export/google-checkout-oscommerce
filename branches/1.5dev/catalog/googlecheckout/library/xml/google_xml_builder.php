@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * Classes used to generate XML data
  *
  * Based on sample code available at http://simon.incutio.com/code/php/XmlWriter.class.php.txt

@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * Generates a Sitemap.
  * 
  * If destination webserver supports the "AddType" .htaccess directive,

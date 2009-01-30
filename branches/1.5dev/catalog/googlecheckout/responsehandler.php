@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * Script invoked for any callback notifications from the Checkout server.
  *
  * Can be used to process new order notifications, order state changes,

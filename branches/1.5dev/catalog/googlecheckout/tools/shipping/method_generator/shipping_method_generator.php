@@ -1,13 +1,7 @@
 <?php
 /*
- * Created on 28/03/2007
- *
- * Coded by: Ropu
- * Globant - Buenos Aires, Argentina  - z-tests_atx
- * Version 0.2
- */
+  Copyright (C) 2008 Google Inc.
 
-/*
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
   as published by the Free Software Foundation; either version 2
@@ -22,6 +16,11 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+
+/**
+ * Google Checkout v1.5.0
+ * $Id$
+ */
 
 // NOTE: This script MUST be placed in googlecheckout/tools/shipping/method_generator/ directory
 

@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * Functions to store configuration values (shipping options) using
  * checkboxes in the administration tool. These methods are meant to
  * be included in catalog/admin/includes/functions/general.php.

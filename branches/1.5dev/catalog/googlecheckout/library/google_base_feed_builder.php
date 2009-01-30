@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * Generates a feed (RSS 2.0) compatible with Google Base for products.
  *
  * See http://base.google.com/support/bin/answer.py?answer=73932

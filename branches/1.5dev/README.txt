@@ -397,7 +397,7 @@ COMMON MISTAKES
     catalog/googlecheckout/logs/response_error.log
     catalog/googlecheckout/logs/response_message.log files.
 
-2. Set the Google Checkout Merchant Center, set your callback URL to: 
+2. In the Google Checkout Merchant Center, set your callback URL to: 
 
      https://<your-domain/catalog/googlecheckout/responsehandler.php
 

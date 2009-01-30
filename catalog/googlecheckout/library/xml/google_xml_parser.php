@@ -1,7 +1,4 @@
 <?php
-/**
- * Classes used to parse xml data
- */
 /*
   Copyright (C) 2007 Google Inc.
 
@@ -18,17 +15,15 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 
-  For more info: http://code.google.com/p/google-checkout-php-sample-code/
-
-  Upgrades (05/23/2007) ropu:
-     Remove UpdateRecursive()
-     Support for empty tags (like <world-area/>)
-     Accept multiple options in a second parameter
-*
-**/
-
-/* This uses SAX parser to convert XML data into PHP associative arrays
+/**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
+ * Classes used to parse xml data 
+ * 
+ * This uses SAX parser to convert XML data into PHP associative arrays
  * When invoking the constructor with the input data, strip out the first XML line
  *
  * Member field Description:

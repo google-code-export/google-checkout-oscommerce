@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * This method is meant to be included in catalog/admin/orders.php.
  */
  

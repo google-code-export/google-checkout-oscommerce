@@ -18,6 +18,9 @@
 */
 
 /**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
  * Generates a Google Base RSS feed.
  * 
  * If destination webserver supports the "AddType" .htaccess directive,

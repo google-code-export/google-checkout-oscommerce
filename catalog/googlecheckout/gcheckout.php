@@ -18,6 +18,7 @@
 */
 
 /**
+ * Google Checkout v1.5.0
  * $Id$
  * 
  * Script invoked when Google Checkout payment option has been enabled

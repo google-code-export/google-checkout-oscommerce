@@ -1,13 +1,5 @@
 <?php
 /*
- * Created on 28/03/2007
- *
- * Coded by: Ropu
- * Globant - Buenos Aires, Argentina  - z-tests_atx
- * Version 0.1
- */
-
-/*
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
   as published by the Free Software Foundation; either version 2
@@ -23,10 +15,14 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-/* ** tool to test WS response time
+/**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
+ * Tool to test WS response time.
+ * 
+ * NOTE: This script MUST be placed in the googlecheckout/tools/shipping/metrics/ directory.
  */
-
-// NOTE: This script MUST be placed in googlecheckout/tools/shipping/metrics/ directory
 
 // Set the shippers code you want to test
 $shippers = array();

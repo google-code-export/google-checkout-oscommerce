@@ -33,7 +33,7 @@ class WizardBuilder(object):
     self.diff3 = diff3
     self.row = 0
     self.window = Tkinter.Tk()
-    self.window.title('Checkout Plugin Installer')
+    self.window.title('Checkout Plugin Deployer')
 
     self.welcome_screen = self.build_config_screen(self.window)
 
@@ -44,7 +44,7 @@ class WizardBuilder(object):
     window.title('Errors')
 
     label = Tkinter.Label(window,
-                 text='Unable to install the Google Checkout Module for '
+                 text='Unable to deploy the Google Checkout Module for '
                  'OS Commerce due to errors in the files below.\nPlease '
                  'see %s for instructions on how to install the plugin '
                  'manually.' % MANUAL_DOCS)
@@ -59,15 +59,16 @@ class WizardBuilder(object):
     screen.grid_columnconfigure(1, minsize=200, weight=100)
 
     self.add_row(screen, 0,
-                 'Welcome to the Google Checkout installer for OS Commerce!')
+                 'Welcome to the Google Checkout deployer for OS Commerce!')
     self.add_row(screen, 1,
-                 'This installer works with OS Commerce version 2.2rc2')
+                 'This works with OS Commerce version 2.2rc2 and will\n'
+                 'prepare your OS Commerce store for Google Checkout.')
 
     self.plugin_entry = self.add_directory_row(screen, 2, 'Plugin Directory',
                                                os.getcwd())
-    self.install_entry = self.add_directory_row(screen, 3, 'OSCommerce Direcory')
+    self.install_entry = self.add_directory_row(screen, 3, 'OSCommerce Directory')
 
-    self.add_button(screen, 4, 2, 'Install', self.confirm)
+    self.add_button(screen, 4, 2, 'Deploy', self.confirm)
     self.add_button(screen, 4, 3, 'Cancel', sys.exit)
     screen.pack(fill=Tkinter.BOTH, expand=1)
 
@@ -115,7 +116,8 @@ class WizardBuilder(object):
     golden_dir = os.path.join(self.plugin_entry.get(), 'tools', 'golden',
                               'oscommerce-2.2rc2a', 'catalog%s' % os.sep)
 
-    if not os.path.exists(plugin_dir):
+    if (not os.path.exists(plugin_dir)
+        or not os.path.exists(os.path.join(plugin_dir, 'googlecheckout'))):
       return tkMessageBox.showerror(title='Unable to find directory',
           message='Unable to find the checkout plugin. Please check '
                   'the directory and try again.')
@@ -174,9 +176,6 @@ def install_file(diff3, plugin, golden, destination):
   Returns None if there are no errors or a tuple with the error and file name
           there was an error with
 
-  TODO(alek.dembowski) This does not do any error checking... at a minimum we
-  should be checking that the subprocess completed properly, that the
-  destination file is writable, and catching IO exceptions during the write.
   '''
   if os.path.isdir(plugin):
     return None

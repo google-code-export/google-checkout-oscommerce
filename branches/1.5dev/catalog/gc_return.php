@@ -189,6 +189,9 @@ function popupWindow(url) {
         </td>
       </tr>
     </table></form></td>
+<?php
+$cart->reset(true);
+?>
 <!-- body_text_eof //-->
     <td width="<?php echo BOX_WIDTH; ?>" valign="top"><table border="0" width="<?php echo BOX_WIDTH; ?>" cellspacing="0" cellpadding="2">
 <!-- right_navigation //-->

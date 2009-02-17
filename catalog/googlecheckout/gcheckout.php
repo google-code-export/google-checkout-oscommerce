@@ -21,15 +21,17 @@
  * Google Checkout v1.5.0
  * $Id$
  * 
- * Script invoked when Google Checkout payment option has been enabled
- * It uses phpGCheckout library so it can work with PHP4 and PHP5
+ * Script invoked when the Google Checkout payment option has been enabled.
+ * It uses phpGCheckout library so it can work with PHP4 and PHP5.
+ * 
  * Generates the cart xml, shipping and tax options and adds them as hidden fields
- * along with the Checkout button
+ * along with the Google Checkout button.
 
  * A disabled button is displayed in the following cases:
- * 1. If merchant id or merchant key is not set
- * 2. If there are multiple shipping options selected and they use different shipping tax tables
- *  or some dont use tax tables
+ * 
+ *   1. If merchant id or merchant key is not set.
+ *   2. If there are multiple shipping options selected and they use different shipping tax tables
+ *      or some dont use tax tables.
  */
 //error_reporting(E_ALL);
 //require_once('admin/includes/configure.php');
@@ -74,14 +76,19 @@ function gc_compare($key, $data, $sep="_VD:", $def_ret='1')
   return $def_ret;
 }
 
+require_once('googlecheckout/library/googlecart.php');
+require_once('googlecheckout/library/googleitem.php');
+require_once('googlecheckout/library/googleshipping.php');
+require_once('googlecheckout/library/googletax.php');
+
+require_once('googlecheckout/library/configuration/google_configuration.php');
+require_once('googlecheckout/library/configuration/google_configuration_keys.php');
+
+$config = new GoogleConfigurationKeys();
+
 $googlepayment = new googlecheckout();
 $total_weight = $cart->show_weight();
 $total_count = $cart->count_contents();
-
-require('googlecheckout/library/googlecart.php');
-require('googlecheckout/library/googleitem.php');
-require('googlecheckout/library/googleshipping.php');
-require('googlecheckout/library/googletax.php');
 
 $Gcart = new googlecart($googlepayment->merchantid,
                         $googlepayment->merchantkey,
@@ -90,15 +97,15 @@ $Gcart = new googlecart($googlepayment->merchantid,
                           ?"sandbox":"production",
                         DEFAULT_CURRENCY);
 $Gwarnings = array();
-if(MODULE_PAYMENT_GOOGLECHECKOUT_MODE=='https://sandbox.google.com/checkout/'){
+if (MODULE_PAYMENT_GOOGLECHECKOUT_MODE=='https://sandbox.google.com/checkout/'){
   $Gwarnings[] = GOOGLECHECKOUT_STRING_WARN_USING_SANDBOX;
 }
 // Check installed Version
-if(MODULE_PAYMENT_GOOGLECHECKOUT_VERSION != GOOGLECHECKOUT_FILES_VERSION) {
+if (MODULE_PAYMENT_GOOGLECHECKOUT_VERSION != GOOGLECHECKOUT_FILES_VERSION) {
   $Gcart->SetButtonVariant(false);
   $Gwarnings[] = sprintf(GOOGLECHECKOUT_STRING_WARN_MIX_VERSIONS,
-                          MODULE_PAYMENT_GOOGLECHECKOUT_VERSION,
-                          GOOGLECHECKOUT_FILES_VERSION);
+                         MODULE_PAYMENT_GOOGLECHECKOUT_VERSION,
+                         GOOGLECHECKOUT_FILES_VERSION);
 }
 
 if (($googlepayment->merchantid == '') || ($googlepayment->merchantkey == '')) {
@@ -111,8 +118,8 @@ require_once(DIR_WS_CLASSES . 'order.php');
 $order = new order;
 $order_items = $order->products;
 
-if(MODULE_PAYMENT_GOOGLECHECKOUT_VIRTUAL_GOODS == 'True'
-              && $cart->get_content_type() != 'physical' ) {
+$virtual_goods = gc_get_configuration_value($config->virtualGoods() == 'True');
+if($virtual_goods && $cart->get_content_type() != 'physical' ) {
   $Gcart->SetButtonVariant(false);
   $Gwarnings[] = GOOGLECHECKOUT_STRING_WARN_VIRTUAL;
 }
@@ -126,7 +133,8 @@ $tax_array = array();
 $tax_name_array = array();
 $flagAnyOutOfStock = false;
 $product_list = '';
-$resticted_categories = split('([ ]?[,][ ]?)',MODULE_PAYMENT_GOOGLECHECKOUT_RESTRICTED_CATEGORIES);
+$restricted_categories_raw = gc_get_configuration_value($config->restrictedCategories());
+$resticted_categories = split('([ ]?[,][ ]?)', $restricted_categories_raw);
 for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
   $product_virtual = false;
   if (isset($products[$i]['attributes']) && is_array($products[$i]['attributes'])) {
@@ -289,8 +297,10 @@ if ( (STOCK_ALLOW_CHECKOUT != 'true') && ($flagAnyOutOfStock == true) ) {
 $private_data = tep_session_id() .';'. tep_session_name();
 $Gcart->SetMerchantPrivateData(
                new MerchantPrivateData(array('session-data' => $private_data)));
-$Gcart->AddRoundingPolicy(MODULE_PAYMENT_GOOGLECHECKOUT_TAXMODE,
-                          MODULE_PAYMENT_GOOGLECHECKOUT_TAXRULE);
+$rounding_mode = gc_get_configuration_value($config->roundingMode());
+$rounding_rule = gc_get_configuration_value($config->roundingRule());
+$Gcart->AddRoundingPolicy($rounding_mode, $rounding_rule);
+// TODO(eddavisson): Use OSC's tep_href_link().
 $continue_shopping_url = ($googlepayment->continue_url=='gc_return.php')?
                       $googlepayment->continue_url . '?products_id=' .
                       implode(',', explode(';', !empty($product_list)?
@@ -299,12 +309,15 @@ $Gcart->SetEditCartUrl(tep_href_link('shopping_cart.php'));
 $Gcart->SetContinueShoppingUrl(tep_href_link($continue_shopping_url));
 $Gcart->SetRequestBuyerPhone('true');
 
-if(MODULE_PAYMENT_GOOGLECHECKOUT_EXPIRATION != 'NONE') {
-//  2007-12-31T11:59:59-05:00
-  $Gcart->SetCartExpiration(date('Y-m-d\TH:i:s\Z', time()
-            + MODULE_PAYMENT_GOOGLECHECKOUT_EXPIRATION*60 - date('Z', time())));
+// Cart expiration.
+$cart_expiration_time = gc_get_configuration_value($config->cartExpirationTime());
+if ($cart_expiration_time != $config->nullValue()) {
+  // 2007-12-31T11:59:59-05:00
+  $Gcart->SetCartExpiration(date(
+      'Y-m-d\TH:i:s\Z', time() + $cart_expiration_time * 60 - date('Z', time())));
 }
-//Shipping options
+
+//Shipping options.
 $tax_class = array ();
 $shipping_arr = array ();
 $tax_class_unique = array ();
@@ -376,14 +389,19 @@ if(DOWNLOAD_ENABLED != 'true' || $cart->get_content_type() != 'virtual') {
         'status' => $module->check());
     }
   }
-
-// check if there is a shipping module activated that is not flat rate
+  
+  // TODO(eddavisson): ???
+  // check if there is a shipping module activated that is not flat rate
   // to enable Merchan Calculations
   // if there are flat and MC, both will be MC
-  $ship_calculation_mode = MODULE_PAYMENT_GOOGLECHECKOUT_CARRIER_CALCULATED_ENABLED=='True'?false:
-                          (count(array_keys($module_info_enabled))
-                          > count(array_intersect($googlepayment->shipping_support
-                          , array_keys($module_info_enabled)))) ? true : false;
+  $carrier_calculated_shipping_enabled = 
+      (gc_get_configuration_value($config->enableCarrierCalculatedShipping()) == 'True');
+      
+  // TODO(eddavisson): Really?
+  $ship_calculation_mode = 
+      ($carrier_calculated_shipping_enabled) ? false: (count(array_keys($module_info_enabled))
+      > 
+      count(array_intersect($googlepayment->shipping_support, array_keys($module_info_enabled)))) ? true : false;
 
   $key_values = explode(", ", MODULE_PAYMENT_GOOGLECHECKOUT_SHIPPING);
   $shipping_config_errors = '';
@@ -443,8 +461,8 @@ if(DOWNLOAD_ENABLED != 'true' || $cart->get_content_type() != 'virtual') {
 
     //    Disable any merchant-calculation module if Carrier calculated is enabled
   //    This will allow only flat-rate shippings
-    if(MODULE_PAYMENT_GOOGLECHECKOUT_CARRIER_CALCULATED_ENABLED == 'True'
-        && !in_array($module_name, $googlepayment->shipping_support)){
+    if ($carrier_calculated_shipping_enabled 
+        && !in_array($module_name, $googlepayment->shipping_support)) {
       $enable = 'False';
       unset($module_info_enabled['freeshipper']);
     }
@@ -491,7 +509,8 @@ if(DOWNLOAD_ENABLED != 'true' || $cart->get_content_type() != 'virtual') {
               $shipping_price = $currencies->get_value(DEFAULT_CURRENCY) * ($price>=0?$price:0);
             }
             $Gfilter = new GoogleShippingFilters();
-            if(MODULE_PAYMENT_GOOGLECHECKOUT_USPOBOX == 'False') {
+            $disallow_us_po_box = (gc_get_configuration_value($config->usPoBox()) == 'False');
+            if ($disallow_us_po_box) {
               $Gfilter->SetAllowUsPoBox('false');
             }
             if(!empty($allowed_restriction_country)){
@@ -555,7 +574,7 @@ if(DOWNLOAD_ENABLED != 'true' || $cart->get_content_type() != 'virtual') {
       }
     }
   }
-  if(MODULE_PAYMENT_GOOGLECHECKOUT_CARRIER_CALCULATED_ENABLED == 'True' && !$free_shipping){
+  if ($carrier_calculated_shipping_enabled && !$free_shipping) {
     $Gshipping = new GoogleCarrierCalculatedShipping('Carrier_shipping');
     $country_code = defined('SHIPPING_ORIGIN_COUNTRY')?SHIPPING_ORIGIN_COUNTRY:STORE_COUNTRY;
     $zone_name = tep_get_zone_code($country_code, STORE_ZONE, '');
@@ -567,11 +586,13 @@ if(DOWNLOAD_ENABLED != 'true' || $cart->get_content_type() != 'virtual') {
                                     $zone_name);
     $GSPackage = new GoogleShippingPackage($ship_from,1,1,1,'IN');
     $Gshipping->addShippingPackage($GSPackage);
-    $carriers_config = explode(', ', MODULE_PAYMENT_GOOGLECHECKOUT_CARRIER_CALCULATED);
+    $carrier_calculated_shipping_configuration = 
+        gc_get_configuration_value($config->carrierCalculatedShipping());
+    $carriers_config = explode(', ', $carrier_calculated_shipping_configuration);
 //    print_r($googlepayment->cc_shipping_methods);die;
-    foreach($googlepayment->cc_shipping_methods_names as $CCSCode => $CCSName){
-      foreach($googlepayment->cc_shipping_methods[$CCSCode] as $type => $methods) {
-        foreach($methods as $method => $method_name) {
+    foreach ($googlepayment->cc_shipping_methods_names as $CCSCode => $CCSName){
+      foreach ($googlepayment->cc_shipping_methods[$CCSCode] as $type => $methods) {
+        foreach ($methods as $method => $method_name) {
           $values = explode('|', gc_compare($CCSCode . $method. $type , $carriers_config, "_CCS:", '0|0|0'));
           if($values[0] != '0') {
             $CCSoption = new GoogleCarrierCalculatedShippingOption($values[0], $CCSName, $method,$values[1], $values[2], 'REGULAR_PICKUP');
@@ -584,10 +605,11 @@ if(DOWNLOAD_ENABLED != 'true' || $cart->get_content_type() != 'virtual') {
   }
 }
 
-if($ship_calculation_mode == 'True') {
-
+if ($ship_calculation_mode == 'True') {
+  $sandbox_merchant_callback_protocol = 
+      gc_get_configuration_value($config->sandboxMerchantCallbackProtocol());
   if (MODULE_PAYMENT_GOOGLECHECKOUT_MODE == 'https://sandbox.google.com/checkout/'
-      && MODULE_PAYMENT_GOOGLECHECKOUT_MC_MODE == 'http') {
+      && $sandbox_merchant_callback_protocol == 'http') {
     $url = HTTP_SERVER . DIR_WS_CATALOG .'googlecheckout/responsehandler.php';
   }
   else {
@@ -596,8 +618,9 @@ if($ship_calculation_mode == 'True') {
   $Gcart->SetMerchantCalculations($url, 'false', 'false', 'false');
 }
 
-if(MODULE_PAYMENT_GOOGLECHECKOUT_3RD_PARTY_TRACKING != 'NONE') {
 // Third party tracking
+$third_party_tracking = gc_get_configuration_value($config->thirdPartyTrackingUrl());
+if ($third_party_tracking != $config->nullValue()) {
   $tracking_attr_types = array(
                               'buyer-id' => 'buyer-id',
                               'order-id' => 'order-id',
@@ -618,8 +641,7 @@ if(MODULE_PAYMENT_GOOGLECHECKOUT_3RD_PARTY_TRACKING != 'NONE') {
                               'shipping-postal-code' => 'shipping-postal-code',
                               'shipping-country-code' => 'shipping-country-code',
                             );
-  $Gcart->AddThirdPartyTracking(MODULE_PAYMENT_GOOGLECHECKOUT_3RD_PARTY_TRACKING,
-                                                          $tracking_attr_types);
+  $Gcart->AddThirdPartyTracking($third_party_tracking, $tracking_attr_types);
 }
 //Tax options
 if (sizeof($tax_class_unique) == 1 && sizeof($module_info_enabled) == sizeof($tax_class)) {
@@ -698,9 +720,11 @@ foreach ($tax_array as $tax_table) {
   $Gcart->AddAlternateTaxTables($GAtaxTable);
 }
 
-if(!(MODULE_PAYMENT_GOOGLECHECKOUT_ANALYTICS == 'NONE')) {
-  $Gcart->AddGoogleAnalyticsTracking(MODULE_PAYMENT_GOOGLECHECKOUT_ANALYTICS);
+$google_analytics_id = gc_get_configuration_value($config->googleAnalyticsId());
+if ($google_analytics_id != $config->nullValue()) {  
+  $Gcart->AddGoogleAnalyticsTracking($google_analytics_id);
 }
+
 ?>
 <div align="right">
 <?php

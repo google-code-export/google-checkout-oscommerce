@@ -93,13 +93,18 @@ define('GC_STATE_CANCELED', 105);
 
 chdir('./..');
 $curr_dir = getcwd();
-define('API_CALLBACK_ERROR_LOG', $curr_dir."/googlecheckout/logs/response_error.log");
-define('API_CALLBACK_MESSAGE_LOG', $curr_dir."/googlecheckout/logs/response_message.log");
+define('API_CALLBACK_ERROR_LOG', $curr_dir . "/googlecheckout/logs/response_error.log");
+define('API_CALLBACK_MESSAGE_LOG', $curr_dir . "/googlecheckout/logs/response_message.log");
 
 require_once($curr_dir . '/googlecheckout/library/googlemerchantcalculations.php');
 require_once($curr_dir . '/googlecheckout/library/googleresult.php');
 require_once($curr_dir . '/googlecheckout/library/googlerequest.php');
 require_once($curr_dir . '/googlecheckout/library/googleresponse.php');
+
+require_once($curr_dir . '/googlecheckout/library/configuration/google_configuration.php');
+require_once($curr_dir . '/googlecheckout/library/configuration/google_configuration_keys.php');
+
+$config = new GoogleConfigurationKeys();
 
 $google_response = new GoogleResponse();
 
@@ -129,8 +134,8 @@ if (isset($gc_data[$root]['shopping-cart']['merchant-private-data']['session-dat
   }
 }
 
-include('includes/application_top.php');
-include('includes/modules/payment/googlecheckout.php');
+include_once('includes/application_top.php');
+include_once('includes/modules/payment/googlecheckout.php');
 
 if(tep_session_is_registered('cart') && is_object($cart)) {
   $cart->restore_contents();
@@ -143,7 +148,8 @@ $google_response->SetMerchantAuthentication($google_checkout->merchantid,
                                             $google_checkout->merchantkey);
 
 // Check if this is CGI-installed; if so .htaccess is needed.
-if (MODULE_PAYMENT_GOOGLECHECKOUT_CGI != 'True') {
+$htaccess = (gc_get_configuration_value($config->htaccessAuthMode()) == 'True');
+if ($htaccess) {
   $google_response->HttpAuthentication();
 }
 
@@ -165,6 +171,7 @@ switch ($root) {
     break;
   }
   // TODO(eddavisson): Why are these commented out?
+  // TODO(eddavisson): If we re-activate this, need to move to new configuration system.
   case "merchant-calculation-callback" : {
 //  if (MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET == 'True') {
 //    include_once ($curr_dir . '/googlecheckout/multisocket.php');
@@ -247,7 +254,7 @@ function process_merchant_calculation_callback_single($google_response) {
   // Get a hash array with the description of each shipping method
   $shipping_methods = $google_checkout->getMethods();
 
-  require(DIR_WS_CLASSES .'order.php');
+  require(DIR_WS_CLASSES . 'order.php');
   $order = new order;
 
   $items = gc_get_arr_result($gc_data[$root]['shopping-cart']['items']['item']);
@@ -313,7 +320,7 @@ function process_merchant_calculation_callback_single($google_response) {
   // Loop through the list of address ids from the callback.
   $addresses = gc_get_arr_result($gc_data[$root]['calculate']['addresses']['anonymous-address']);
   // Get all the enabled shipping methods.
-  require(DIR_WS_CLASSES .'shipping.php');
+  require_once(DIR_WS_CLASSES . 'shipping.php');
 
   // Required for some shipping methods (ie. USPS).
   require_once('includes/classes/http_client.php');
@@ -348,7 +355,8 @@ function process_merchant_calculation_callback_single($google_response) {
    if (isset($gc_data[$root]['calculate']['shipping'])) {
       $shipping = gc_get_arr_result($gc_data[$root]['calculate']['shipping']['method']);
 
-      if(MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET == 'True') {
+      // TODO(eddavisson): If we reactivate this, need to move to new configuration system.
+      if (MODULE_PAYMENT_GOOGLECHECKOUT_MULTISOCKET == 'True') {
         // Single.
         // Get all the enabled shipping methods.
          $name = $shipping[0]['name'];

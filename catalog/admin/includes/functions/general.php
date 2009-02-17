@@ -755,10 +755,6 @@
 
     return $string;
   }
-
-  // *** BEGIN GOOGLE CHECKOUT ***
-  require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/functions/general.php');
-  // *** END GOOGLE CHECKOUT ***
     
 ////
 // Alias function for module configuration keys
@@ -931,15 +927,7 @@
     tep_db_query("delete from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "'");
 
     // *** BEGIN GOOGLE CHECKOUT ***
-    $status_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
-    while ($status = tep_db_fetch_array($status_query)) {
-      $status_flag = $status['configuration_value'];	
-    }
-    if ($status_flag == 'True') {
-      require_once('../includes/modules/payment/googlecheckout.php');
-      $googlepayment = new googlecheckout();
-      tep_db_query("delete from " . $googlepayment->table_order . " where orders_id = '" . (int)$order_id . "'");
-    }
+    require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/functions/general.php');
     // *** END GOOGLE CHECKOUT ***
   }
 

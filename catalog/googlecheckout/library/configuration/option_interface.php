@@ -1,6 +1,6 @@
 <?php
 /*
-  Copyright (C) 2008 Google Inc.
+  Copyright (C) 2009 Google Inc.
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -21,25 +21,30 @@
  * Google Checkout v1.5.0
  * $Id$
  * 
- * This is our hook into osCommerce's tep_remove_order() function.
+ * An interface for option classes. Inheritance is a PHP5 option, so we
+ * may not want to use it explicitly, but this can still serve as a guide
+ * to creating new options.
  * 
- * It's meant to be included in catalog/admin/includes/functions/general.php.
+ * TODO(eddavisson): Investigate PHP5. Maybe we can use it...
+ * 
+ * @author Ed Davisson (ed.davisson@gmail.com)
  */
+class GoogleOptionInterface {
+  
+	function getOptionType() {}
 
-$status_query = tep_db_query(
-    "select configuration_value from " . TABLE_CONFIGURATION
-    . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
-    
-while ($status = tep_db_fetch_array($status_query)) {
-  $status_flag = $status['configuration_value'];  
-}
+  function getKey() {}
+  
+  function getTitle() {}
+  
+  function getDescription() {}
+  
+  function getValue() {}
+  
+  function setValue($value) {}
+  
+  function getHtml() {}
 
-if ($status_flag == 'True') {
-  require_once('../includes/modules/payment/googlecheckout.php');
-  $google_checkout = new googlecheckout();
-  tep_db_query(
-      "delete from " . $google_checkout->table_order 
-      . " where orders_id = '" . (int) $order_id . "'");
 }
 
 ?>

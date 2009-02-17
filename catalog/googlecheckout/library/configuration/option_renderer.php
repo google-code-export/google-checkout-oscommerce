@@ -1,6 +1,6 @@
 <?php
 /*
-  Copyright (C) 2008 Google Inc.
+  Copyright (C) 2009 Google Inc.
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -21,25 +21,33 @@
  * Google Checkout v1.5.0
  * $Id$
  * 
- * This is our hook into osCommerce's tep_remove_order() function.
+ * Renders a single option.
  * 
- * It's meant to be included in catalog/admin/includes/functions/general.php.
+ * TODO(eddavisson): Should this be handled by the options themselves?
+ * 
+ * @author Ed Davisson (ed.davisson@gmail.com)
  */
-
-$status_query = tep_db_query(
-    "select configuration_value from " . TABLE_CONFIGURATION
-    . " where configuration_key = 'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS'");
+class GoogleOptionRenderer {
+  
+  /**
+   * Constructor.
+   */
+  function GoogleOptionRenderer() {}
+  
+  /**
+   * Returns the html for the option.
+   */
+  function render($option) {
+    $html = '';
+    $html .= '<tr><td>';
+    $html .= '<span class="title">' . $option->getTitle() . '</span><br/>';
+    $html .= '<span class="description">' . $option->getDescription() . '</span><br/>';
+    $html .= '</td><td class="control">';
+    $html .= $option->getHtml();
+    $html .= '</td></tr>';
     
-while ($status = tep_db_fetch_array($status_query)) {
-  $status_flag = $status['configuration_value'];  
-}
-
-if ($status_flag == 'True') {
-  require_once('../includes/modules/payment/googlecheckout.php');
-  $google_checkout = new googlecheckout();
-  tep_db_query(
-      "delete from " . $google_checkout->table_order 
-      . " where orders_id = '" . (int) $order_id . "'");
+    return $html;
+  }
 }
 
 ?>

@@ -39,8 +39,12 @@ function google_checkout_state_change($check_status, $status, $oID,
   define('API_CALLBACK_MESSAGE_LOG',
          DIR_FS_CATALOG . "/googlecheckout/logs/response_message.log");
 
-  include_once(DIR_FS_CATALOG.'/includes/modules/payment/googlecheckout.php');
-  include_once(DIR_FS_CATALOG.'/googlecheckout/library/googlerequest.php');
+  include_once(DIR_FS_CATALOG . '/includes/modules/payment/googlecheckout.php');
+  include_once(DIR_FS_CATALOG . '/googlecheckout/library/googlerequest.php');
+  require_once(DIR_FS_CATALOG . '/googlecheckout/library/configuration/google_configuration.php');
+  require_once(DIR_FS_CATALOG . '/googlecheckout/library/configuration/google_configuration_keys.php');
+  
+  $config = new GoogleConfigurationKeys();
 
   $googlecheckout = new googlecheckout();
   
@@ -178,9 +182,10 @@ function google_checkout_state_change($check_status, $status, $oID,
   
   // Send Buyer's message
   if ($cust_notify == 1 && isset($notify_comments) && !empty($notify_comments)) {
-    $cust_notify_ok = '0';      
+    $cust_notify_ok = '0';
+    $use_cart_messaging = (gc_get_configuration_value($config->useCartMessaging()) == 'True');
     if (!((strlen(htmlentities(strip_tags($notify_comments))) > GOOGLE_MESSAGE_LENGTH)
-        && MODULE_PAYMENT_GOOGLECHECKOUT_USE_CART_MESSAGING=='True')) {
+        && $use_cart_messaging)) {
   
       list($curl_status,) = $google_request->sendBuyerMessage(
           $google_order, $notify_comments, "true");

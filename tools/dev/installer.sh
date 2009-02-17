@@ -69,7 +69,7 @@ function debug {
 #   None.
 ########################################
 function help {
-  echo -e "Arguments: $0 {install|uninstall|test} osc_root_directory"
+  echo -e "Arguments: $0 {install|uninstall|reinstall|test} osc_root_directory"
   echo -e "           $0 help"
   exit 0
 }
@@ -413,7 +413,7 @@ function uninstall {
 #   None.
 ########################################
 function running_in_correct_directory {
-  if [[ -f "install.sh" ]]; then
+  if [[ -f "install.bat" ]]; then
     echo true
   else
     echo false
@@ -461,6 +461,8 @@ function main {
         install;;
       uninstall)
         uninstall;;
+      reinstall)
+        uninstall; install;;
       test)
         test;;
       *)

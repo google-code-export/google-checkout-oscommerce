@@ -118,9 +118,9 @@ class GoogleSitemapBuilder {
   function get_products_query() {
     return tep_db_query(
       "select products_id, "
-      . "products_quantity "
-      . "products_status "
-      . "products_date_added "
+      . "products_quantity, "
+      . "products_status, "
+      . "products_date_added, "
       . "products_last_modified "
       . "from " . TABLE_PRODUCTS . " ");
   }

@@ -21,12 +21,19 @@
  * Google Checkout v1.5.0
  * $Id$
  * 
- * This method is meant to be included in catalog/admin/modules.php.
+ * This code is meant to be included in catalog/admin/modules.php.
  * 
  * TODO(eddavisson): Seems like we shouldn't need to roll our own function to do this.
  * 
  * @author Ed Davisson (ed.davisson@gmail.com)
  */
+
+// Execute the cron hook.
+require_once(DIR_FS_CATALOG . '/googlecheckout/library/google_cron_hook.php');
+$google_cron_hook = new GoogleCronHook();
+$google_cron_hook->execute();
+ 
+// TODO(eddavisson): Seems like we shouldn't need to roll our own function to do this. 
 function gc_makeSqlString($str) {
   $single_quote = "'";
   $escaped_str = addcslashes(stripcslashes($str), "'\"\\\0..\37!@\177..\377");

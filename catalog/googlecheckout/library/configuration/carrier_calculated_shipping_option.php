@@ -111,7 +111,7 @@ class GoogleCarrierCalculatedShippingOption /* implements GoogleOptionInterface 
             
             // Variable.
             $html .= '<td>';
-            $html .= $this->getInput($key, 2, $values[2]);
+            $html .= $this->getInput($key, 2, $values[2]) . ' %';
             $html .= '</td>';
             
              // Method name.

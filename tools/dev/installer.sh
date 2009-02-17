@@ -43,6 +43,7 @@ LOG_FILES=( \
     "${CATALOG}/googlecheckout/logs/response_message.log" \
     "${CATALOG}/googlecheckout/feeds/products-static.xml" \
     "${CATALOG}/googlecheckout/feeds/sitemap-static.xml" \
+    "${CATALOG}/googlecheckout/feeds/last-updated.html" \
     )
 
 # Set via command line parameters.

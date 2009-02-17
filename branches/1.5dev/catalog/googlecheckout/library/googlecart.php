@@ -999,7 +999,7 @@
      * @return string the button's html
      */
     function CheckoutServer2ServerButton($url, $size="large", $variant=true,
-                                  $loc="en_US",$showtext=true, $style="trans") {
+                                  $loc="en_US",$showtext=false, $style="trans") {
 
       switch (strtolower($size)) {
         case "medium":
@@ -1029,6 +1029,7 @@
               break;
         }
       }
+      
       $data = "<div style=\"width: ".$width."px\">";
       if ($this->variant == "text") {
         $data .= "<div align=center><form method=\"POST\" action=\"".
@@ -1089,7 +1090,7 @@
      * @return string the button's html
      */
     function CheckoutButtonCode($size="large", $variant=true, $loc="en_US",
-                                               $showtext=true, $style="trans") {
+                                               $showtext=false, $style="trans") {
 
       switch (strtolower($size)) {
         case "medium":
@@ -1119,7 +1120,6 @@
               break;
         }
       }
-
 
       $data = "<div style=\"width: ".$width."px\">";
       if ($this->variant == "text") {

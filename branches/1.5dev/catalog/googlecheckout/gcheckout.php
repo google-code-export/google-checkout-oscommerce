@@ -459,8 +459,8 @@ if(DOWNLOAD_ENABLED != 'true' || $cart->get_content_type() != 'virtual') {
       }
     }
 
-    //    Disable any merchant-calculation module if Carrier calculated is enabled
-  //    This will allow only flat-rate shippings
+    // Disable any merchant-calculation module if Carrier calculated is enabled
+    // This will allow only flat-rate shippings
     if ($carrier_calculated_shipping_enabled 
         && !in_array($module_name, $googlepayment->shipping_support)) {
       $enable = 'False';

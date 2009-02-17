@@ -22,28 +22,26 @@
  * $Id$
  */
 
-// NOTE: This script MUST be placed in googlecheckout/tools/shipping/method_generator/ directory
-
-// Set the shippers code you want to test
+// Add the shippers for which to generate methods.
 $shippers = array();
+$shippers[] = "usps";
 //$shippers[] = "fedex1";
 //$shippers[] = "upsxml";
 
-
-if(isset($_POST['country'])) {
+if (isset($_POST['country'])) {
   error_reporting(E_ALL);
   chdir('./../../../..');
   $curr_dir = getcwd();
 
   include_once('includes/application_top.php');
-  // serialized cart, to avoid needing one in session
+  // Serialized cart, to avoid needing one in session
   $cart = unserialize('O:12:"shoppingcart":5:{s:8:"contents";a:1:{i:6;a:1:{s:3:"qty";i:1;}}s:5:"total";d:30;s:6:"weight";d:7;s:6:"cartID";s:5:"62209";s:12:"content_type";s:8:"physical";}');
-//  print_r($cart);
+//print_r($cart);
 
   $cart->total = $_POST['price'];
   $cart->weight = $_POST['weight'];
   $cart->contents[6]['qty'] = $_POST['cant'];
-//  print_r($cart);
+//print_r($cart);
 //die;
   require(DIR_WS_CLASSES .'order.php');
   $order = new order;
@@ -54,12 +52,11 @@ if(isset($_POST['country'])) {
     tep_session_register('cartID');
   }
 
-
   $total_weight = $cart->show_weight();
   $total_count = $cart->count_contents();
 
   // Get all the enabled shipping methods.
-  require(DIR_WS_CLASSES .'shipping.php');
+  require(DIR_WS_CLASSES . 'shipping.php');
 
   // Required for some shipping methods (ie. USPS).
   require_once('includes/classes/http_client.php');
@@ -71,15 +68,11 @@ if(isset($_POST['country'])) {
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="stylesheet" type="text/css" href="../stylesheet.css">
 <title>Shipping Methods Generator</title>
-
 <script language="JavaScript" type="text/javascript" src="multishipping_generator.js"></script>
-
 </head>
 <body bgcolor="#FFFFFF" text="#000000" link="#FF9966" vlink="#FF9966" alink="#FFCC99">
-
   <h2 align="center">Shipping Methods generator</h2>
-
- <form action="" method="post" onSubmit="document.getElementById('calculate').disabled=true;document.getElementById('calculate').value='Calculating...'">
+  <form action="" method="post" onSubmit="document.getElementById('calculate').disabled=true;document.getElementById('calculate').value='Calculating...'">
     <table align="center" border="0" cellpadding="2" cellspacing="0">
       <tr>
         <td>
@@ -190,8 +183,8 @@ if(isset($_POST['country'])) {
   list($start_m, $start_s) = explode(' ', microtime());
   $start = $start_m + $start_s;
 
-    // Set up the order address.
-// Domestic
+  // Set up the order address.
+  // Domestic.
   $country = mysql_escape_string($_POST['country']);
   $city = mysql_escape_string($_POST['city']);
   $region = mysql_escape_string($_POST['region']);
@@ -213,13 +206,15 @@ if(isset($_POST['country'])) {
   $order->delivery['postcode'] = $postal_code;
   $shipping_modules = new shipping();
   $i_shipping_modules = $shipping_modules;
-//  print_r($shipping_modules);
+//print_r($shipping_modules);
+  
   $quotes =  $shipping_modules->quote();
-  foreach($quotes as $shipper) {
+  foreach ($quotes as $shipper) {
     $methods = array();
-    if(is_array(@$shipper['methods']) && !isset($shipper['error'])){
-      foreach($shipper['methods'] as $method) {
-        if(isset($methods_duplicate[$method['title']])) {
+    if (is_array(@$shipper['methods']) && !isset($shipper['error'])) {
+      foreach ($shipper['methods'] as $method) {
+        print_r($method['title']);
+        if (isset($methods_duplicate[$method['title']])) {
           $method['title'] .= "_" . $methods_duplicate[$method['title']]++;
         }
         else {
@@ -235,7 +230,8 @@ if(isset($_POST['country'])) {
       $mc_shipping_methods_names[$shipper['id']] = htmlentities($shipper['module']);
     }
   }
-// int'l
+  
+  // International.
   if(!empty($_POST['i_country'])) {
     $country = mysql_escape_string($_POST['i_country']);
     $city = mysql_escape_string($_POST['i_city']);

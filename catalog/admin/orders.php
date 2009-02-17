@@ -310,58 +310,7 @@
             <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
 <!-- *** BEGIN GOOGLE CHECKOUT *** -->
 <?php 
-// Google Checkout Tracking Number
-//orders_status == STATE_PROCESSING -> Processing before delivery
-	if(strpos($order->info['payment_method'], 'Google')!= -1 && $order->info['orders_status'] == GC_STATE_PROCESSING){
-			echo '<td><table border="0" cellpadding="3" cellspacing="0" width="100%">   
-				<tbody>
-					<tr>  
-						<td style="border-top: 2px solid rgb(255, 255, 255); border-right: 2px solid rgb(255, 255, 255);" nowrap="nowrap" colspan="2">
-								<b>Shipping Information</b>  
-						</td>  
-					</tr>
-					<tr>  
-						<td nowrap="nowrap" valign="middle" width="1%">  
-							<font size="2">  
-								<b>Tracking:</b>  
-							</font>  
-						</td>  
-						<td style="border-right: 2px solid rgb(255, 255, 255); border-bottom: 2px solid rgb(255, 255, 255);" nowrap="nowrap">   
-							<input name="tracking_number" style="color: rgb(0, 0, 0);" id="trackingBox" size="20" type="text">   
-						</td>  
-					</tr>  
-					<tr>  
-						<td nowrap="nowrap" valign="middle" width="1%">  
-							<font size="2">  
-								<b>Carrier:</b>  
-							</font>  
-						</td>  
-						<td style="border-right: 2px solid rgb(255, 255, 255);" nowrap="nowrap">  
-							<select name="carrier_select" style="color: rgb(0, 0, 0);" id="carrierSelect">  
-								<option value="select" selected="selected">
-								 Select ...  
-								</option>   
-								<option value="USPS">
-								 USPS  
-								</option>   
-								<option value="DHL">
-								 DHL  
-								</option>   
-								<option value="UPS">
-								 UPS  
-								</option>   
-								<option value="Other">
-								 Other  
-								</option>   
-								<option value="FedEx">
-								 FedEx  
-								</option>   
-							</select>  
-						</td>  
-					</tr>     
-				</tbody> 
-			</table></td>';
-	}
+require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders3.php');
 ?>
 <!-- *** END GOOGLE CHECKOUT *** -->
           </tr>

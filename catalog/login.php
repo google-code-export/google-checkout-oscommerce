@@ -213,8 +213,6 @@ function session_win() {
         </form>
 <?php
           // *** BEGIN GOOGLE CHECKOUT ***
-          // Checks if the Google Checkout payment module has been enabled and, if so, 
-          // includes gcheckout.php to add the Checkout button to the page.
           if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
             include_once('googlecheckout/gcheckout.php');
           }

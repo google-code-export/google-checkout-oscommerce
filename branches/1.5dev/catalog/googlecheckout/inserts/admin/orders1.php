@@ -30,6 +30,12 @@ define('GC_STATE_SHIPPED', 102);
 define('GC_STATE_REFUNDED', 103);
 define('GC_STATE_SHIPPED_REFUNDED', 104);
 define('GC_STATE_CANCELED', 105);
+
+// Execute the cron hook.
+require_once(DIR_FS_CATALOG . '/googlecheckout/library/google_cron_hook.php');
+$google_cron_hook = new GoogleCronHook();
+$google_cron_hook->execute();
+
 function google_checkout_state_change($check_status, $status, $oID, 
                                       $cust_notify, $notify_comments) {
   global $db, $messageStack, $orders_statuses;

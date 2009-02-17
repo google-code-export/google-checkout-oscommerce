@@ -29,9 +29,6 @@
  * 
  * Otherwise, this page generates a feed and copies it into
  * "products-static.xml" (also in this directory).
- * 
- * TODO(eddavisson): Tie regeneration of products-static.xml to some
- * action in the store.
  */
 
 // Require application_top.php to get access to configuration data.
@@ -45,11 +42,6 @@ require_once(DIR_FS_CATALOG . 'googlecheckout/library/google_base_feed_builder.p
 // Get the feed.
 $google_base_feed_builder = new GoogleBaseFeedBuilder($languages_id);
 $feed = $google_base_feed_builder->get_xml();
-
-// Write it to the static file.
-$file = fopen(DIR_FS_CATALOG . 'googlecheckout/feeds/products-static.xml', "w");
-fwrite($file, $google_base_feed_builder->get_xml());
-fclose($file);
 
 // And output it here.
 header("Content-Type: text/xml; charset=utf-8");

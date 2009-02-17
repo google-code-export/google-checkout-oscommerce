@@ -43,11 +43,6 @@ require_once(DIR_FS_CATALOG . 'googlecheckout/library/google_sitemap_builder.php
 $google_sitemap_builder = new GoogleSitemapBuilder();
 $feed = $google_sitemap_builder->get_xml();
 
-// Write it to the static file.
-$file = fopen(DIR_FS_CATALOG . 'googlecheckout/feeds/sitemap-static.xml', "w");
-fwrite($file, $google_sitemap_builder->get_xml());
-fclose($file);
-
 // And output it here.
 header("Content-Type: text/xml; charset=utf-8");
 echo($feed);

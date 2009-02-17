@@ -13,11 +13,7 @@
   require('includes/application_top.php');
 
   // *** BEGIN GOOGLE CHECKOUT ***
-  function gc_makeSqlString($str) {
-    $single_quote = "'";
-    $escaped_str = addcslashes(stripcslashes($str), "'\"\\\0..\37!@\177..\377");
-    return ($single_quote.$escaped_str.$single_quote);
-  }
+  require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/modules1.php');
   // *** END GOOGLE CHECKOUT ***
 
   $set = (isset($HTTP_GET_VARS['set']) ? $HTTP_GET_VARS['set'] : '');
@@ -52,20 +48,7 @@
     switch ($action) {
       case 'save':
         // *** BEGIN GOOGLE CHECKOUT ***
-        // TODO(eddavisson): Investigate this change.
-        // fix configuration no saving -
-        reset($HTTP_POST_VARS['configuration']);
-        // end fix    
-        while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
-          // Checks if module is of type google checkout and also verfies if this configuration is 
-          // for the check boxes for the shipping options   				
-          if (is_array($value)) {
-            $value = implode(", ", $value);
-            $value = ereg_replace (", --none--", "", $value);
-          }
-          // Change this query to use gc_makeSqlString()
-          tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . gc_makeSqlString($value) . " where configuration_key = " . gc_makeSqlString($key));
-  	    }
+        require(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/modules2.php');
         // *** END GOOGLE CHECKOUT ***
         tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
         break;

@@ -192,9 +192,9 @@ class GoogleOptions {
         $this->config->thirdPartyTrackingUrl(),
         "NONE");
     
-    $this->options[] = new GoogleTextOption(
+    $this->other_options[] = new GoogleTextOption(
         "Restricted Product Categories",
-        "A comma-separated of product categories for which the Google Checkout button will be grayed out."
+        "A comma-separated list of product categories for which the Google Checkout button will be grayed out."
             . " For more information, please consult Google Checkout's" 
             . " <a class=\"google\" href=\"http://checkout.google.com/support/sell/bin/answer.py?answer=46174&topic=8681\" target=\"_blank\">policy</a>.",
         $this->config->restrictedCategories(),

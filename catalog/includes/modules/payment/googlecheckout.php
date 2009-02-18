@@ -239,7 +239,7 @@ class googlecheckout {
 
   function getLink($text, $path) {
   	$href = tep_href_link($path);
-    $a = '<a style="color:blue;text-decoration:underline" href="' . $href . '" target="_blank">'. $text . '</a>';
+    $a = '<a style="color:blue;text-decoration:underline" href="' . $href . '">'. $text . '</a>';
     return $a;
   }
 
@@ -258,7 +258,7 @@ class googlecheckout {
     // Very Important: The title (including the html that makes it into a link) is
     // stored in a 255-character SQL field. Watch for truncation!
     $this->insertConfiguration(
-        "More options in the " . $this->getLink("Advanced Configuration Dashboard", "gc_dashboard.php"),
+        "For more options, see the " . $this->getLink("Advanced Configuration Dashboard", "gc_dashboard.php"),
         'MODULE_PAYMENT_GOOGLECHECKOUT_LINK',
         '',
         '',        

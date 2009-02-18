@@ -1,113 +1,122 @@
 <?php
 /*
- * Created on 20/03/2007
- * @author: Ropu
- * @version: 1.2
+  Copyright (C) 2008 Google Inc.
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+/**
+ * Google Checkout v1.5.0
+ * $Id$
  * 
- * Script to emulate a google checkout request to merchant response handler
- * Expected answer: A valid XML in response to your posted xml request.
- *                  No PHP errors warnings or any other string. 
+ * Script to emulate a Google Checkout request made to a merchant response handler.
  * 
- * CURL must be installed
+ * Expected result: A valid XML response. 
+ * Shouldn't contain any PHP errors or warnings.
  * 
- * README:
- * Configure the parameters.
- * Place this script in your website.
- * Point your browser to this script.
- * Analize the response.
+ * Note: CURL must be installed.
+ * 
+ * TODO(eddavisson): Test this and maybe delete it.
  */
- if(!isset($_POST['URL']) || empty($_POST['URL'])){
-   $_POST['URL'] = 'https://your-site.com/googlecheckout/responsehandler.php';
- }
+ 
+if (!isset($_POST['URL']) || empty($_POST['URL'])) {
+  $_POST['URL'] = 'https://your-domain/catalog/googlecheckout/responsehandler.php';
+}
  
 ?>
 <html>
 <head>
   <title>Responsehandler Test</title>
   <script language="JavaScript" type="text/javascript">
-   var help_texts = Array(
- 												'The Merchant Id could be found in GoogleCheckout->Settings->integration',
- 												'The Merchant Key could be found in GoogleCheckout->Settings->integration <b>(NO data will be recorded!)</b>',
- 												'The full path to your responsehandler.php file<br/><small>(ie. https://your-site.com/ googlecheckout/responsehandler.php)<br/>Only ports 80 and 443 are available</small>',
- 												'Here put the XML Request your want to test against your implementation<br/><small>(ie. New-order-notification, Merchant-calculation-callback)</small>)'
- 												);
+    var help_texts = Array(
+ 		    'The Merchant Id could be found in GoogleCheckout->Settings->integration',
+ 		    'The Merchant Key could be found in GoogleCheckout->Settings->integration <b>(NO data will be recorded!)</b>',
+ 		    'The full path to your responsehandler.php file<br/><small>(ie. https://your-site.com/ googlecheckout/responsehandler.php)<br/>Only ports 80 and 443 are available</small>',
+ 		    'Here put the XML Request your want to test against your implementation<br/><small>(ie. New-order-notification, Merchant-calculation-callback)</small>)'
+ 			  );
  
- /**
-  * show_help
-  * @param {int} help_index 
-  */
-  function show_help(help_index) {
-  	var help_div = document.getElementById('help');
-  	var help_text = document.getElementById('help_text');
-  	
-  	help_text.innerHTML = help_texts[help_index];
-  	help_div.style.display = 'block';
-  }
+   /**
+    * show_help
+    * @param {int} help_index 
+    */
+    function show_help(help_index) {
+    	var help_div = document.getElementById('help');
+    	var help_text = document.getElementById('help_text');
+    	
+    	help_text.innerHTML = help_texts[help_index];
+    	help_div.style.display = 'block';
+    }
 	</script>
   <link rel="stylesheet" type="text/css" href="../stylesheet.css">
-<style type="text/css">
-
-/* tables for merchant error details */
-table.errorDetail tr th {
-  font-family: Arial, sans-serif;
-  padding-right: 5px;
-  padding-bottom: 5px;
-  vertical-align: top;
-}
-table.errorDetail tr td {
-  padding-bottom: 5px;
-  vertical-align: top;
-}
-pre.xmlCode {
-  border: 1px solid #000055;
-  background-color: #DEE8FA;
-  width: 95%;
-  overflow: auto;
-  padding: 3px 3px 17px 3px; /* extra bottom padding for scrollbar on IE */
-}
-
-.MiddleMap {
-  width: 75%;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-}
-
-.bordersAndPadding {
-  border-right: solid 1px #CCCCCC;
-  border-bottom: solid 1px #CCCCCC;
-  padding: 5px
-}
-.ipLookupTableRow {
-  font-family: Geneva, Arial, Helvetica, sans-serif;
-}
-
-.ipLookupTitleRow {
-  font-weight: bold;
-  font-family: Geneva, Arial, Helvetica, sans-serif;
-}
-
-
-</style>
-  
+  <style type="text/css">
+    /* Tables for merchant error details */
+    table.errorDetail tr th {
+      font-family: Arial, sans-serif;
+      padding-right: 5px;
+      padding-bottom: 5px;
+      vertical-align: top;
+    }
+    table.errorDetail tr td {
+      padding-bottom: 5px;
+      vertical-align: top;
+    }
+    pre.xmlCode {
+      border: 1px solid #000055;
+      background-color: #DEE8FA;
+      width: 95%;
+      overflow: auto;
+      padding: 3px 3px 17px 3px; /* extra bottom padding for scrollbar on IE */
+    }
+    
+    .MiddleMap {
+      width: 75%;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    
+    .bordersAndPadding {
+      border-right: solid 1px #CCCCCC;
+      border-bottom: solid 1px #CCCCCC;
+      padding: 5px
+    }
+    .ipLookupTableRow {
+      font-family: Geneva, Arial, Helvetica, sans-serif;
+    }
+    
+    .ipLookupTitleRow {
+      font-weight: bold;
+      font-family: Geneva, Arial, Helvetica, sans-serif;
+    }
+  </style>
 </head>
 <body>  
-  <h2 align=center>Responsehandler Test: Test your implementation</h2>
+  <h2 align=center>Test for responsehandler.php</h2>
   
 <?php
 
-if(isset($_POST['submit'])){
-	// Responsehandler.php URL
+if (isset($_POST['submit'])) {
+  // URL for responsehandler.php.
 	$url = $_POST['URL'];
-	// Your Merchant ID
+	// Your Merchant ID.
 	$merid = $_POST['sb_id'];
-	// Your Merchant Key
+	// Your Merchant Key.
 	$merkey = $_POST['sb_key'];
-	// Here put the xml u want to emulate! You can take the ones from googlecheckout/response_message.log
+  // XML to send. See googlecheckout/logs/response_message.log for examples.
 	$postargs = $_POST['xml'];
 	
-
-
 	// No need to touch anything below here.
 	list($start_m, $start_s) = explode(' ', microtime());
 	$start = $start_m + $start_s;
@@ -127,7 +136,7 @@ if(isset($_POST['submit'])){
   	<col width="80%">
 	  <tbody>
 	  <tr>
-		  <th>XML We Sent:</th>
+		  <th>XML Sent:</th>
 		  <td>
 			  <div style="width: 100%;">
 			  	<pre class="xmlCode"><?= htmlentities($header_string) . "\n".htmlentities($postargs);?></pre>
@@ -135,7 +144,7 @@ if(isset($_POST['submit'])){
 		  </td>
 	  </tr>
 	  <tr>
-		  <th>XML We Received:</th>
+		  <th>XML Received:</th>
 		  <td>
 			  <div style="width: 100%;">
 			  	<pre class="xmlCode"><?=htmlentities($response);?></pre>
@@ -161,9 +170,8 @@ function send_google_req($url, $merid, $merkey, $postargs) {
   $headers[] = "Accept: application/xml;charset=UTF-8";
   $headers[] = "User-Agent: Ropus ResponseHandler Test";
   
-  $ip = isset($_SERVER['HTTP_X_FORWARDED_FOR'])?$_SERVER['HTTP_X_FORWARDED_FOR']:$_SERVER['REMOTE_ADDR'];
+  $ip = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR']:$_SERVER['REMOTE_ADDR'];
   $headers[] = "X-Origin-IP: " . $ip;
-
 
   // Set the POST options.
   curl_setopt($session, CURLOPT_POST, true);
@@ -171,8 +179,8 @@ function send_google_req($url, $merid, $merkey, $postargs) {
   curl_setopt($session, CURLOPT_POSTFIELDS, trim($postargs));
   curl_setopt($session, CURLOPT_HEADER, true);
   curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
-//  curl_setopt($session, CURLOPT_PROXY, '192.168.128.150:3128');
-//  curl_setopt($session, CURLOPT_TIMEOUT, 10);
+//curl_setopt($session, CURLOPT_PROXY, '192.168.128.150:3128');
+//curl_setopt($session, CURLOPT_TIMEOUT, 10);
   
   // Set to valir ssl.crt certification
 //curl_setopt($session, CURLOPT_CAINFO, "C:\\Program Files\\xampp\\apache\\conf\\ssl.crt\\ca-bundle.crt");
@@ -189,7 +197,8 @@ function send_google_req($url, $merid, $merkey, $postargs) {
   $status_code = array();
   return $response;
 }
-?>  
+
+?>
   <form action="" method="post">
   <table border="1" cellpadding="2" cellspacing="0" align="center" width="90%">
     <tr>

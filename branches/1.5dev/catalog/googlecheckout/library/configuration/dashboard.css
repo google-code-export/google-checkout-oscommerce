@@ -6,25 +6,26 @@ body {
   font-family: Verdana, Sans-serif;
 }
 
-.pagetitle {
-	font-weight: bold;
-  font-size: 150%;
+/* Override OSC's somewhat annoying link styling. */
+a.google {  
+  color: blue !important;
+  font-size: 100% !important;
+  text-decoration: underline !important;
 }
 
 .pagedescription {
-	font-size: 80%;
+  font-size: 100%;
 }
-	
+  
 .container {
-	width: 950px;
-	margin-left: auto;
-	margin-right: auto;
-	text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
 table.config {
-	border-collapse: collapse;
-	margin: 10px;
+  border-collapse: collapse;
+  margin: 10px;
 }
 
 table.config .title {
@@ -37,15 +38,15 @@ table.config .description {
 table.config tr.section td {
   text-align: center;
   font-weight: bold;
-  background-color: #eee;  
+  background-color: #F0F1F1;  
   vertical-align: middle;
   padding: 5px;
 }
 
 table.config tr td {
   font-size: 80%;
-  border-top: 1px solid darkblue;
-  border-bottom: 1px solid darkblue;
+  border-top: 1px solid #616060;
+  border-bottom: 1px solid #616060;
   border-collapse: collapse;
   text-align: left;
   vertical-align: top;
@@ -58,12 +59,12 @@ table.config tr td.control {
 
 table.config tr.section td {
   vertical-align: middle;
-}	
+} 
 
 table.ccs, table.mcs {
-	border-collapse: collapse;
+  border-collapse: collapse;
 }
-	
+  
 table.ccs tr td, table.mcs tr td {
   border: 1px solid #aaa;
   padding: 3px;
@@ -71,8 +72,8 @@ table.ccs tr td, table.mcs tr td {
 }
 
 table.ccs tr.head td, table.mcs tr.head td {
-  font-weight: bold;	
-	text-align: center;
+  font-weight: bold;  
+  text-align: center;
 }
 
 table.css tr.subhead td, table.mcs tr.subhead td {

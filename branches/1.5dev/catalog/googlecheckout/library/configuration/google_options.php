@@ -86,7 +86,7 @@ class GoogleOptions {
         "Google Analytics ID",
         "Google Analytics ID (UA-XXXXXX-X). Set to \"NONE\" to disable."
             . " For more information, see Google Checkout's"
-            . " <a href=\"http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html\" target=\"_blank\">Analytics integration documentation</a>.",
+            . " <a class=\"google\" href=\"http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html\" target=\"_blank\">Analytics integration documentation</a>.",
         $this->config->googleAnalyticsId(),
         "NONE");
     
@@ -124,7 +124,7 @@ class GoogleOptions {
     $this->rounding_options[] = new GoogleArrayOption(
         "Rounding Policy Mode",
         "Method for rounding costs to two decimal places. For more information, see"
-            . " Google Checkout's <a href=\"http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html\" target=\"_blank\">rounding policy</a>.",
+            . " Google Checkout's <a class=\"google\" href=\"http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html\" target=\"_blank\">rounding policy</a>.",
         $this->config->roundingMode(),
         array(
             "Up" => "UP",
@@ -152,7 +152,7 @@ class GoogleOptions {
         "Checking this option will disable PHP Basic Authentication, which is not compatible with CGI."
             . " This feature is used by the callback handler to validate Google Checkout messages."
             . " If you check this box, you will need to configure your .htaccess files by visiting"
-            . " <a href=\"htaccess.php\" target=\"_blank\">this page</a>.",
+            . " <a class=\"google\" href=\"htaccess.php\" target=\"_blank\">this page</a>.",
         $this->config->htaccessAuthMode(),
         "False");
     
@@ -196,7 +196,7 @@ class GoogleOptions {
         "Restricted Product Categories",
         "A comma-separated of product categories for which the Google Checkout button will be grayed out."
             . " For more information, please consult Google Checkout's" 
-            . " <a href=\"http://checkout.google.com/support/sell/bin/answer.py?answer=46174&topic=8681\" target=\"_blank\">policy</a>.",
+            . " <a class=\"google\" href=\"http://checkout.google.com/support/sell/bin/answer.py?answer=46174&topic=8681\" target=\"_blank\">policy</a>.",
         $this->config->restrictedCategories(),
         "");
         

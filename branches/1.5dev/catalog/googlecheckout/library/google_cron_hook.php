@@ -60,9 +60,9 @@ class GoogleCronHook {
     }
     
     // Record the time of the last update.
-    $file = fopen(DIR_FS_CATALOG . 'googlecheckout/feeds/last-updated.html', "w");
+    $file = fopen(DIR_FS_CATALOG . 'googlecheckout/logs/last_updated.log', "w");
     if ($file) {
-      fwrite($file, date("F j, Y, G:i a"));
+      fwrite($file, "Last updated: " . date("F j, Y, G:i a"));
       fclose($file);
     }
   }

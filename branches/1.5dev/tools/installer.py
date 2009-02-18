@@ -259,6 +259,9 @@ def install(diff3, plugin, golden, install):
   # but is currently how the plugin is written. Should think of better ways to
   # do this going forward.
   writable_files = [
+    os.path.join(install, 'googlecheckout', 'feeds', 'products-static.xml'),
+    os.path.join(install, 'googlecheckout', 'feeds', 'sitemap-static.xml'),  
+    os.path.join(install, 'googlecheckout', 'logs', 'last_updated.log'),                      
     os.path.join(install, 'googlecheckout', 'logs', 'response_error.log'),
     os.path.join(install, 'googlecheckout', 'logs', 'response_message.log'),
   ]

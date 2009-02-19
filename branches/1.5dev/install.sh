@@ -5,16 +5,16 @@
 #
 # Author: Ed Davisson (ed.davisson@gmail.com)
 
-DIFF3="/usr/bin/diff3"
+GC_CATALOG="catalog/"
 GOLDEN_CATALOG="tools/golden/oscommerce-2.2rc2a/catalog/"
 INSTALLER="python tools/installer.py"
 
 function main {
   if [[ "$#" -eq 1 ]]; then
-    target_dir="${1}/"
-    ${INSTALLER} --diff3=${DIFF3} ${GOLDEN_CATALOG} ${target_dir}
+    target_catalog="${1}/"
+    ${INSTALLER} ${GC_CATALOG} ${GOLDEN_CATALOG} ${target_catalog}
   else
-    ${INSTALLER} --diff3=${DIFF3} --ui
+    ${INSTALLER} --ui
   fi
 }
 

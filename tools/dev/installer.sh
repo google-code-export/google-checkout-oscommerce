@@ -39,11 +39,11 @@ BACKUP_SUFFIX="google.backup"
 
 # These files have their permissions set to 777 at the end of the installation.
 LOG_FILES=( \
-    "${CATALOG}/googlecheckout/logs/response_error.log" \
-    "${CATALOG}/googlecheckout/logs/response_message.log" \
     "${CATALOG}/googlecheckout/feeds/products-static.xml" \
     "${CATALOG}/googlecheckout/feeds/sitemap-static.xml" \
-    "${CATALOG}/googlecheckout/feeds/last-updated.html" \
+    "${CATALOG}/googlecheckout/logs/last_updated.log" \
+    "${CATALOG}/googlecheckout/logs/response_error.log" \
+    "${CATALOG}/googlecheckout/logs/response_message.log" \
     )
 
 # Set via command line parameters.

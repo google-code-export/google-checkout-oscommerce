@@ -215,7 +215,7 @@ for ($i = 0, $n = sizeof($products); $i < $n; $i++) {
                                                    GOOGLECHECKOUT_STRING_EXTRA_DIGITAL_CONTENT);
   }
   $Gcart->AddItem($Gitem);
-// Stock Check
+  // Stock Check
   if (STOCK_CHECK == 'true') {
     if (tep_check_stock($products[$i]['id'], $products[$i]['quantity'])) {
       $flagAnyOutOfStock = true;
@@ -289,14 +289,22 @@ foreach($order_totals as $order_total){
 //  $Gcart->AddAlternateTaxTables($GAtaxTable_OT);
 //}
 // Out of Stock
-if ( (STOCK_ALLOW_CHECKOUT != 'true') && ($flagAnyOutOfStock == true) ) {
+if ((STOCK_ALLOW_CHECKOUT != 'true') && ($flagAnyOutOfStock == true) ) {
   $Gcart->SetButtonVariant(false);
   $Gwarnings[] = GOOGLECHECKOUT_STRING_WARN_OUT_OF_STOCK;
 }
 
-$private_data = tep_session_id() .';'. tep_session_name();
-$Gcart->SetMerchantPrivateData(
-               new MerchantPrivateData(array('session-data' => $private_data)));
+// Merchant Private Data.
+// NOTE(eddavisson): We include the osCommerce and Google Checkout
+// Module version numbers here so usage can be tracked. It's a little
+// awkward to put it here, but it seems like the best option.
+$private_data = tep_session_id() . ';' . tep_session_name();
+$Gcart->SetMerchantPrivateData(new MerchantPrivateData(array(
+    'session-data' => $private_data,
+    'oscommerce-version' => PROJECT_VERSION,
+    'google-checkout-module-version' => GOOGLECHECKOUT_FILES_VERSION,
+    )));
+    
 $rounding_mode = gc_get_configuration_value($config->roundingMode());
 $rounding_rule = gc_get_configuration_value($config->roundingRule());
 $Gcart->AddRoundingPolicy($rounding_mode, $rounding_rule);

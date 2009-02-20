@@ -236,11 +236,27 @@ class googlecheckout {
     //echo $query;
     tep_db_query($query);
   }
+  
+  function getLink($text, $url, $new_window) {
+    $a = '<a';
+    $a .= ' style="color:blue;text-decoration:underline"';
+    $a .= ' href="' . $url . '"';
+    if ($new_window) {
+    	$a .= ' target="_blank"';
+    }
+    $a .= '>' . $text . '</a>';
+    return $a;  	
+  }
 
-  function getLink($text, $path) {
-  	$href = tep_href_link($path);
-    $a = '<a style="color:blue;text-decoration:underline" href="' . $href . '">'. $text . '</a>';
-    return $a;
+  function getOscLink($text, $path) {
+    return $this->getLink($text, tep_href_link($path), false);
+  }
+  
+  function getWarning($message) {
+  	$warning = '<span style="color:red">';
+    $warning .= $message;
+    $warning .= '</span>';
+    return $warning;
   }
 
   function install() {
@@ -254,11 +270,14 @@ class googlecheckout {
     // if we increment this variable each time.
     $sort_order = 0;
 
+    // NOTE(eddavisson): The configuration titles and descriptions are stored
+    // in 255-character fields, so we need to be careful not to exceed that limit.
+    // This is especially easy to do when you embed html in the title/description,
+    // as we do in many places below.
+
     // Dummy dashboard link.
-    // Very Important: The title (including the html that makes it into a link) is
-    // stored in a 255-character SQL field. Watch for truncation!
     $this->insertConfiguration(
-        "For more options, see the " . $this->getLink("Advanced Configuration Dashboard", "gc_dashboard.php"),
+        "For more options, see the " . $this->getOscLink("Advanced Configuration Dashboard", "gc_dashboard.php"),
         'MODULE_PAYMENT_GOOGLECHECKOUT_LINK',
         '',
         '',        
@@ -279,8 +298,8 @@ class googlecheckout {
         'Enable the Google Checkout Module', 
         'MODULE_PAYMENT_GOOGLECHECKOUT_STATUS', 
         'True', 
-        'Select "True" to accepts payment through Google Checkout on your site.', 
-        $sort_order++,      
+        'Select "True" to accept payments through Google Checkout on your site.', 
+        $sort_order++,
         'tep_cfg_select_option(array(\\\'True\\\', \\\'False\\\'),');
         
     // Mode.
@@ -288,7 +307,9 @@ class googlecheckout {
          'Mode of Operation', 
          'MODULE_PAYMENT_GOOGLECHECKOUT_MODE', 
          'https://sandbox.google.com/checkout/', 
-         'Select the Sandbox (for testing) or Production (live) Google Checkout environment. Note that different a ID/Key pair will be used depending on the environment that is selected.', 
+         'Select <b>sandbox.google.com</b> (for testing) or <b>checkout.google.com</b> (live).'
+             . ' Make sure you have entered the corresponding ID/Key pair below.'
+             . ' When you are done testing, switch this option to <b>checkout.google.com</b>.', 
          $sort_order++, 
          'tep_cfg_select_option(array(\\\'https://sandbox.google.com/checkout/\\\', \\\'https://checkout.google.com/\\\'),');
          
@@ -298,16 +319,25 @@ class googlecheckout {
         'Google Checkout Production Merchant ID', 
         'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID', 
         '', 
-        'Your Merchant ID can be found in the Google Checkout Merchant Console on the "Integration" page under the "Settings" tab.',
+        'Your Merchant ID can be found in the Google Checkout Merchant Console'
+            . ' under ' . $this->getLink('"Integration->Settings"', 
+                                         'https://checkout.google.com/sell/settings?section=Integration', 
+                                         true)
+            . '.',
         $sort_order++);
         
     // Production Merchant Key.
     // TODO(eddavisson): Add link to Google Checkout Merchant Console.    
     $this->insertConfiguration(
-        'Google Checkout Production Merchant Key', 
+        'Google Checkout Production Merchant Key'
+            . '<br/>' . $this->getWarning('Note: We strongly recommend that you do not share your Merchant Key with anyone.'), 
         'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY', 
         '', 
-        'Your Merchant Key can also be found in the Google Checkout Merchant Console on the "Integration" page under the "Settings" tab.',
+        'Your Merchant Key can also be found in the Google Checkout Merchant Console'
+            . ' under ' . $this->getLink('"Integration->Settings"', 
+                                         'https://checkout.google.com/sell/settings?section=Integration', 
+                                         true)
+            . '.',
         $sort_order++);
         
     // Sandbox Merchant ID.
@@ -316,16 +346,25 @@ class googlecheckout {
         'Google Checkout Sandbox Merchant ID', 
         'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTID_SNDBOX', 
         '', 
-        'Your Merchant ID can be found in the Google Checkout Merchant Console on the "Integration" page under the "Settings" tab.',
+        'Your Merchant ID can be found in the Google Checkout Merchant Console'
+            . ' under ' . $this->getLink('"Integration->Settings"', 
+                                         'https://sandbox.google.com/checkout/sell/settings?section=Integration', 
+                                         true)
+            . '.',
         $sort_order++);
 
     // Sandbox Merchant Key.
     // TODO(eddavisson): Add link to Google Checkout Merchant Console.
     $this->insertConfiguration(
-        'Google Checkout Sandbox Merchant Key', 
+        'Google Checkout Sandbox Merchant Key'
+            . '<br/>' . $this->getWarning('Note: We strongly recommend that you do not share your Merchant Key with anyone.'),
         'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY_SNDBOX', 
         '', 
-        'Your Merchant Key can also be found in the Google Checkout Merchant Console on the "Integration" page under the "Settings" tab.',
+        'Your Merchant ID can be found in the Google Checkout Merchant Console'
+            . ' under ' . $this->getLink('"Integration->Settings"', 
+                                         'https://sandbox.google.com/checkout/sell/settings?section=Integration', 
+                                         true)
+            . '.',
         $sort_order++);
 
     tep_db_query("create table if not exists ". $this->table_name ." (customers_id int(11), buyer_id bigint(20))");

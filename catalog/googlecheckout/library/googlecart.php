@@ -409,14 +409,14 @@
           array('xmlns' => $this->schema_url));
       $xml_data->Push('shopping-cart');
 
-      //Add cart expiration if set
+      // Add cart expiration if set
       if($this->cart_expiration != "") {
         $xml_data->Push('cart-expiration');
         $xml_data->Element('good-until-date', $this->cart_expiration);
         $xml_data->Pop('cart-expiration');
       }
 
-      //Add XML data for each of the items
+      // Add XML data for each of the items
       $xml_data->Push('items');
       foreach($this->item_arr as $item) {
         $xml_data->Push('item');
@@ -920,6 +920,12 @@
       if($this->analytics_data != ''){
         $xml_data->Element('analytics-data', $this->analytics_data);
       }
+      
+      // Platform ID. This allows the use of osCommerce to be tracked.
+      // NOTE(eddavisson): Don't change this number unless you know
+      // exactly what you're doing. It is not meant to have the same
+      // value as your own merchant ID.
+      $xml_data->Element('platform-id', '134878646971931');
 
       $xml_data->Pop('merchant-checkout-flow-support');
       $xml_data->Pop('checkout-flow-support');

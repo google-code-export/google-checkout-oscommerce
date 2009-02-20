@@ -2,7 +2,7 @@
 #
 # Copyright 2009 Google Inc. All Rights Reserved.
 
-"""Install script for the Google Checkout OS Commerce plugin.
+"""Install script for the Google Checkout osCommerce module.
 
 """
 
@@ -35,7 +35,7 @@ class WizardBuilder(object):
     self.diff3 = diff3
     self.row = 0
     self.window = Tkinter.Tk()
-    self.window.title('Checkout Plugin Deployer')
+    self.window.title('Google Checkout Module Deployer')
 
     self.welcome_screen = self.build_config_screen(self.window)
 
@@ -47,8 +47,8 @@ class WizardBuilder(object):
 
     label = Tkinter.Label(window,
                  text='Unable to deploy the Google Checkout Module for '
-                 'OS Commerce due to errors in the files below.\nPlease '
-                 'see %s for instructions on how to install the plugin '
+                 'osCommerce due to errors in the files below.\nPlease '
+                 'see %s for instructions on how to install the module '
                  'manually.' % MANUAL_DOCS)
     label.pack(side=Tkinter.TOP)
 
@@ -61,14 +61,14 @@ class WizardBuilder(object):
     screen.grid_columnconfigure(1, minsize=200, weight=100)
 
     self.add_row(screen, 0,
-                 'Welcome to the Google Checkout deployer for OS Commerce!')
+                 'Welcome to the Google Checkout module deployer for osCommerce!')
     self.add_row(screen, 1,
-                 'This works with OS Commerce version 2.2rc2 and will\n'
-                 'prepare your OS Commerce store for Google Checkout.')
+                 'This works with osCommerce version 2.2rc2a and will\n'
+                 'prepare your osCommerce store for Google Checkout.')
 
-    self.plugin_entry = self.add_directory_row(screen, 2, 'Plugin Directory',
+    self.module_entry = self.add_directory_row(screen, 2, 'Module Directory',
                                                os.getcwd())
-    self.install_entry = self.add_directory_row(screen, 3, 'OSCommerce Directory')
+    self.install_entry = self.add_directory_row(screen, 3, 'osCommerce Directory')
 
     self.add_button(screen, 4, 2, 'Deploy', self.confirm)
     self.add_button(screen, 4, 3, 'Cancel', sys.exit)
@@ -102,40 +102,40 @@ class WizardBuilder(object):
     return button
 
   def confirm(self):
-    if not self.plugin_entry.get().strip():
+    if not self.module_entry.get().strip():
       return tkMessageBox.showerror(title='Unable to find directory',
           message='Please enter where you downloaded the '
-                  'Google Checkout plugin.')
+                  'Google Checkout module.')
     elif not self.install_entry.get().strip():
       return tkMessageBox.showerror(title='Unable to find directory',
-          message='Please enter where you installed OS Commerce.')
+          message='Please enter where you installed osCommerce.')
 
-    backup_dir = tempfile.mkdtemp(prefix='checkout-osc-plugin')
+    backup_dir = tempfile.mkdtemp(prefix='checkout-osc-module')
     logging.info('Backup dir %s' % backup_dir)
 
-    plugin_dir = os.path.join(self.plugin_entry.get(), 'catalog%s' % os.sep)
+    module_dir = os.path.join(self.module_entry.get(), 'catalog%s' % os.sep)
     install_dir = self.install_entry.get()
-    golden_dir = os.path.join(self.plugin_entry.get(), 'tools', 'golden',
+    golden_dir = os.path.join(self.module_entry.get(), 'tools', 'golden',
                               'oscommerce-2.2rc2a', 'catalog%s' % os.sep)
 
-    if (not os.path.exists(plugin_dir)
-        or not os.path.exists(os.path.join(plugin_dir, 'googlecheckout'))):
+    if (not os.path.exists(module_dir)
+        or not os.path.exists(os.path.join(module_dir, 'googlecheckout'))):
       return tkMessageBox.showerror(title='Unable to find directory',
-          message='Unable to find the checkout plugin. Please check '
+          message='Unable to find the checkout module. Please check '
                   'the directory and try again.')
     elif (not os.path.exists(os.path.join(install_dir, 'index.php')) or
           not os.path.exists(os.path.join(install_dir, 'shopping_cart.php'))):
       return tkMessageBox.showerror(title='Unable to find directory',
-          message='Unable to verify the OS Commerce installation. '
+          message='Unable to verify the osCommerce installation. '
                   'Please check the directory and try again.')
     elif not os.path.exists(golden_dir):
       return tkMessageBox.showerror(title='Unable to find directory',
-          message='Unable to find the checkout plugin. Please check '
+          message='Unable to find the checkout module. Please check '
                   'the directory and try again.')
 
     backup(install_dir, backup_dir)
     try:
-      problems = install(self.diff3, plugin_dir, golden_dir, install_dir)
+      problems = install(self.diff3, module_dir, golden_dir, install_dir)
 
       if problems:
         rollback(install_dir, backup_dir)
@@ -149,25 +149,25 @@ class WizardBuilder(object):
 
     shutil.rmtree(backup_dir)
     tkMessageBox.showinfo(title='Installation Sucessful',
-                          message='The Google Checkout plugin for OS Commerce '
+                          message='The Google Checkout module for osCommerce '
                           'installed successfully. Please verify and activate '
-                          'it through the OS Commerce admin interface.')
+                          'it through the osCommerce admin interface.')
     sys.exit()
 
 
-def install_file(diff3, plugin, golden, destination):
-  '''Installs the plugin file to the destination directory.
+def install_file(diff3, module, golden, destination):
+  '''Installs the module file to the destination directory.
 
-  For each file, if it only exists in the plugin, or is identical to the
+  For each file, if it only exists in the module, or is identical to the
   install we pass, We only do the diff it it exists in all three places
-  Plugin           Install                Result
+  Module           Install                Result
     Changed          Same                   Merge
                      Changed                Merge
                      Deleted                Warn
     New              New                    Okay IFF contents match
                      Doesn't Exist          Copy
 
-  Expects the path to the plugin's changed file, the golden file and the
+  Expects the path to the module's changed file, the golden file and the
   destination file.
 
   Straight copy if it doesn't exist in the destination, merge if it does
@@ -179,34 +179,34 @@ def install_file(diff3, plugin, golden, destination):
           there was an error with
 
   '''
-  if os.path.isdir(plugin):
+  if os.path.isdir(module):
     return None
 
   if not os.path.exists(destination):
     make_dir(os.path.dirname(destination))
-    shutil.copy2(plugin, destination)
+    shutil.copy2(module, destination)
     os.chmod(destination, 0775)
 
     if os.path.exists(golden):
       return ('This file has been removed from your installation and is '
-              'required for the plugin.', destination)
+              'required for the module.', destination)
   elif not os.path.exists(golden):
     # Touchy here... we should only be okay with this case if we know the files
     # are the same...
-    if filecmp.cmp(plugin, destination):
+    if filecmp.cmp(module, destination):
       return None
     else:
       return ('File unexpectedly exists in the installation directory. '
-              'This may mean that the plugin has been installed once '
+              'This may mean that the module has been installed once '
               'before already.', destination)
 
 
-  if filecmp.cmp(plugin, destination):
+  if filecmp.cmp(module, destination):
     # It seems we already applied the changes
     return None
 
   # Apply the merge to the destination file
-  output = merge(diff3, plugin, golden, destination)
+  output = merge(diff3, module, golden, destination)
 
   # Open dest file and write the buffer to it
   dest = open(destination, mode='w')
@@ -222,10 +222,10 @@ def install_file(diff3, plugin, golden, destination):
   return None
 
 
-def merge(diff3, plugin, golden, destination):
+def merge(diff3, module, golden, destination):
   logging.info('Running %s on the three input files, %s, %s, and %s' %
-               (diff3, plugin, golden, destination))
-  merger = subprocess.Popen([diff3, '-m', plugin, golden, destination],
+               (diff3, module, golden, destination))
+  merger = subprocess.Popen([diff3, '-m', module, golden, destination],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   (out, error) = merger.communicate()
 
@@ -254,11 +254,11 @@ def list_files(root):
   return files
 
 
-def install(diff3, plugin, golden, install):
-  plugin_files = list_files(plugin)
+def install(diff3, module, golden, install):
+  module_files = list_files(module)
 
-  # Some files in the plugin need to be set to be writable... this feels hacky
-  # but is currently how the plugin is written. Should think of better ways to
+  # Some files in the module need to be set to be writable... this feels hacky
+  # but is currently how the module is written. Should think of better ways to
   # do this going forward.
   writable_files = [
     os.path.join(install, 'googlecheckout', 'feeds', 'products-static.xml'),
@@ -271,15 +271,15 @@ def install(diff3, plugin, golden, install):
   errors = []
 
   fail = False
-  for file in plugin_files:
+  for file in module_files:
     try:
-      plugin_file = '%s.%s%s' % (plugin, os.sep, file)
+      module_file = '%s.%s%s' % (module, os.sep, file)
       golden_file = '%s.%s%s' % (golden, os.sep, file)
       installation_file = '%s%s%s%s%s' % (install, os.sep, '.', os.sep, file)
 
-      logging.info('Installing %s to %s' % (plugin_file, installation_file))
+      logging.info('Installing %s to %s' % (module_file, installation_file))
 
-      error = install_file(diff3, plugin_file, golden_file, installation_file)
+      error = install_file(diff3, module_file, golden_file, installation_file)
 
       if error:
         errors.append(error)
@@ -288,7 +288,7 @@ def install(diff3, plugin, golden, install):
 
     except Exception, error:
       logging.error('Error while installing file: %s' % file, exc_info=error)
-      errors.append(('Error occured: %s' % error, installation_file))
+      errors.append(('Error occurred: %s' % error, installation_file))
 
   return errors
 
@@ -374,16 +374,16 @@ def main():
   else:
     if len(args) < 3:
       print ('Not enough arguments supplied, expects '
-             '<checkout plugin> <clean oscommerce> <existing oscommerce install>')
+             '<checkout module> <clean oscommerce> <existing oscommerce install>')
       return
     elif len(args) > 3:
       print ('Too many args provided, expects '
-             '<checkout plugin> <clean oscommerce> <existing oscommerce install>')
+             '<checkout module> <clean oscommerce> <existing oscommerce install>')
       return
 
     print('Beginning install process')
 
-    plugin_dir = args[0]
+    module_dir = args[0]
     golden_dir = args[1]
     install_dir = args[2]
     if options.backup:
@@ -393,7 +393,7 @@ def main():
         shutil.rmtree(backup_dir)
         make_dir(os.path.dirname(backup_dir.rstrip(os.sep)))
     else:
-      backup_dir = tempfile.mkdtemp(prefix='checkout-osc-plugin')
+      backup_dir = tempfile.mkdtemp(prefix='checkout-osc-module')
       logging.info('Backup dir: %s' % backup_dir)
 
     try:
@@ -402,7 +402,7 @@ def main():
       if not options.backup:
         # In this case the backup was only temporary
         shutil.rmtree(backup_dir)
-    install(options.diff3, plugin_dir, golden_dir, install_dir)
+    install(options.diff3, module_dir, golden_dir, install_dir)
 
 
 if __name__ == '__main__':

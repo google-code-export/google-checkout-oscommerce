@@ -425,40 +425,38 @@
         $xml_data->Element('unit-price', $item->unit_price,
             array('currency' => $this->currency));
         $xml_data->Element('quantity', $item->quantity);
-        if($item->merchant_private_item_data != '') {
-//          echo get_class($item->merchant_private_item_data);
+        if ($item->merchant_private_item_data != '') {
+        //echo get_class($item->merchant_private_item_data);
           if(is_a($item->merchant_private_item_data,
                                               'merchantprivate')) {
             $item->merchant_private_item_data->AddMerchantPrivateToXML($xml_data);
-          }
-          else {
+          } else {
             $xml_data->Element('merchant-private-item-data',
                                              $item->merchant_private_item_data);
           }
         }
-        if($item->merchant_item_id != '')
+        if ($item->merchant_item_id != '')
           $xml_data->Element('merchant-item-id', $item->merchant_item_id);
-        if($item->tax_table_selector != '')
+        if ($item->tax_table_selector != '')
           $xml_data->Element('tax-table-selector', $item->tax_table_selector);
-//      Carrier calculation
-        if($item->item_weight != '' && $item->numeric_weight !== '') {
+        // Carrier calculation
+        if ($item->item_weight != '' && $item->numeric_weight !== '') {
           $xml_data->EmptyElement('item-weight', array( 'unit' => $item->item_weight,
                                                 'value' => $item->numeric_weight
                                                ));
         }
-//      New Digital Delivery Tags
-        if($item->digital_content) {
+        // New Digital Delivery Tags
+        if ($item->digital_content) {
           $xml_data->push('digital-content');
-          if(!empty($item->digital_url)) {
+          if (!empty($item->digital_url)) {
             $xml_data->element('description', substr($item->digital_description,
                                                           0, MAX_DIGITAL_DESC));
             $xml_data->element('url', $item->digital_url);
-//            To avoid NULL key message in GC confirmation Page
-            if(!empty($item->digital_key)) {
+            // To avoid NULL key message in GC confirmation Page
+            if (!empty($item->digital_key)) {
               $xml_data->element('key', $item->digital_key);
             }
-          }
-          else {
+          } else {
             $xml_data->element('email-delivery',
                       $this->_GetBooleanValue($item->email_delivery, "true"));
           }
@@ -468,15 +466,16 @@
       }
       $xml_data->Pop('items');
 
-      if($this->merchant_private_data != '') {
-        if(is_a($this->merchant_private_data, 'merchantprivate')) {
+      // TODO(eddavisson): Where would this have come from?
+      if ($this->merchant_private_data != '') {
+        if (is_a($this->merchant_private_data, 'merchantprivate')) {
           $this->merchant_private_data->AddMerchantPrivateToXML($xml_data);
         }
         else {
-          $xml_data->Element('merchant-private-data',
-                                                  $this->merchant_private_data);
+          $xml_data->Element('merchant-private-data', $this->merchant_private_data);
         }
       }
+      
       $xml_data->Pop('shopping-cart');
 
       $xml_data->Push('checkout-flow-support');
@@ -490,14 +489,14 @@
       if(count($this->shipping_arr) > 0)
         $xml_data->Push('shipping-methods');
 
-      //Add the shipping methods
+      // Add the shipping methods
       foreach($this->shipping_arr as $ship) {
-        //Pickup shipping handled in else part
-        if($ship->type == "flat-rate-shipping" ||
-           $ship->type == "merchant-calculated-shipping"
-//  If shipping-company calc support addr-filtering and shipping restrictions as a subatag of shipping-company-calculated-shipping
-//           ||$ship->type == "shipping-company-calculated-shipping"
-           ) {
+        // Pickup shipping handled in else part
+        if ($ship->type == "flat-rate-shipping" 
+            || $ship->type == "merchant-calculated-shipping"
+         // If shipping-company calc support addr-filtering and shipping restrictions as a subatag of shipping-company-calculated-shipping
+          //||$ship->type == "shipping-company-calculated-shipping"
+            ) {
           $xml_data->Push($ship->type, array('name' => $ship->name));
           $xml_data->Element('price', $ship->price,
               array('currency' => $this->currency));
@@ -1171,8 +1170,12 @@
       $data .= "</div>";
       return $data;
     }
-        //Code for generating Checkout button
-    //@param $variant will be ignored if SetButtonVariant() was used before
+    
+    /**
+     * Code for generating Checkout button.
+     * 
+     * @param $variant will be ignored if SetButtonVariant() was used before.
+     */
     function CheckoutButtonNowCode($size="large", $variant=true, $loc="en_US",
                                                $showtext=true, $style="trans") {
 
@@ -1368,15 +1371,15 @@
      * @access private
      */
     function xml2html($data, $path = '', &$rta){
-//      global $multiple_tags,$ignore_tags;
-    //    $arr = gc_get_arr_result($data);
+    //global $multiple_tags,$ignore_tags;
+    //$arr = gc_get_arr_result($data);
       foreach($data as $tag_name => $tag) {
         if(isset($this->ignore_tags[$tag_name])){
           continue;
         }
-        if(is_array($tag)){
-    //     echo print_r($tag, true) . $tag_name . "<- tag name\n";
-          if(!$this->is_associative_array($data)) {
+        if (is_array($tag)){
+        //echo print_r($tag, true) . $tag_name . "<- tag name\n";
+          if (!$this->is_associative_array($data)) {
             $new_path = $path . '-' . ($tag_name +1);
           } else {
             if(isset($this->multiple_tags[$tag_name])
@@ -1488,7 +1491,7 @@
       return $hmac;
     }
 
-    //Method used internally to set true/false cart variables
+    // Method used internally to set true/false cart variables
     /**
      * @access private
      */
@@ -1505,8 +1508,8 @@
          break;
       }
     }
-    //Method used internally to set true/false cart variables
-    // Deprecated, must NOT use eval, bug-prune function
+    // Method used internally to set true/false cart variables
+    // Deprecated, must NOT use eval, bug-prone function.
     /**
      * @access private
      */

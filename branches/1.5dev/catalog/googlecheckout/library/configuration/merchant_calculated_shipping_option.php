@@ -85,8 +85,7 @@ class GoogleMerchantCalculatedShippingOption /* implements GoogleOptionInterface
         count(array_keys($installed_modules)) 
         > count(array_intersect($google_checkout->shipping_support, array_keys($installed_modules)));
     if (!$show_configuration) {
-      // TODO(eddavisson): Some appropriate message.
-      return '<i>Nothing to configure.</i>';
+      return '<i>No compatible shipping modules detected.</i>';
     }
     
     $db_value = $this->getValue();

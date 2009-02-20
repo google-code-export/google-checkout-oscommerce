@@ -76,7 +76,7 @@ table.ccs tr.head td, table.mcs tr.head td {
   text-align: center;
 }
 
-table.css tr.subhead td, table.mcs tr.subhead td {
+table.ccs tr.subhead td, table.mcs tr.subhead td {
   font-style: italic;
   text-align: center;
 }

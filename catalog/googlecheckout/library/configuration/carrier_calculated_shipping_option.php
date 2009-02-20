@@ -80,18 +80,31 @@ class GoogleCarrierCalculatedShippingOption /* implements GoogleOptionInterface 
     
     // Set up table and header row.
     $html = '<table class="ccs">';
-    $html .= '<tr class="head">';
-    $html .= '<td>Default</td>';
-    $html .= '<td>Fixed</td>';
-    $html .= '<td>Variable</td>';
-    $html .= '<td>Method</td>';   
-    $html .- '</tr>';
+    
+    $header_row .= '<tr class="head">';
+    $header_row .= '<td>Default</td>';
+    $header_row .= '<td>Fixed</td>';
+    $header_row .= '<td>Variable</td>';
+    $header_row .= '<td>Method</td>';   
+    $header_row .= '</tr>';
     
     // Iterate through shipping methods.
     $google_checkout = new googlecheckout();
     foreach ($google_checkout->cc_shipping_methods_names as $code => $name) {
+      $html .= '<tr class="head"><td colspan="4">';
+      $html .= $name;
+      $html .= '</td></tr>';
       foreach ($google_checkout->cc_shipping_methods[$code] as $type => $methods) {
         if (is_array($methods) && !empty($methods)) {
+          if ($type == 'international_types') {
+            $type_name = 'International';
+          } else {
+            $type_name = 'Domestic';
+          }
+          $html .= '<tr class="subhead"><td colspan="4">';
+          $html .= $type_name;
+          $html .= '</td></tr>';
+          $html .= $header_row;
           foreach ($methods as $method => $method_name) {
             $key = $code . $method . $type;
             $value = $this->compare($key, $key_values, "_CSS:", '1.00|0|0');

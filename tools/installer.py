@@ -9,6 +9,7 @@
 __author__ = 'alek.dembowski@gmail.com (Alek Dembowski)'
 
 import filecmp
+import glob
 import logging
 import optparse
 import os
@@ -21,6 +22,7 @@ import tempfile
 import Tkinter
 import tkFileDialog
 import tkMessageBox
+import zipfile
 
 MERGE_MARKER = '<<<<<<<'
 
@@ -303,8 +305,28 @@ def make_dir(path):
     os.chmod(path, 0755)
 
 
-def backup(install_dir, backup_dir):
+def add_dir_to_zip(zip_file, directory):
+  for file in glob.glob(directory + '/*'):
+    if os.path.isfile(file):
+      zip_file.write(file, file, zipfile.ZIP_DEFLATED)
+    elif os.path.isdir(file):
+      add_dir_to_zip(zip_file, file)
+
+
+def backup(install_dir, backup_dir, do_zip):
   shutil.copytree(install_dir, os.path.join(backup_dir, 'backup'))
+  
+  if do_zip:
+    # Zip installation in tmp directory.
+    zip_file_path = os.path.join(backup_dir, 'backup.zip')
+    zip_file = zipfile.ZipFile(zip_file_path, 'w')
+    add_dir_to_zip(zip_file, install_dir)
+    zip_file.close()
+  
+    # Copy zip to installation directory.
+    backups_dir = os.path.join(install_dir, 'googlecheckout', 'backups')
+    make_dir(backups_dir)
+    shutil.copy(zip_file_path, backups_dir)
 
 
 def rollback(install_dir, backup_dir):
@@ -322,10 +344,12 @@ def main():
                     'exists on the system path otherwise.')
   p.add_option('-b', '--backup', action='store',
                help='Specify a directory to store the backup in')
+  p.add_option('-z', '--zip_backup', action='store_true',
+               help='Create a zip of the backup and copy it into the installation')
   p.add_option('-u', '--ui', action='store_true',
                help='Runs the script using the UI wizard')
   p.add_option('-r', '--restore', action='store',
-               help='Specifies the directory the backup is ')
+               help='Specifies the directory the backup is in')
 
   options, args =  p.parse_args()
   if not options.quiet:
@@ -373,7 +397,7 @@ def main():
       logging.info('Backup dir: %s' % backup_dir)
 
     try:
-      backup(install_dir, backup_dir)
+      backup(install_dir, backup_dir, options.zip_backup)
     finally:
       if not options.backup:
         # In this case the backup was only temporary

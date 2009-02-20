@@ -12,9 +12,9 @@ INSTALLER="python tools/installer.py"
 function main {
   if [[ "$#" -eq 1 ]]; then
     target_catalog="${1}/"
-    ${INSTALLER} ${GC_CATALOG} ${GOLDEN_CATALOG} ${target_catalog}
+    ${INSTALLER} --zip_backup ${GC_CATALOG} ${GOLDEN_CATALOG} ${target_catalog}
   else
-    ${INSTALLER} --ui
+    ${INSTALLER} --ui --zip_backup
   fi
 }
 

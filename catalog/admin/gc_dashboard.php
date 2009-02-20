@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=<?php echo CHARSET; ?>">
 <title><?php echo TITLE; ?></title>
-<link rel="stylesheet" type="text/css" href="../googlecheckout/library/configuration/dashboard2.css"/>
+<link rel="stylesheet" type="text/css" href="../googlecheckout/library/configuration/dashboard.css"/>
 <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
 <script type="text/javascript" src="../googlecheckout/library/configuration/shipping_options.js"/>
 <script language="javascript" src="includes/general.js"></script>

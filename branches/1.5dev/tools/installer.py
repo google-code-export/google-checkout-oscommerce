@@ -262,8 +262,8 @@ def install(diff3, module, golden, install):
   # do this going forward.
   writable_files = [
     os.path.join(install, 'googlecheckout', 'feeds', 'products-static.xml'),
-    os.path.join(install, 'googlecheckout', 'feeds', 'sitemap-static.xml'),  
-    os.path.join(install, 'googlecheckout', 'logs', 'last_updated.log'),                      
+    os.path.join(install, 'googlecheckout', 'feeds', 'sitemap-static.xml'),
+    os.path.join(install, 'googlecheckout', 'logs', 'last_updated.log'),
     os.path.join(install, 'googlecheckout', 'logs', 'response_error.log'),
     os.path.join(install, 'googlecheckout', 'logs', 'response_message.log'),
   ]
@@ -284,11 +284,17 @@ def install(diff3, module, golden, install):
       if error:
         errors.append(error)
       elif os.path.exists(installation_file) and installation_file in writable_files:
+        print "Making this file writable!"
         os.chmod(installation_file, 0777)
 
     except Exception, error:
       logging.error('Error while installing file: %s' % file, exc_info=error)
       errors.append(('Error occurred: %s' % error, installation_file))
+
+  if not errors:
+    for file in writable_files:
+      if os.path.exists(file):
+        os.chmod(file, 0777)
 
   return errors
 

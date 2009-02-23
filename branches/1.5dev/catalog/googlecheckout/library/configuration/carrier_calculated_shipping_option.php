@@ -27,12 +27,16 @@ require_once(DIR_FS_CATALOG . '/includes/modules/payment/googlecheckout.php');
  * Option for carrier calculated shipping configuration.
  * 
  * TODO(eddavisson): This is kind of a mess.
+ * TODO(eddavisson): Added 'Config' to the (already long) class name to
+ *     avoid conflicting with a class defined in 'googleshipping.php'.
  * 
  * @author Ed Davisson (ed.davisson@gmail.com)
  */
-class GoogleCarrierCalculatedShippingOption /* implements GoogleOptionInterface */ {
+class GoogleCarrierCalculatedShippingConfigOption /* implements GoogleOptionInterface */ {
   
   var $type = "carrier_calculated_shipping";
+  
+  var $default_shipping_cost = 10;
   
   var $title;
   var $description;  
@@ -40,13 +44,30 @@ class GoogleCarrierCalculatedShippingOption /* implements GoogleOptionInterface 
   
   var $google_configuration;
   
-  function GoogleCarrierCalculatedShippingOption($title, $description, $database_key) {
+  function GoogleCarrierCalculatedShippingConfigOption($title, $description, $database_key) {
     $this->title = $title;
     $this->description = $description;
     $this->database_key = $database_key;
     
     $this->google_configuration = new GoogleConfiguration();
-  //$this->google_configuration->setDefault($this->database_key, $default);
+    
+    // TODO(eddavisson): Yuk!
+    $default_keys = array();
+    $google_checkout = new googlecheckout();
+    foreach ($google_checkout->cc_shipping_methods_names as $code => $name) {
+      foreach ($google_checkout->cc_shipping_methods[$code] as $type => $methods) {
+        if (is_array($methods) && !empty($methods)) {
+          foreach ($methods as $method => $method_name) {
+            $key = $code . $method . $type . '_CCS:' . $this->default_shipping_cost . '|0|0';
+            
+            $default_keys[] = $key;
+            
+          }
+        }
+      }
+    }  
+    $default = join(', ', $default_keys);
+    $this->google_configuration->setDefault($this->database_key, $default);
   }
 
   function getOptionType() {
@@ -107,7 +128,7 @@ class GoogleCarrierCalculatedShippingOption /* implements GoogleOptionInterface 
           $html .= $header_row;
           foreach ($methods as $method => $method_name) {
             $key = $code . $method . $type;
-            $value = $this->compare($key, $key_values, "_CSS:", '1.00|0|0');
+            $value = $this->compare($key, $key_values, "_CSS:", $this->default_shipping_cost . '|0|0');
             $values = explode('|', $value);
             
             $html .= '<tr>';

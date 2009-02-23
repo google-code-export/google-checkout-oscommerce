@@ -52,6 +52,7 @@ class googlecheckout {
     require(DIR_FS_CATALOG . '/googlecheckout/library/shipping/carrier_calculated_methods.php');
     require_once(DIR_FS_CATALOG . '/googlecheckout/library/configuration/google_configuration.php');
     require_once(DIR_FS_CATALOG . '/googlecheckout/library/configuration/google_configuration_keys.php');
+    require_once(DIR_FS_CATALOG . '/googlecheckout/library/configuration/google_options.php');
     
     $config = new GoogleConfigurationKeys();
     
@@ -399,6 +400,12 @@ class googlecheckout {
     // Custom Google configuration.
     $google_configuration = new GoogleConfiguration();
     $google_configuration->install();
+    
+    // Set defaults.
+    // TODO(eddavisson): It's awkward to have to construct one of these
+    // in addition to the GoogleConfiguration above.
+    $google_options = new GoogleOptions();
+    
   }
 
   function remove() {

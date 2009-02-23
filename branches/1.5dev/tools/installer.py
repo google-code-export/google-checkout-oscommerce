@@ -319,7 +319,7 @@ def add_dir_to_zip(zip_file, directory):
       add_dir_to_zip(zip_file, file)
 
 
-def backup(install_dir, backup_dir, do_zip):
+def backup(install_dir, backup_dir, do_zip=True):
   shutil.copytree(install_dir, os.path.join(backup_dir, 'backup'))
   
   if do_zip:

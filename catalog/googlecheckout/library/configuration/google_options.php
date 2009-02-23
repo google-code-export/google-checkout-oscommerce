@@ -104,7 +104,7 @@ class GoogleOptions {
         $this->config->enableCarrierCalculatedShipping(),
         "True");
         
-    $this->shipping_options[] = new GoogleCarrierCalculatedShippingOption(
+    $this->shipping_options[] = new GoogleCarrierCalculatedShippingConfigOption(
         "Carrier Calculated Shipping Configuration",
         "This section can be used to configure carrier calculated shipping. The Default value will "
             . " be used if Google Checkout is unable to contact the carrier for a quote. Setting "

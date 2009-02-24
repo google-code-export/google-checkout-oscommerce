@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script wraps the python install script for Unix and is analogous to 
+# This script wraps the python install script for Unix and is analogous to
 # install.bat for Windows.
 #
 # Author: Ed Davisson (ed.davisson@gmail.com)

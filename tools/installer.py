@@ -48,7 +48,7 @@ class WizardBuilder(object):
     label = Tkinter.Label(window,
                  text='Unable to deploy the Google Checkout Module for '
                  'osCommerce due to errors in the files below.\nPlease '
-                 'see %s for instructions on how to install the module '
+                 'see %s for instructions on how to deploy the module '
                  'manually.' % MANUAL_DOCS)
     label.pack(side=Tkinter.TOP)
 
@@ -148,10 +148,11 @@ class WizardBuilder(object):
       return
 
     shutil.rmtree(backup_dir)
-    tkMessageBox.showinfo(title='Installation Sucessful',
+    tkMessageBox.showinfo(title='Deploy Sucessful',
                           message='The Google Checkout module for osCommerce '
-                          'installed successfully. Please verify and activate '
-                          'it through the osCommerce admin interface.')
+                            'has deployed successfully.\n'
+                            'Please configure the plugin from the osCommerce'
+                            ' admin interface to complete the installation.')
     sys.exit()
 
 
@@ -273,9 +274,12 @@ def install(diff3, module, golden, install):
   fail = False
   for file in module_files:
     try:
-      module_file = '%s.%s%s' % (module, os.sep, file)
-      golden_file = '%s.%s%s' % (golden, os.sep, file)
-      installation_file = '%s%s%s%s%s' % (install, os.sep, '.', os.sep, file)
+      if file.startswith(os.sep):
+        file = file.lstrip(os.sep)
+
+      module_file = os.path.join(module, file)
+      golden_file = os.path.join(golden, file)
+      installation_file = os.path.join(install, file)
 
       logging.info('Installing %s to %s' % (module_file, installation_file))
 
@@ -283,9 +287,6 @@ def install(diff3, module, golden, install):
 
       if error:
         errors.append(error)
-      elif os.path.exists(installation_file) and installation_file in writable_files:
-        print "Making this file writable!"
-        os.chmod(installation_file, 0777)
 
     except Exception, error:
       logging.error('Error while installing file: %s' % file, exc_info=error)

@@ -204,7 +204,7 @@ class GoogleOptions {
         "Continue Shopping URL",
         "The page to which customers will be redirected if they choose to continue shopping after they check out.",
         $this->config->continueShoppingUrl(),
-        "checkout_success.php");
+        "gc_return.php");
   }
 }
 

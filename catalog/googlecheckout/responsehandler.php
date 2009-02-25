@@ -298,7 +298,7 @@ function process_merchant_calculation_callback_single($google_response) {
 
   $prod_attr = gc_get_prattr($order->products);
 
-  foreach($prod_attr as $product_id => $item_data){
+  foreach ($prod_attr as $product_id => $item_data) {
 //$products_id, $qty = '1', $attributes = '
     $cart->add_cart($product_id, $item_data['qty'] , $item_data['attr']);
   }
@@ -457,10 +457,10 @@ function process_merchant_calculation_callback_single($google_response) {
        //calculate_coupons($google_response, $merchant_result);
         $merchant_calc->AddResult($merchant_result);
     }
-   }
-   $cart = $ex_cart;
+  }
+  $cart = $ex_cart;
 
-   $google_response->ProcessMerchantCalculations($merchant_calc);
+  $google_response->ProcessMerchantCalculations($merchant_calc);
 }
 
 /**
@@ -1150,11 +1150,10 @@ function process_order_state_change_notification($google_response, $google_check
             $orders_status_id = GC_STATE_SHIPPED_REFUNDED;
             break;
           }
-          case GC_STATE_PROCESSING: {
-          default;
+          case GC_STATE_PROCESSING:
+          default:
             $orders_status_id = GC_STATE_SHIPPED;
             break;
-          }
         }
 
         $do_fulfillment_state_update = true;
@@ -1299,7 +1298,7 @@ function process_refund_amount_notification($google_response, $google_checkout) 
           "" . TABLE_ORDERS_TOTAL . " where orders_id = " .
           "'" . $google_order['orders_id'] . "' AND class = 'ot_total'"));
 
-  $net_rev = tep_db_fetch_array(tep_db_query(\
+  $net_rev = tep_db_fetch_array(tep_db_query(
       "SELECT orders_total_id, text, value from " .
           "" . TABLE_ORDERS_TOTAL . " where orders_id = " .
           "'" . $google_order['orders_id'] . "' AND class = 'ot_goog_net_rev'"));
@@ -1444,8 +1443,7 @@ function gc_get_prattr($order_items) {
 }
 
 function sandbox_or_prod() {
-  return (MODULE_PAYMENT_GOOGLECHECKOUT_MODE == 'https://sandbox.google.com/checkout/') ?
-      "sandbox" : "production";
+  return (MODULE_PAYMENT_GOOGLECHECKOUT_MODE == 'https://sandbox.google.com/checkout/') ? "sandbox" : "production";
 }
 
 function get_shipping_info($google_checkout, $gc_data_root) {

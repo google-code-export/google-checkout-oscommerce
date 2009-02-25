@@ -219,3 +219,5 @@ class GoogleMerchantCalculatedShippingOption /* implements GoogleOptionInterface
   }
 
 }
+
+?>

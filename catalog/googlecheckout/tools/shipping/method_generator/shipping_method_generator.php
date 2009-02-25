@@ -213,7 +213,7 @@ if(isset($_POST['country'])) {
     $methods = array();
     if (is_array(@$shipper['methods']) && !isset($shipper['error'])) {
       foreach ($shipper['methods'] as $method) {
-        print_r($method['title']);
+      //print_r($method['title']);
         if (isset($methods_duplicate[$method['title']])) {
           $method['title'] .= "_" . $methods_duplicate[$method['title']]++;
         }

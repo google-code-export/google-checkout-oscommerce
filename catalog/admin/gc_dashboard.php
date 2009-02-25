@@ -61,6 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   header('Location: ' . $_SERVER['PHP_SELF']);
 }
 
+// TODO(eddavisson): Hacky!
+function get_response_handler_url() {
+  $dummy = 'a';
+	$admin_folder = tep_href_link($dummy);
+  $catalog_folder = substr($admin_folder, 0, strlen($admin_folder) - strlen('admin/' . $dummy));
+  return $catalog_folder . 'googlecheckout/responsehandler.php';
+}
+
 ?>
 <!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html <?php echo HTML_PARAMS; ?>>
@@ -113,6 +121,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                       <form action="<?php echo $_SERVER['PHP_SELF'] ?>" method="POST">
                         <input type="hidden" name="isupdate" value="true"/>
                         <table class="config">
+                          <tr class="section"><td colspan="2">Integration</td></tr>
+                          <tr>
+                            <td colspan="2">
+                              <span class="title">API callback URL</span><br/>
+                              <span class="description">
+                                For Level 2 integration, copy and paste this URL into the "API callback URL" field in the Google Checkout Merchant Center 
+                                under "Integration->Settings" (links to this page in  
+                                <a class="google" href="https://sandbox.google.com/checkout/sell/settings?section=Integration" target="_blank">Sandbox</a> and 
+                                <a class="google" href="https://checkout.google.com/sell/settings?section=Integration" target="_blank">Production</a>):</span><br/><br/>
+                              <span class="copypaste"><?php echo(get_response_handler_url()); ?></span>
+                            </td>
+                          </tr>
                           <tr class="section"><td colspan="2">Recommended Options</td></tr>
                           <?php
                             foreach ($options->getRecommendedOptions() as $option) {

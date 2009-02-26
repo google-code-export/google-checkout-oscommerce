@@ -59,9 +59,7 @@ class GoogleCarrierCalculatedShippingConfigOption /* implements GoogleOptionInte
         if (is_array($methods) && !empty($methods)) {
           foreach ($methods as $method => $method_name) {
             $key = $code . $method . $type . '_CCS:' . $this->default_shipping_cost . '|0|0';
-            
             $default_keys[] = $key;
-            
           }
         }
       }
@@ -128,7 +126,7 @@ class GoogleCarrierCalculatedShippingConfigOption /* implements GoogleOptionInte
           $html .= $header_row;
           foreach ($methods as $method => $method_name) {
             $key = $code . $method . $type;
-            $value = $this->compare($key, $key_values, "_CSS:", $this->default_shipping_cost . '|0|0');
+            $value = $this->compare($key, $key_values, "_CCS:", $this->default_shipping_cost . '|0|0');
             $values = explode('|', $value);
             
             $html .= '<tr>';
@@ -155,9 +153,9 @@ class GoogleCarrierCalculatedShippingConfigOption /* implements GoogleOptionInte
             $input = '<input';
             $input .= ' type="hidden"';
             $input .= ' size="60"';
-            $input .= ' id="hidden_' . $key . '"';
+            $input .= ' id="hid_' . $key . '"';
             $input .= ' name="' . $this->getKey() . $key . '"';
-            $input .= ' value="' . $key .  '_CSS:' . $value . '"';
+            $input .= ' value="' . $key .  '_CCS:' . $value . '"';
             $input .= '/>';
             $html .= $input;
             
@@ -175,7 +173,7 @@ class GoogleCarrierCalculatedShippingConfigOption /* implements GoogleOptionInte
    */
   function getInput($key, $position, $value) {
     $input = '<input';
-    $input .= ' ' . $this->getHandlers($key, 2);
+    $input .= ' ' . $this->getHandlers($key, $position);
     $input .= ' size="6"';
     $input .= ' type="text"';
     $input .= ' name="null"';

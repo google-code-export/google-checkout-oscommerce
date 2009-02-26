@@ -419,7 +419,7 @@ class googlecheckout {
   
     // Custom Google removal.
     $google_configuration = new GoogleConfiguration();
-  //$google_configuration->remove();
+    $google_configuration->remove();
   }
 
   function keys() {

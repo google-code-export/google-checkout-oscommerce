@@ -37,7 +37,7 @@ function ccs_blur(value, code, hidden_id, position) {
 		value.value = '0';
 	}
 	
-	hidden.value = code + '_CSS:' + split[0] + '|' + split[1] + '|' + split[2];
+	hidden.value = code + '_CCS:' + split[0] + '|' + split[1] + '|' + split[2];
 }
 
 /**
@@ -45,11 +45,10 @@ function ccs_blur(value, code, hidden_id, position) {
  */
 function ccs_focus(value, code, hidden_id, position) {
 	var hidden = document.getElementById(hidden_id);
-	console.log(hidden);
-	var split = hidden.value.substring((code + '_CSS:').length).split('|');
-//value.value = value.value.substring((code + '_CSS:').length, hidden.value.length);
+	var split = hidden.value.substring((code + '_CCS:').length).split('|');
+//value.value = value.value.substring((code + '_CCS:').length, hidden.value.length);
 	split[position] = value.value;
-	hidden.value = code + '_CSS:' + split[0] + '|' + split[1] + '|' + split[2];
+	hidden.value = code + '_CCS:' + split[0] + '|' + split[1] + '|' + split[2];
 }
 
 /**

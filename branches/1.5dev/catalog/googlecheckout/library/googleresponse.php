@@ -23,9 +23,6 @@
  * 
  * This class is instantiated everytime any notification or
  * order processing commands are received.
- *
- * Refer demo/responsehandlerdemo.php for different use case scenarios
- * for this code
  */
 
   /**
@@ -82,8 +79,8 @@
         $compare_mer_id = $_SERVER['PHP_AUTH_USER'];
         $compare_mer_key = $_SERVER['PHP_AUTH_PW'];
       }
-  //  IIS Note::  For HTTP Authentication to work with IIS,
-  // the PHP directive cgi.rfc2616_headers must be set to 0 (the default value).
+      // IIS Note::  For HTTP Authentication to work with IIS,
+      // the PHP directive cgi.rfc2616_headers must be set to 0 (the default value).
       else if(isset($_SERVER['HTTP_AUTHORIZATION'])){
         list($compare_mer_id, $compare_mer_key) = explode(':',
             base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'],
@@ -111,7 +108,7 @@
       echo $result;
     }
 
-// Notification API
+    // Notification API
     function ProcessNewOrderNotification() {
       $this->SendAck();
     }
@@ -121,7 +118,7 @@
     function ProcessOrderStateChangeNotification() {
       $this->SendAck();
     }
-//   Amount Notifications
+    // Amount Notifications
     function ProcessChargeAmountNotification() {
       $this->SendAck();
     }

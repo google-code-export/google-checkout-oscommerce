@@ -37,7 +37,7 @@
  */
 
 // TODO(eddavisson): Why isn't this being used?
-// Error handler function// Used to handle errors and log them in the GC log files
+// Error handler function. Used to handle errors and log them in the log files.
 //function ErrorHandler($errno, $errstr, $errfile, $errline) {
 //  global $google_response;
 //  switch ($errno) {
@@ -77,6 +77,9 @@
 //  // Don't execute PHP internal error handler.
 //  return true;
 //}
+//
+//set_error_handler("ErrorHandler");
+
 error_reporting(E_ALL);
 
 // Temporarily disable multisocket.
@@ -111,11 +114,8 @@ $google_response = new GoogleResponse();
 // Set up the log files.
 $google_response->SetLogFiles(API_CALLBACK_ERROR_LOG, API_CALLBACK_MESSAGE_LOG, L_ALL);
 
-//set_error_handler("ErrorHandler");
-
 // Retrieve the XML sent in the HTTP POST request to the ResponseHandler
-$xml_response =
-    isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : file_get_contents("php://input");
+$xml_response = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : file_get_contents("php://input");
 if (get_magic_quotes_gpc()) {
   $xml_response = stripslashes($xml_response);
 }
@@ -273,8 +273,7 @@ function process_merchant_calculation_callback_single($google_response) {
         $order_total_value = $ot['value'] * (strrpos($ot['text'], '-') === false ? 1 : -1);
         $custom_order_totals_total += $currencies->get_value($gc_data[$root]['order-total']['currency']) * $order_total_value;
     } else {
-      // For Invoices!
-      // Happy BDay ropu, 07/03
+      // For invoices.
       $order->products[] = array (
         'qty' => $item['quantity']['VALUE'],
         'name' => $item['item-name']['VALUE'],
@@ -363,12 +362,11 @@ function process_merchant_calculation_callback_single($google_response) {
         // Compute the price for this shipping method and address id
         list($a, $method_name) = explode(': ',$name);
         if ((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY) && ($shipping_methods[$method_name][1] == 'domestic_types'))
-            ||
-          (($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY) && ($shipping_methods[$method_name][1] == 'international_types'))){
-              // Reset the shipping class to set the new address
-              if (class_exists($shipping_methods[$method_name][2])) {
-                $GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
-              }
+           || (($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY) && ($shipping_methods[$method_name][1] == 'international_types'))) {
+          // Reset the shipping class to set the new address
+          if (class_exists($shipping_methods[$method_name][2])) {
+            $GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
+          }
         }
         $quotes =  $shipping_modules->quote('', $shipping_methods[$method_name][2]);
       }
@@ -378,15 +376,15 @@ function process_merchant_calculation_callback_single($google_response) {
            $name = $curr_ship['name'];
           // Compute the price for this shipping method and address id
           list($a, $method_name) = explode(': ',$name);
-          if((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY)
+          if ((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY)
               && ($shipping_methods[$method_name][1] == 'domestic_types'))
-              ||
-            (($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY)
+                ||
+              (($order->delivery['country']['id'] != SHIPPING_ORIGIN_COUNTRY)
               && ($shipping_methods[$method_name][1] == 'international_types'))){
-                // Reset the shipping class to set the new address.
-                if (class_exists($shipping_methods[$method_name][2])) {
-                  $GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
-                }
+            // Reset the shipping class to set the new address.
+            if (class_exists($shipping_methods[$method_name][2])) {
+              $GLOBALS[$shipping_methods[$method_name][2]] = new $shipping_methods[$method_name][2];
+            }
           }
         }
         $quotes =  $shipping_modules->quote();
@@ -396,7 +394,7 @@ function process_merchant_calculation_callback_single($google_response) {
          $name = $curr_ship['name'];
         // Compute the price for this shipping method and address id
         list($a, $method_name) = explode(': ',$name);
-        unset($quote_povider);
+        unset($quote_provider);
         unset($quote_method);
         if ((($order->delivery['country']['id'] == SHIPPING_ORIGIN_COUNTRY)
             && ($shipping_methods[$method_name][1] == 'domestic_types'))
@@ -407,7 +405,7 @@ function process_merchant_calculation_callback_single($google_response) {
             // privider name (class)
             if ($shipping_provider['id'] == $shipping_methods[$method_name][2]) {
               // method name
-              $quote_povider = $key_provider;
+              $quote_provider = $key_provider;
               if (is_array($shipping_provider['methods']))
               foreach ($shipping_provider['methods'] as $key_method => $shipping_method) {
                 if ($shipping_method['id'] == $shipping_methods[$method_name][0]){
@@ -420,12 +418,12 @@ function process_merchant_calculation_callback_single($google_response) {
           }
         }
         //if there is a problem with the method, i mark it as non-shippable
-        if (isset($quotes[$quote_povider]['error']) ||
-            !isset($quotes[$quote_povider]['methods'][$quote_method]['cost'])) {
+        if (isset($quotes[$quote_provider]['error']) 
+            || !isset($quotes[$quote_provider]['methods'][$quote_method]['cost'])) {
           $price = "9999.09";
           $shippable = "false";
         } else {
-          $price = $quotes[$quote_povider]['methods'][$quote_method]['cost'];
+          $price = $quotes[$quote_provider]['methods'][$quote_method]['cost'];
           $shippable = "true";
         }
         $merchant_result = new GoogleResult($curr_id);
@@ -448,14 +446,14 @@ function process_merchant_calculation_callback_single($google_response) {
         $merchant_calc->AddResult($merchant_result);
       }
     } else {
-        $merchant_result = new GoogleResult($curr_id);
-        if ($gc_data[$root]['calculate']['tax']['VALUE'] == "true") {
-          // Compute tax for this address id and shipping type
-          $amount = 15; // Modify this to the actual tax value
-          $merchant_result->SetTaxDetails($currencies->get_value(DEFAULT_CURRENCY) * $amount);
-        }
-       //calculate_coupons($google_response, $merchant_result);
-        $merchant_calc->AddResult($merchant_result);
+      $merchant_result = new GoogleResult($curr_id);
+      if ($gc_data[$root]['calculate']['tax']['VALUE'] == "true") {
+        // Compute tax for this address id and shipping type
+        $amount = 15; // Modify this to the actual tax value
+        $merchant_result->SetTaxDetails($currencies->get_value(DEFAULT_CURRENCY) * $amount);
+      }
+    //calculate_coupons($google_response, $merchant_result);
+      $merchant_calc->AddResult($merchant_result);
     }
   }
   $cart = $ex_cart;
@@ -476,7 +474,7 @@ function process_merchant_calculation_callback_single($google_response) {
  * TODO(eddavisson): This function is way too long. Split into pieces.
  */
 function process_new_order_notification($google_response, $google_checkout) {
-  global $order, $currencies;
+  global $order, $currencies, $languages_id;
 
   list($root, $gc_data) = $google_response->GetParsedXML();
 
@@ -600,7 +598,7 @@ function process_new_order_notification($google_response, $google_checkout) {
   tep_session_register('customer_first_name');
   // Customer exists, is logged and address book is up to date.
 
-  list($shipping_cost, $shipping_method_name, $shipping_method_code) =
+  list($shipping, $shipping_cost, $shipping_method_name, $shipping_method_code) =
       get_shipping_info($google_checkout, $gc_data[$root]);
 
   $tax_amt = $gc_data[$root]['order-adjustment']['total-tax']['VALUE'];
@@ -654,8 +652,8 @@ function process_new_order_notification($google_response, $google_checkout) {
   $order->billing['format_id'] = 2;
   $order->info['payment_method'] = $payment_method;
   $order->info['payment_module_code'] = $google_checkout->code;
-  $order->info['shipping_method'] = $shipping_name;
-  $order->info['shipping_module_code'] = $shipping_code;
+  $order->info['shipping_method'] = $shipping_method_name;
+  $order->info['shipping_module_code'] = $shipping_method_code;
   $order->info['cc_type'] = '';
   $order->info['cc_owner'] = '';
   $order->info['cc_number'] = '';
@@ -691,8 +689,7 @@ function process_new_order_notification($google_response, $google_checkout) {
         $order_total_value = $order_total['value'] * (strrpos($order_total['text'], '-') === false ? 1 : -1);
         $custom_order_totals_total += $currencies->get_value($gc_data[$root]['order-total']['currency']) * $order_total_value;
       } else {
-        // For Invoices!
-        // Happy BDay ropu, 07/03
+        // For invoices.
         $order->products[] = array (
           'qty' => $item['quantity']['VALUE'],
           'name' => $item['item-name']['VALUE'],
@@ -722,12 +719,12 @@ function process_new_order_notification($google_response, $google_checkout) {
   // Update values so that order_total modules get the correct values.
   $order->info['total'] = $gc_data[$root]['order-total']['VALUE'];
   $order->info['subtotal'] = $gc_data[$root]['order-total']['VALUE'] -
-                            ($ship_cost + $tax_amt) +
+                            ($shipping_cost + $tax_amt) +
                             @$coupons[0]['applied-amount']['VALUE'] -
                             $custom_order_totals_total;
   $order->info['coupon_code'] = @$coupons[0]['code']['VALUE'];
   $order->info['shipping_method'] = $shipping;
-  $order->info['shipping_cost'] = $ship_cost;
+  $order->info['shipping_cost'] = $shipping_cost;
   $order->info['tax_groups']['tax'] = $tax_amt;
   $order->info['currency'] = $gc_data[$root]['order-total']['currency'];
   $order->info['currency_value'] = 1;
@@ -1451,7 +1448,8 @@ function get_shipping_info($google_checkout, $gc_data_root) {
     $cost = $gc_data_root['order-adjustment']['shipping']['merchant-calculated-shipping-adjustment']['shipping-cost']['VALUE'];
     $shipping_methods = $google_checkout->getMethods();
     list (, $shipping_method_key) = explode(': ', $shipping_string, 2);
-    return array($cost,
+    return array($shipping_string,
+                 $cost,
                  $shipping_method_name = $shipping_methods[$shipping_method_key][0],
                  $shipping_method_code = $shipping_methods[$shipping_method_key][2]);
   } else if (isset($gc_data_root['order-adjustment']['shipping']['flat-rate-shipping-adjustment']['shipping-name']['VALUE'])) {
@@ -1459,15 +1457,19 @@ function get_shipping_info($google_checkout, $gc_data_root) {
     $cost = $gc_data_root['order-adjustment']['shipping']['flat-rate-shipping-adjustment']['shipping-cost']['VALUE'];
     $shipping_methods = $google_checkout->getMethods();
     list (, $shipping_method_key) = explode(': ', $shipping_string, 2);
-    return array($cost,
+    return array($shipping_string,
+                 $cost,
                  $shipping_method_name = $shipping_methods[$shipping_method_key][0],
                  $shipping_method_code = $shipping_methods[$shipping_method_key][2]);
   } else if (isset($gc_data_root['order-adjustment']['shipping']['carrier-calculated-shipping-adjustment']['shipping-name']['VALUE'])) {
-    return array($gc_data_root['order-adjustment']['shipping']['carrier-calculated-shipping-adjustment']['shipping-cost']['VALUE'],
+    // NOTE(eddavisson): Yes, the 'shipping-name' value is intentionally repeated.
+    return array($gc_data_root['order-adjustment']['shipping']['carrier-calculated-shipping-adjustment']['shipping-name']['VALUE'],
+                 $gc_data_root['order-adjustment']['shipping']['carrier-calculated-shipping-adjustment']['shipping-cost']['VALUE'],
                  $gc_data_root['order-adjustment']['shipping']['carrier-calculated-shipping-adjustment']['shipping-name']['VALUE'],
                  'GCCarrierCalculated');
   } else {
-    return array(0,
+    return array('GC Digital Delivery',
+                 0,
                  'GC Digital Delivery',
                  'FreeGCDigital');
   }

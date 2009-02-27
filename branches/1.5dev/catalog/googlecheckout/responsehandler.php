@@ -476,7 +476,7 @@ function process_merchant_calculation_callback_single($google_response) {
  * TODO(eddavisson): This function is way too long. Split into pieces.
  */
 function process_new_order_notification($google_response, $google_checkout) {
-  global $order;
+  global $order, $currencies;
 
   list($root, $gc_data) = $google_response->GetParsedXML();
 
@@ -1084,7 +1084,6 @@ function process_order_state_change_notification($google_response, $google_check
         break;
       }
       case 'PROCESSING': {
-      //$google_response->SendAck(false);
         $google_request = new GoogleRequest($google_checkout->merchantid,
                                             $google_checkout->merchantkey,
                                             sandbox_or_prod(),

@@ -27,8 +27,8 @@
  */
 chdir("./..");
 require_once(DIR_WS_LANGUAGES . $language . '/modules/payment/googlecheckout.php');
-require_once(DIR_WS_CATALOG . '/googlecheckout/library/configuration/google_configuration.php');
-require_once(DIR_WS_CATALOG . '/googlecheckout/library/configuration/google_configuration_keys.php');
+require_once(DIR_WS_CATALOG . 'googlecheckout/library/configuration/google_configuration.php');
+require_once(DIR_WS_CATALOG . 'googlecheckout/library/configuration/google_configuration_keys.php');
   
 $config = new GoogleConfigurationKeys();
 

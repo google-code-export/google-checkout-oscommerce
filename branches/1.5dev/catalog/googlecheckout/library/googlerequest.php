@@ -262,8 +262,7 @@
      *
      * @return array the status code and body of the response
      */
-    function SendMerchantOrderNumber($google_order,
-                                              $merchant_order, $timeout=false) {
+    function SendMerchantOrderNumber($google_order, $merchant_order, $timeout=false) {
       $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                   <add-merchant-order-number xmlns=\"". $this->schema_url .
                   "\" google-order-number=\"". $google_order . "\">
@@ -289,8 +288,7 @@
      *
      * @return array the status code and body of the response
      */
-    function SendBuyerMessage($google_order, $message,
-                                      $send_mail="true", $timeout=false) {
+    function SendBuyerMessage($google_order, $message, $send_mail="true", $timeout=false) {
       $postargs = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                   <send-buyer-message xmlns=\"". $this->schema_url .
                   "\" google-order-number=\"". $google_order . "\">

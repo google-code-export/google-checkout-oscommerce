@@ -1,0 +1,45 @@
+#summary Google Checkout Module v1.5.0 for osCommerce v2.2, RC 2a - Support
+#sidebar SideBar_1_5_0
+
+----
+
+Please begin by reading the [ReadMe_1_5_0 readme] page.
+
+----
+
+<wiki:toc max_depth="4" />
+
+----
+
+= Forum =
+To meet other developers and merchants who have integrated Google Checkout with osCommerce and to discuss any topics related to integration of Google Checkout with osCommerce, please visit the forum:
+
+  http://groups.google.com/group/google-checkout-for-osc-mod-support
+
+
+= Common Mistakes =
+  # Make sure you have set 777 file permissions on the following files:<br/><br/>`<osc-directory>/catalog/googlecheckout/logs/response_error.log`<br/>`<osc-directory>/catalog/googlecheckout/logs/response_message.log `<br/><br/>files.<br/><br/>
+  # In the Google Checkout Merchant Center, set your callback URL to: <br/><br/>`https://<your-domain>/catalog/googlecheckout/responsehandler.php`<br/><br/>In production mode, "https" is required; in the sandbox, "https" is optional. Set the correct option in the osCommerce admin console. For more information about supported SSL certificates, please see:<br/><br/>http://www.google.com/checkout/ssl-certificates<br/>http://checkout.google.com/support/sell/bin/answer.py?answer=57856<br/><br/>
+  # Make sure you are using the correct combination of Merchant ID and Merchant Key. Remember that sandbox and production modes have different keys and IDs.
+
+
+= Troubleshooting =
+
+|| Problem || Solution ||
+|| `/public_html/googlecheckout/logs/response_message.log) [function.fopen]: failed to open stream: Permission denied.` || Set the file attributes to 777 for:<br/><br/>`<osc-directory>/catalog/googlecheckout/logs/response_error.log`<br/>`<osc-directory>/catalog/googlecheckout/logs/response_message.log`  ||
+|| Test order shows up on Google Checkout but not in the osCommerce admin console. || There is an error somewhere in the file:<br/><br/>`<osc-directory>/catalog/googlecheckout/responsehandler.php`<br/><br/>or you have set the wrong API callback URL in your Google Checkout seller account under the 'Settings->Integration' tab. ||
+|| `<error-message>Malformed URL component: expected id: (\d{10})|(\d{15}), but got 8***********4 </error-message>` || You may have an extra space after your Google Merchant ID. Go to 'Admin->Payment' in the osCommerce admin console. Edit the Google Checkout module and the extra space should disappear. Click the 'Update' button to save the changes. ||
+|| `<error-message>No seller found with id 7************8</error-message>` || You may have entered Google Checkout Merchant ID. The sandbox Merchant ID can only be used with sandbox accounts (sandbox and production modes use different Merchant IDs). ||
+|| `sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target` || Your SSL certificate is not accepted by Google Checkout. For information about supported SSL certificates, please see:<br/><br/>http://www.google.com/checkout/ssl-certificates<br/>http://checkout.google.com/support/sell/bin/answer.py?answer=57856 ||
+|| `<error-message>Bad Signature on Cart</error-message>` || You may have entered the wrong Merchant ID or Key. ||
+|| Error seen in logs (`<osc-directory>/catalog/googlecheckout/logs/response_error.log`):<br/><br/>`Tue Nov 28 8:56:21 PST 2006:- Shopping cart not obtained from session.` || Go to 'Admin->Configuration->Session' in the osCommerce admin console and set 'Prevent Spider Sessions' to `False`. Side effects: You may see spiders as active users.<br/><br/>Solution 2 (recommended): Edit:<br/><br/>`<osc-directory>/catalog/includes/spider.txt`<br/><br/> and remove any lines containing the word `jakarta`. ||
+|| `Warning: main(admin/includes/configure.php) [function.main]: failed to open stream: No such file or directory in /public_html/googlecheckout/gcheckout.php on line 34 Fatal error: main() [function.require]: Failed opening required 'admin/includes/configure.php' (include_path='.:/usr/lib/php:/usr/local/lib/php') in /public_html/googlecheckout/gcheckout.php on line 33` || Change<br/><br/>`<osc-directory>/googlecheckout/gcheckout.php`, line 33 to:<br/><br/>`directory require_once('admin/includes/configure.php'); ||
+|| HTTP Authentication doesn't work with IIS. || The PHP directive cgi.rfc2616_headers must be set to 0 (the default value). Will use the `$_SERVER['HTTP_AUTHORIZATION']` header. ||
+|| No shipping is shown in the Cart. || Check that the `DIR_FS_CATALOG` and `DIR_WS_MODULES` constants have the correct values set in:<br/><br/>`<osc-directory>/catalog/includes/configre.php`<br/><br/>Try adding an echo in:<br/><br/>`<osc-directory>/catalog/googlecheckout/gcheckout.php`<br/><br/> such as:<br/><br/>`echo $module_directory = DIR_FS_CATALOG . DIR_WS_MODULES . 'shipping/';`<br/><br/>and vist:<br/><br/>`http://<your-domain>/catalog/shopping_cart.php`<br/><br/>to see if the string you see is the correct directory for the shipping files. ||
+|| `Warning: session_start() [function.session-start]: Cannot send session cookie` || This happens most often when running the deploy scripts locally on Windows and you FTP to a Linux / Unix server. You should use a different ftp tool which transmits php files in ascii mode.<br/><br/> We recommend using [http://filezilla-project.org/ FileZilla] to manage the ftp uploads.||
+
+
+= Bugs =
+To see known bugs or to report new ones, please see: 
+
+  http://groups.google.com/group/google-checkout-for-osc-mod-support

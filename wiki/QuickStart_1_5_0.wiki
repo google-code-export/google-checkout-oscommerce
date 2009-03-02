@@ -1,0 +1,72 @@
+#summary The quick guide to setting up Google Checkout on osCommerce
+#sidebar SideBar_1_5_0
+
+Welcome to the Quick Start guide to Google Checkout on osCommerce! This guide will help you get up and running with Checkout as quickly as possible.
+
+= Checklist =
+
+=== Who is this for? ===
+Anyone who needs to install the Google Checkout plugin on the current version of osCommerce.
+
+We assume you are working from a clean installation of osCommerce. If you are working from a pre-existing installation of osCommerce please see our full [Installation_1_5_0 Installation Guide] before continuing.
+
+
+== Prep work ==
+These steps should be done before you begin your installation, and can be done in any order.
+
+  * Download and install osCommerce version 2.2rc2a
+    * You can get this from the [http://www.oscommerce.com/solutions/downloads osCommerce download page]
+    * Instructions for how to install osCommerce are included in the osCommerce package.
+  * Setup a Google Checkout Merchant Account
+    * Sign up from the [https://checkout.google.com/sell/ Google Checkout Merchant page].
+  * Copy down your Google Checkout Merchant ID and Merchant Key
+    * These can be found under [https://checkout.google.com/sell/settings?section=Integration Settings -> Integration] in the merchant dashboard.
+    * You will need these later in the installation.
+  * Download and extract the Google Checkout Plugin for osCommerce 
+    * [http://google-checkout-oscommerce-staging.googlecode.com/files/google-checkout-oscommerce-1.5.zip google-checkout-oscommerce-1.5.zip]
+
+== Installation ==
+Now that the prep work is done you should be ready install and configure the plugin.
+
+=== Deploy the module ===
+
+  # Run the deploy tool to copy the required files to your osCommerce installation.
+    * If you are on windows, find the directory that you extracted the module to and run install.bat
+    * If you are on linux, find the directory that you extracted the module to and run install.sh
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/step1.PNG
+  # You'll see a screen asking for the directory that you unzipped the plugin to and the directory where osCommerce is installed. 
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/step2.PNG
+  # The osCommerce directory is usually the /catalog directory in the standard distribution of osCommerce. Your directory may be named differently. 
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/step3.PNG 
+  # Once you have both directories filled in properly, click the Deploy button. 
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/step4.PNG
+  # Verify that it worked! You should have gotten a screen that looked like this, if you didn't please see our [ManualInstructions_1_5_0 Manual Instructions] 
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/deploy-success.PNG 
+
+=== Configure inside OS Commerce ===
+
+  # Go to the Payment Modules section of the osCommerce admin screen and select GoogleCheckout
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/selecting_checkout.png
+  # Click install and you'll see the sidebar change to this:
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/empty_options.png
+  # Click edit so we can fill in the values needed to start using Google Checkout. There are two modes to run under - sandbox and production.
+    * The sandbox environment is for testing your integration. Orders which are sent here will not be charged but allow you to make sure your configuration worked.
+    * The production environment is for sending real orders. You should change your settings for to use production once you have made sure it works with sandbox. 
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/edit_options.png
+  # Now we need to enter some settings from Google Checkout. Checkout uses a sandbox environment for you to do your testing and to make sure everything works before going live with your store. To accept payments you need to get your merchant id and key from the production version of Google Checkout.
+    * Sandbox: https://sandbox.google.com/checkout/sell/settings?section=Integration
+    * Production: http://checkout.google.com/sell/settings?section=Integration
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/checkout_settings.png
+  # Copy the merchant ID and key for your sandbox account and your production account into the configuration screen. And hit update. 
+    * Do NOT share your production key with anyone else, you should treat it like a password.
+    http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/complete_settings.png
+
+
+== Next Steps ==
+Congratulations, at this point your installation should be complete. Where should you go from here?
+
+  * The [TestingInstructions_1_5_0 Testing Instructions] cover some ways of testing that your installation is working properly. We strongly recommend following the test guide there before allowing your customers to use Checkout.
+  * The [Installation_1_5_0 Full Installation Guide] can show you what files go where and give you a better understanding of what the deploy tool is doing. 
+  * The [http://code.google.com/p/google-checkout-oscommerce-staging/wiki/Support_1_5_0#Troubleshooting Troubleshooting] guide covers common issues people have with their installation. If you're having a problem, this is the first place you should look.
+  * The [http://code.google.com/p/google-checkout-oscommerce-staging/wiki/ReadMe_1_5_0#Advanced Advanced Options] guide explains what to do if you need to configure more advanced options for your store in case you need to go above and beyond the basic integration shown here.
+  * The [Analytics_1_5_0 Analytics] and [ProductSearch_1_5_0 Product Search] guides explain how to use Google Analytics and Google Product Search with your store.

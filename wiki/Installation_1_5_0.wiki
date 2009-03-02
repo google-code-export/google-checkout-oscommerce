@@ -1,0 +1,346 @@
+#summary Google Checkout Module v1.5.0 for osCommerce v2.2, RC 2a - Installation
+#sidebar SideBar_1_5_0
+
+----
+
+Please begin by reading the [ReadMe_1_5_0 readme] page.
+
+----
+
+<wiki:toc max_depth="4" />
+
+----
+
+= Introduction =
+This page describes how to perform a fresh install of the Google Checkout module. There are several possible ways to install the module.
+
+
+= Upgrading =
+If you are upgrading from a previous version of this module, be sure to uninstall and reinstall the module in the osCommerce admin console after you deploy the source code (by clicking "uninstall" and then "install"). This ensures that the database tables are adjusted appropriately.
+
+
+= Installer Script =
+If you are running an unmodified or slightly-modified version of osCommerce v2.2, RC 2a, you can install the module using a script. For instructions, please see the [QuickStart_1_5_0 Quick Start Guide].
+
+
+= Manual Installation =
+There are two manual installation options you to choose from, so please read carefully to determine which option is right for you.
+
+
+== Unmodified osCommerce ==
+If you are using the basic osCommerce installation without any other modules or add-ons, simply copy the provided files into your osCommerce directory, preserving the file structure.
+
+Note: If you applied a patch or manually modified the files to disable `register_globals`, you should use Option B.
+
+For your reference, here is the list of files you need to copy over to your system:
+
+{{{
+  <osc-directory>/
+    install.bat
+    README.txt
+    tools/
+
+  <osc-directory>/catalog/
+    checkout_payment.php
+    gc_return.php
+    googlecheckout/
+    login.php
+    shopping_cart.php
+
+  <osc-directory>/catalog/admin/
+    htaccess.php
+    modules.php
+    orders.php
+
+  <osc-directory>/catalog/admin/includes/functions/
+    general.php
+
+  <osc-directory>/catalog/includes/languages/english/modules/payment/
+    googlecheckout.php
+
+  <osc-directory>/catalog/includes/languages/espanol/modules/payment/
+    googlecheckout.php
+
+  <osc-directory>/catalog/includes/languages/german/modules/payment/
+    googlecheckout.php
+
+  <osc-directory>/catalog/includes/modules/payment/
+    googlecheckout.php
+}}}
+
+== Modified osCommerce ==
+If you have other modules installed on your osCommerce installation, replacing your existing files might break your existing installation. In this case, you need to edit the existing files manually.
+
+For this option, follow the instructions below:
+
+1. Copy the following new files into your existing system, preserving the file structure:
+
+{{{
+  <osc-directory>/
+    install.bat
+    README.txt
+    tools/
+
+  <osc-directory>/catalog/
+    gc_return.php
+    googlecheckout/
+
+  <osc-directory>/catalog/admin/
+    htaccess.php
+
+  <osc-directory>/catalog/includes/languages/english/modules/payment/
+    googlecheckout.php
+
+  <osc-directory>/catalog/includes/languages/espanol/modules/payment/
+    googlecheckout.php
+
+  <osc-directory>/catalog/includes/languages/german/modules/payment/
+     googlecheckout.php
+
+  <osc-directory>/catalog/includes/modules/payment/
+    googlecheckout.php
+}}}
+
+2. Manually edit the following files from your system as instructed below:
+
+{{{
+  <osc-directory>/catalog/admin/includes/functions/
+    general.php
+
+  <osc-directory>/catalog/admin/
+    modules.php
+    orders.php
+
+  <osc-directory>/catalog/
+    checkout_payment.php
+    login.php
+    shopping_cart.php
+}}}
+
+*1. `<osc-directory>/catalog/admin/includes/functions/general.php (LINE 929)`*
+
+Add:
+
+{{{
+// *** BEGIN GOOGLE CHECKOUT ***
+require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/functions/general.php');
+// *** END GOOGLE CHECKOUT ***
+}}}
+
+*2a. `<osc-directory>/catalog/admin/modules.php (LINE 45)`*
+
+Replace:
+
+{{{
+    case 'save':
+      while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
+        tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = '" . $value . "' where configuration_key = '" . $key . "'");
+      }
+      tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+      break;
+}}}
+
+With:
+
+{{{
+    case 'save':
+      // *** BEGIN GOOGLE CHECKOUT ***
+      require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules2.php');
+      // *** END GOOGLE CHECKOUT ***
+      tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+      break;
+}}}
+
+*2b. `<osc-directory>/catalog/admin/modules.php (LINE 15)`*
+
+Add:
+
+{{{
+// *** BEGIN GOOGLE CHECKOUT ***
+require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules1.php');
+// *** END GOOGLE CHECKOUT ***
+}}}
+
+
+*3a. `<osc-directory>/catalog/admin/orders.php (LINE 318)`*
+
+Replace:
+
+{{{
+          </table></td>
+          <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+        </tr>
+      </table></td>
+}}}
+
+With:
+
+{{{
+          </table></td>
+          <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+<!-- *** BEGIN GOOGLE CHECKOUT *** -->
+<?php
+require(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/orders3.php');
+?>
+<!-- *** END GOOGLE CHECKOUT *** -->
+          </tr>
+        </table></td>
+}}}
+
+*3b. `<osc-directory>/catalog/admin/orders.php (LINE 40)`*
+
+Replace:
+
+{{{
+      if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
+tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
+
+        $customer_notified = '0';
+        if (isset($HTTP_POST_VARS['notify']) && ($HTTP_POST_VARS['notify'] == 'on')) {
+$notify_comments = '';
+          if (isset($HTTP_POST_VARS['notify_comments']) && ($HTTP_POST_VARS['notify_comments'] == 'on')) {
+            $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
+          }
+
+          $email = STORE_NAME . "\n" . EMAIL_SEPARATOR . "\n" . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . "\n" . EMAIL_TEXT_INVOICE_URL . ' ' . tep_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL') . "\n" . EMAIL_TEXT_DATE_ORDERED . ' ' . tep_date_long($check_status['date_purchased']) . "\n\n" . $notify_comments . sprintf(EMAIL_TEXT_STATUS_UPDATE, $orders_status_array[$status]);
+
+          tep_mail($check_status['customers_name'], $check_status['customers_email_address'], EMAIL_TEXT_SUBJECT, $email, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+
+          $customer_notified = '1';
+        }
+
+        tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments) . "')");
+
+        $order_updated = true;
+      }
+}}}
+
+With:
+
+{{{
+      if ( ($check_status['orders_status'] != $status) || tep_not_null($comments)) {
+        tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . tep_db_input($status) . "', last_modified = now() where orders_id = '" . (int)$oID . "'");
+
+        // *** BEGIN GOOGLE CHECKOUT ***
+        require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders2.php');
+        // *** END GOOGLE CHECKOUT ***
+
+        tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments) . "')");
+
+        $order_updated = true;
+      }
+}}}
+
+*3c. `<osc-directory>/catalog/admin/orders.php (LINE 14)`*
+
+Add:
+
+{{{
+// *** BEGIN GOOGLE CHECKOUT ***
+require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders1.php');
+// *** END GOOGLE CHECKOUT ***
+}}}
+
+*4. `<osc-directory>/catalog/checkout_payment.php (LINE 224)`*
+
+Replace:
+
+{{{
+$selection = $payment_modules->selection();
+}}}
+
+With:
+
+{{{
+// *** BEGIN GOOGLE CHECKOUT ***
+// Skips Google Checkout as a payment option on the payments page since that option
+// is provided in the checkout page.
+$selection = $payment_modules->selection();
+for ($i = 0, $n = sizeof($selection); $i < $n; $i++) {
+  if ($selection[$i]['id'] == 'googlecheckout') {
+    array_splice($selection, $i, 1);
+    break;
+  }
+}
+// *** END GOOGLE CHECKOUT ***
+}}}
+
+*5. `<osc-directory>/catalog/login.php (LINE 203)`*
+
+Replace:
+
+{{{
+                        <td align="right"><?php echo tep_image_submit('button_login.gif', IMAGE_BUTTON_LOGIN); ?></td>
+                        <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+                      </tr>
+                    </table></td>
+                  </tr>
+                </table></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table></td>
+      </tr>
+    </table></form></td>
+}}}
+
+With:
+
+{{{
+                        <td align="right"><?php echo tep_image_submit('button_login.gif', IMAGE_BUTTON_LOGIN); ?></td>
+                        <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+                      </tr>
+                    </table></td>
+                  </tr>
+                </table></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table>
+        </form>
+<?php
+          // *** BEGIN GOOGLE CHECKOUT ***
+          if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+            include_once('googlecheckout/gcheckout.php');
+          }
+          // *** END GOOGLE CHECKOUT ***
+?>
+        </td>
+      </tr>
+    </table></td>
+}}}
+
+*6. `<osc-directory>/catalog/shopping_cart.php (LINE 202)`*
+
+Replace:
+
+{{{
+              <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
+              <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+            </tr>
+          </table></td>
+        </tr>
+      </table></td>
+    </tr>
+}}}
+
+With:
+
+{{{
+              <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
+              <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
+      </form>
+<?php
+        // *** BEGIN GOOGLE CHECKOUT ***
+        if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+          include_once('googlecheckout/gcheckout.php');
+        }
+        // *** END GOOGLE CHECKOUT ***
+?>
+      <form></td>
+    </tr>
+}}}

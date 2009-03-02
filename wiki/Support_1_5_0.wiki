@@ -1,4 +1,5 @@
 #summary Google Checkout Module v1.5.0 for osCommerce v2.2, RC 2a - Support
+#labels v1_5_0
 #sidebar SideBar_1_5_0
 
 ----

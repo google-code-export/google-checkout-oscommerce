@@ -1,0 +1,239 @@
+#summary Google Checkout Module v1.5.0 for osCommerce v2.2, RC 2a - Readme
+#sidebar SideBar_1_5_0
+
+----
+
+= Before you Begin =
+This module will only work with: 
+
+  _osCommerce Online Merchant v2.2, RC 2a_
+  
+To download osCommerce, please see:
+  
+  http://www.oscommerce.com/solutions/downloads
+
+----
+
+<wiki:toc max_depth="4" />
+
+----
+
+= Introduction =
+This module allows merchants using osCommerce to offer Google Checkout as a payment method and provides Level 2 integration with Google Checkout.
+
+Features include:
+  * Posting shopping carts to Google Checkout
+  * Carrier calculated shipping
+  * International and merchant calculated shipping support
+  * Tax support
+  * User and order processing within the osCommerce admin console
+  * UK support
+  * Google Analytics and third party tracking support
+  * Digital delivery support
+  * Google Product Search support (beta)
+  * Google Sitemaps support (beta)
+
+
+= Requirements =
+  * A Google Checkout Seller account (see http://checkout.google.com/sell)
+  * osCommerce v2.2 RC 2a (see http://www.oscommerce.com/solutions/downloads)
+  * PHP3, PHP4 or PHP5 with cURL (libcurl) installed and enabled
+
+
+= Installation =
+Please see the [Installation_1_5_0 installation] page.<br/>
+
+
+= Configuration =
+
+== Basic ==
+In the osCommerce admin console, select and install the Google Checkout payment 
+module. The following are some of the fields you can update:
+
+  # *Google Checkout Module Version*: (nothing to change)<br/><br/>
+  # *Enable the Google Checkout Module*: Set to `True` to enable Google Checkout for your site.<br/><br/>
+  # *Mode of Operation*: You can test your site with Google Checkout's sandbox servers before migrating to production. You will need to sign up for a separate Google Checkout Sandbox account (see http://sandbox.google.com/checkout/sell). Your sandbox account will have a different Merchant ID and Merchant Key. When you are ready to run against the production server, remember to set your Production Merchant ID and Key.<br/><br/>
+  # *Google Checkout Production Merchant ID*: Required for use against the Google Checkout production server. If the Production Merchant ID and Key are not set (and you are using production mode), a disabled (gray) Checkout button will appear on the Checkout page. You can find these values in your Google Seller Account under the 'Settings->Integration' tab. There are separate fields for production and sandbox keys and IDs.<br/><br/>
+  # *Google Checkout Production Merchant Key*: (see above).<br/><br/>
+  # *Google Checkout Sandbox Merchant ID*: (see above).<br/><br/>
+  # *Google Checkout Sandbox Merchant Key*: (see above).<br/><br/>
+
+Your Google Checkout setup is correct if upon creating a cart, a non-disabled Google Checkout button appears. See the [Installation_1_5_0 installation] page for more info.
+
+
+== Advanced ==
+Advanced configuration options are available in the Google Checkout configuration dashboard, which is linked at the top of the basic configuration page.
+
+
+=== Recommended ===
+  # *Google Analytics ID*: Add Google Analytics to your osCommerce store. For more info, see "Google Analytics" below.<br/><br/>
+
+
+=== Shipping ===
+  # *Ship to United States P.O. Boxes*: If this is set to false, you won't ship to any P.O. box address in the US.<br/><br/>
+  # *Enable Carrier Calculated Shipping*: Enable if you want to use carrier calculated shipping. Note that if you enable carrier calculated shipping, all merchant calculations will be ignored for Google Checkout orders. Only Flat Rate shipping rates will be included with CCS.<br/><br/>
+  # *Carrier Calculated Shipping Configuration*: These are the default values, fixed and variable charges for each carrier calculated shipping method. The default value contains the default shipping cost for a carrier calculated shipping option. If Google is unable to obtain the carrier's shipping rate for a shipping option, the buyer will still have the option of selecting that shipping option and paying the default value to have the order shipped. See:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_price<br/><br/>The fixed value allows you to specify a fixed charge that will be added to the total cost of an order. See:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_additional-fixed-charge<br/><br/>The variable charge specifies a percentage by which a carrier calculated shipping rate will be adjusted. This tag's value may be positive or negative. See:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_additional-variable-charge-percent<br/><br/>Set the default value to 0 to disable the method.<br/><br/>
+  # *Merchant Calculated Shipping Configuration*: These are the default values for all merchant calculated shipping rates. These values will be used if Google Checkout cannot reach your API callback to calculate the shipping price.<br/><br/>
+
+
+=== Rounding ===
+  # *Rounding Policy Mode*: Determines how Google Checkout will round prices.<br/><br/>- US default: rounding rule is `TOTAL`, rounding mode is `HALF_EVEN`<br/>- UK default: rounding rule is `PER_LINE`, rounding mode is `HALF_UP`<br/><br/>For more info, see:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html<br/><br/>
+  # *Rounding Policy Rule*: (see above).<br/><br/>
+
+
+=== Other ===
+  # *Enable .htaccess Basic Authentication Mode*: If your site is installed on a PHP CGI you will need to disable basic authentication over PHP. If you disable this feature, you can prevent spoofed messages from reaching `responsehandler.php` by configuring the `.htaccess` files in your installation. To do this, set 777 file permissions on `<osc-directory>/catalog/googlecheckout/` and visit:<br/><br/>`http://<your-domain>/catalog/admin/htaccess.php`<br/><br/>Remember to change the permissions back after creating the files.<br/><br/>
+  # *Disable Google Checkout for Virtual Goods*: If this feature is enabled and a cart includes any virtual goods, the Google Checkout button will be disabled. For more information, see:<br/><br/>http://checkout.google.com/seller/policies.html#4<br/><br/>
+  # *Sandbox Callback Protocol*: Sets the mode of operation for merchant calculations. If you are using sandbox mode, this can be `http` or `https`. In production, this must be set to `https`.<br/><br/>
+  # *Time to Cart Expiration (minutes)*: If different from `NONE`, this positive integer will set a cart expiration time starting from the creation of the Google Checkout button. This prevents buyers from submitting carts that may be deprecated or include bad settings. The default value is `NONE`. Keep in mind that the clock on your web server may not be synchronized with the clock on the Google Checkout server, so if you set a very short expiration time, carts could expire unexpectedly.<br/><br/>
+  # *Also send Notifications Using osCommerce*: If enabled, the module will send an email using the osCommerce internal email system if the comment in an order is longer than 254 characters, the limit for Google Checkout messages. If this happens, a warning will be shown in the osCommerce admin console. It will also send emails to the merchant account when orders states are changed in the admin console.<br/><br/>
+  # *Third Party Tracking URL*: Enable if you want to integrate the module's third-party tracking feature. Add the tracker URL or `NONE` to disable. For more info, see:<br/><br/>http://code.google.com/apis/checkout/developer/checkout_pixel_tracking.html<br/><br/>
+  # *Google Checkout restricted product categories*: Include the IDs of all the product categories that you want to exclude from Google Checkout purchases, separated by commas (ie. "1, 3,56 , 32"). For more information, see:<br/><br/>http://checkout.google.com/support/sell/bin/answer.py?answer=46174&topic=8681<br/>http://checkout.google.com/seller/policies.html#4<br/><br/>
+  # *Restricted Product Categories*: A comma-separated list of product categories for which the Google Checkout button will be grayed out. For more information, please visit:<br/><br/>http://checkout.google.com/support/sell/bin/answer.py?answer=46174&topic=8681<br/><br/>
+  # *Continue Shopping URL*: The URL customers will be redirected to if they follow the link back to your site after checking out. The default value will display a page showing the items purchases with Google Checkout:<br/><br/>`http://<your-domain>/catalog/googlecheckout/gc_return.php`
+
+
+= Features =
+
+== Google Analytics ==
+To track Google Checkout orders, you must enable e-commerce reporting for your website in your Google Analytics account. The following steps explain how to enable e-commerce reporting for your website:
+
+  # Log in to your Google Analytics account (http://www.google.com/analytics/).
+  # Click the 'Edit' link next to the profile you want to enable. This link appears in the 'Settings' column.
+  # On the 'Profile Settings' page, click the 'Edit' link in the 'Main Website Profile Information' box.
+  # Change the selected 'E-Commerce Website' radio button from 'No' to 'Yes.'
+
+For more info, see:
+
+  http://code.google.com/apis/checkout/developer/checkout_analytics_integration.html
+
+
+=== Third-Party Conversion Tracking (Advanced) ===
+Note: the osCommerce configuration page allows for the use of one third party tracking company. To enable third party tracking with multiple companies, some code modification may be required. Please see:
+
+  http://code.google.com/apis/checkout/developer/checkout_pixel_tracking.html
+ 
+You'll need to change the code in this file:
+
+  `<osc-directory>/catalog/googlecheckout/gcheckout.php`
+
+For example, the following mapping:
+
+{{{
+  $tracking_attr_types = array(
+    'google_checkout_attr_type_1' => 'attr_name_1',
+    'google_checkout_attr_type_2' => 'attr_name_2',
+    ...
+  );
+}}}
+
+will translate to:
+
+{{{
+  <parameters>
+    <url-parameter name="attr_name_1" type="google_checkout_attr_type_1"/>
+    <url-parameter name="attr_name_2" type="google_checkout_attr_type_2"/>
+    ...
+  </parameters>
+}}}
+
+
+== Google Product Search (beta) ==
+This module comes with a Google Product Search feed built in. By configuring Google Base to read this feed, you can have your products show up in search results.
+
+  # Check if the feed is working. Try looking at `http://<your-domain>/catalog/googlecheckout/feeds/products.xml` in your browser. If you see a feed of your store's products, go on to the next step. If, instead, you see PHP source code, your web hosting provider probably doesn't support the .htaccess `AddType` directive. You'll need to go to the "Orders" page of the osCommerce admin console to automatically generate a static version of the Product Search feed. Once you've done that, try looking at `http://<your-domain>/catalog/googlecheckout/feeds/products-static.xml` in your browser, and you should see the feed.
+  # Register with Google Base. Visit http://base.google.com/base/newfeed and go through the account creation steps.
+  # Add a feed. Select the target country, item type ("Products"), data feed type ("googlebase"), and filename ("products.xml" or "products-static.xml" as determined above). Click "Register data feed".
+  # Add a schedule. For the feed you just added, under the "Uploads" column, click "create" (next to "Schedule"). Enter the URL of the feed (as determined above) and set the update frequency. Google Base will now periodically read your feed and update its listings accordingly.
+  # Note: If you had to use "products-static.xml", you'll need to periodically visit the "Orders" page of the osCommerce admin console to refresh your feed.
+
+
+== Google Sitemaps (beta) ==
+This module comes with a Google Sitemaps feed built in. By configuring Google Webmaster Tools to read this feed, you can help Google index your store's pages.
+
+  # Check if the feed is working. Try looking at `http://<your-domain>/catalog/googlecheckout/feeds/sitemap.xml` in your browser. If you see a feed of your store's products, go on to the next step. If, instead, you see PHP source code, your web hosting provider probably doesn't support the .htaccess `AddType` directive. You'll need to go to the "Orders" page of the osCommerce admin console to automatically generate a static version of the Sitemaps feed. Once you've done that, try looking at `http://<your-domain>/catalog/googlecheckout/feeds/sitemap-static.xml` in your browser, and you should see the feed.
+  # Register with Google Webmaster Tools. Visit http://www.google.com/webmasters/tools and go through the account creation steps.
+  # Add your store's website to your account.
+  # Add the sitemap feed URL to your website in the Google Webmaster Tools console.
+  # Note: If you had to use "sitemap-static.xml", you'll need to periodically visit the "Orders" page of the osCommerce admin console to refresh your feed.
+
+
+== Carrier Calculated Shipping ==
+This feature allows merchants to get real time shipping quotes without any additional effort. All calculations are done by the Google Checkout servers. You only need to specify the shipping methods you want to provide. Google supports carrier calculated shipping for three carriers:
+ 
+  * !FedEx, 
+  * UPS 
+  * U.S. Postal Service (USPS)
+
+You cannot offer carrier calculated shipping methods and merchant calculated shipping methods for the same order. However, you can offer carrier calculated shipping methods and still use the Merchant Calculations API to calculate taxes and adjustments for coupons and gift certificates.
+ 
+Please note that only US Domestic shipping address are allowed. If the shipping address is international, only the flat rate shipping method will be shown.
+
+For more info, see:
+
+  http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#Process
+ 
+
+== Merchant Calculated Shipping ==
+In order to use this feature you must have registered with a real time shipping provider, such as USPS or !FedEx. This module must be activated and configured in 'Modules->Shipping'. For each enabled module you'll have to set the default values in the Google Checkout Admin UI. The default values will be used if for any reason Google Checkout cannot reach your API callback to calculate the shipping price. 
+
+The available shipping methods for each shipping provider must be configured in: 
+
+  `<osc-directory>/catalog/googlecheckout/library/shipping/merchant_calculated_methods.php`
+
+in the `$mc_shipping_methods` variable. If you want to disable one or more 
+methods, comment them out. Be aware that if you mix flat rate and real time 
+rates, both will be treated as merchant calculated shipping methods.
+
+To configure new shipping methods, visit:
+
+  `http://<your-domain>/catalog/googlecheckout/tools/shipping/method_generator`
+
+For more info, see:
+
+  `http://<your-domain>/catalog/googlecheckout/tools/shipping/method_generator/README.txt`
+
+
+== Tracking Users and Orders ==
+To enable this feature (as required for Level 2 integration), update the 'API callback URL' field in your Google Checkout seller account ('Settings->Integration') to:
+
+  `https://<your-domain>/catalog/googlecheckout/responsehandler.php`
+
+Note that the production Google Checkout servers require a URL that supports SSL (i.e., it begins with "https://"). The sandbox servers accept non-SSL callback URLs.
+
+You can view your Google Checkout customers and their orders in the 'Reports' tab of the osCommerce admin console. For each order, the default starting state is `Google New`.
+
+Explanation of Google Checkout order states in the osCommerce admin console:
+
+The instructions below assume you have enabled 'Automatically authorize and charge the buyer's credit card' in your Google Checkout seller account under 'Settings->Preferences'.
+
+  # When an order for a regular (non-download) product is submitted through Google Checkout the order state in osCommerce admin console will be automatically set to `Google Processing`. When following up on (shipping) these orders, you will need to change the order status to `Google Shipped`.<br/><br/>
+  # When an order for a download product is submitted via Google Checkout, the order status in the osCommerce admin console will be automatically set to `Google Shipped` (whether the customer has attempted to download or not). When following up on download orders keep the status "Google Shipped"; there is no need to change the state.
+  # Refunding or canceling an _entire_ Google Checkout order is also possible from within the osCommerce admin console.<br/><br/>
+    # If you have not yet changed a non-download order from `Google_Processing` to `Google Shipped` you can directly cancel or refund the _total_ order by selecting `Google Canceled` (but do _not_ set to `Google Refunded`). Changing the state to `Google Canceled` will automatically refund 100% of the transaction AND cancel the order at the same time. So there is no need to login to your Google Checkout merchant account to process the TOTAL refund.<br/><br/>
+    # Also after an item is shipped you can refund the _total_ amount of the order by choosing `Google Canceled` (but as stated above do _not_ set to `Google Refunded`).<br/><br/>
+    # If you want to refund only a _portion_ of the order amount (for example if a customer ordered two items and you want to refund the amount for only one item) then you will need to log in to your Google Checkout merchant account and process the partial refund. Google will automatically change the order status in osCommerce admin console to `Google Refunded` or `Google Shipped and Refunded`, and you won't have to change the state in the osCommerce admin console.<br/><br/>
+    # To reiterate: you should never need to manually change the order state to `Google Refunded` or `Google Shipped and Refunded`. These states are reserved for Google use only.<br/><br/>
+  # You can add a Tracking Number during the state change from `Google Processing` to `Google_Shipped`. A text field and a combo with the shipping providers will be shown when the order is in the `Google Processing` state. Any comments added during state change will be sent to the buyer account page if you have selected the Append Comments option.
+
+All state changes are added as notes in the osCommerce admin console. All request and response messages will be logged to the file: 
+
+  `<osc-directory>/catalog/googlecheckout/logs/response_message.log`
+
+Refunds and cancellations are both added as new order totals in each order as well as part of the history of the order.
+
+
+== Digital Delivery ==
+All products marked as "Product is Virtual" will be included in the digital delivery API. This means that at the end of the Google Checkout transaction, a link to:
+
+  `http://<your-domain>/catalog/checkout_success.php`
+
+will be shown as well as a description of the product.
+
+If the whole cart is virtual, no options will be shown in the Google Checkout 'Place Order' page.
+
+Note: If the cart is virtual but has some custom order totals (i.e., "low order fee", "group discount," etc), a notice saying "Email will be sent" will be shown for each order total in the Google Checkout confirmation page. This is due to a limitation of the Google Checkout API for supporting custom order totals and digital delivery.
+
+
+= Support =
+Please see the [Support_1_5_0 support] page.

@@ -1,4 +1,3 @@
-#labels Featured
 =Introduction=
 The project's documentation currently resides at http://google-checkout-oscommerce.googlecode.com/svn/trunk/README.txt .
 

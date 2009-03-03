@@ -224,8 +224,6 @@ def install_file(diff3, module, golden, destination):
 
 
 def merge(diff3, module, golden, destination):
-  logging.info('Running %s on the three input files, %s, %s, and %s' %
-               (diff3, module, golden, destination))
   merger = subprocess.Popen([diff3, '-m', module, golden, destination],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   (out, error) = merger.communicate()

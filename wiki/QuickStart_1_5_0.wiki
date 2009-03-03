@@ -1,5 +1,5 @@
 #summary The quick guide to setting up Google Checkout on osCommerce
-#labels v1_5_0
+#labels v1_5_0,Featured
 #sidebar SideBar_1_5_0
 
 Welcome to the Quick Start guide to Google Checkout on osCommerce! This guide will help you get up and running with Checkout as quickly as possible.

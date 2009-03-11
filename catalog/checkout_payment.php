@@ -1,13 +1,20 @@
 <?php
 /*
-  $Id: checkout_payment.php,v 1.113 2003/06/29 23:03:27 hpdl Exp $
+  Copyright (C) 2007 Google Inc.
 
-  osCommerce, Open Source E-Commerce Solutions
-  http://www.oscommerce.com
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
 
-  Copyright (c) 2007 osCommerce
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-  Released under the GNU General Public License
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
   require('includes/application_top.php');
@@ -52,12 +59,14 @@
     $billto = $customer_default_address_id;
   } else {
 // verify the selected billing address
-    $check_address_query = tep_db_query("select count(*) as total from " . TABLE_ADDRESS_BOOK . " where customers_id = '" . (int)$customer_id . "' and address_book_id = '" . (int)$billto . "'");
-    $check_address = tep_db_fetch_array($check_address_query);
+    if ( (is_array($billto) && empty($billto)) || is_numeric($billto) ) {
+      $check_address_query = tep_db_query("select count(*) as total from " . TABLE_ADDRESS_BOOK . " where customers_id = '" . (int)$customer_id . "' and address_book_id = '" . (int)$billto . "'");
+      $check_address = tep_db_fetch_array($check_address_query);
 
-    if ($check_address['total'] != '1') {
-      $billto = $customer_default_address_id;
-      if (tep_session_is_registered('payment')) tep_session_unregister('payment');
+      if ($check_address['total'] != '1') {
+        $billto = $customer_default_address_id;
+        if (tep_session_is_registered('payment')) tep_session_unregister('payment');
+      }
     }
   }
 
@@ -219,19 +228,18 @@ function rowOutEffect(object) {
           <tr class="infoBoxContents">
             <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
 <?php
-  // ** GOOGLE CHECKOUT **
-  // Skips Google checkout as a payment option on the payments page since that option
-  // is provided in the checkout page
-  
+  // *** BEGIN GOOGLE CHECKOUT ***
+  // Skips Google Checkout as a payment option on the payments page since that option
+  // is provided in the checkout page.
   $selection = $payment_modules->selection();
-  for($i=0, $n=sizeof($selection); $i<$n; $i++) {
-    if($selection[$i]['id'] == 'googlecheckout') {
-      array_splice($selection, $i, 1);	
+  for ($i = 0, $n = sizeof($selection); $i < $n; $i++) {
+    if ($selection[$i]['id'] == 'googlecheckout') {
+      array_splice($selection, $i, 1);
       break;   
     }
   }
-  // ** END GOOGLE CHECKOUT **
-
+  // *** END GOOGLE CHECKOUT ***
+  
   if (sizeof($selection) > 1) {
 ?>
               <tr>

@@ -1,21 +1,40 @@
 <?php
 /*
-// .htaccess .htpasswd pair for Google Checkout Basic Authentication
-// on CGI php installations V0.2
-// Coded by Ropu
+  Copyright (C) 2007 Google Inc.
 
-ChangeLog:
-// v0.2
-// 02-22-2007
-// * Add sandbox and checkout account
-// * Add check for directory
-// * Add cwd or get['url'] to set defaul dir
-// * Add file creation
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
 
-// v0.1
-// 02-14-2006 st. Valentine's day :D
-// * Basic creation of text to paste in files
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+/**
+ * Google Checkout v1.5.0
+ * $Id$
+ * 
+ * .htaccess .htpasswd pair for Google Checkout Basic Authentication on CGI php
+ *
+ * ChangeLog:
+ * v0.2
+ * 02-22-2007
+ * Add sandbox and checkout account
+ * Add check for directory
+ * Add cwd or get['url'] to set defaul dir
+ * Add file creation
+ *
+ * v0.1
+ * 02-14-2006 st. Valentine's day :D
+ * Basic creation of text to paste in files
+ *
  * README:
  * 
  * NOTE: This must be used if you run PHP over CGI

@@ -1,24 +1,20 @@
 <?php
 /*
-  $Id: modules.php,v 1.47 2003/06/29 22:50:52 hpdl Exp $
+  $Id: modules.php 1802 2008-01-11 16:59:17Z hpdl $
 
   osCommerce, Open Source E-Commerce Solutions
   http://www.oscommerce.com
 
-  Copyright (c) 2003 osCommerce
+  Copyright (c) 2008 osCommerce
 
   Released under the GNU General Public License
 */
 
   require('includes/application_top.php');
 
-  // ** GOOGLE CHECKOUT **
-  function gc_makeSqlString($str) {
-    $single_quote = "'";
-    $escaped_str = addcslashes(stripcslashes($str), "'\"\\\0..\37!@\177..\377");
-    return ($single_quote.$escaped_str.$single_quote);
-  }
-  // **END GOOGLE CHECKOUT**
+  // *** BEGIN GOOGLE CHECKOUT ***
+  require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules1.php');
+  // *** END GOOGLE CHECKOUT ***
 
   $set = (isset($HTTP_GET_VARS['set']) ? $HTTP_GET_VARS['set'] : '');
 
@@ -48,36 +44,20 @@
 
   $action = (isset($HTTP_GET_VARS['action']) ? $HTTP_GET_VARS['action'] : '');
 
-
   if (tep_not_null($action)) {
- 	
     switch ($action) {
       case 'save':
-      // ** GOOGLE CHECKOUT **      
-        // fix configuration no saving -
-      	reset($HTTP_POST_VARS['configuration']);
-        // end fix
-      // ** END GOOGLE CHECKOUT **      
-	    while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
-        // ** GOOGLE CHECKOUT **    
-          // Checks if module is of type google checkout and also verfies if this configuration is 
-          // for the check boxes for the shipping options   				
-	      if( is_array( $value ) ){
-                $value = implode( ", ", $value);
-                $value = ereg_replace (", --none--", "", $value);
-              }
-        // ** END GOOGLE CHECKOUT **
-	
-		  tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = " . gc_makeSqlString($value) . " where configuration_key = " . gc_makeSqlString($key));
-	    }
-	    tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+        // *** BEGIN GOOGLE CHECKOUT ***
+        require(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules2.php');
+        // *** END GOOGLE CHECKOUT ***
+        tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
         break;
       case 'install':
       case 'remove':
         $file_extension = substr($PHP_SELF, strrpos($PHP_SELF, '.'));
         $class = basename($HTTP_GET_VARS['module']);
         if (file_exists($module_directory . $class . $file_extension)) {
-          include($module_directory . $class . $file_extension);
+          include_once($module_directory . $class . $file_extension);
           $module = new $class;
           if ($action == 'install') {
             $module->install();
@@ -149,8 +129,8 @@
   for ($i=0, $n=sizeof($directory_array); $i<$n; $i++) {
     $file = $directory_array[$i];
 
-    include(DIR_FS_CATALOG_LANGUAGES . $language . '/modules/' . $module_type . '/' . $file);
-    include($module_directory . $file);
+    include_once(DIR_FS_CATALOG_LANGUAGES . $language . '/modules/' . $module_type . '/' . $file);
+    include_once($module_directory . $file);
 
     $class = substr($file, 0, strrpos($file, '.'));
     if (tep_class_exists($class)) {
@@ -167,7 +147,8 @@
         $module_info = array('code' => $module->code,
                              'title' => $module->title,
                              'description' => $module->description,
-                             'status' => $module->check());
+                             'status' => $module->check(),
+                             'signature' => (isset($module->signature) ? $module->signature : null));
 
         $module_keys = $module->keys();
 
@@ -207,9 +188,7 @@
   }
 
   ksort($installed_modules);
-
   $check_query = tep_db_query("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = '" . $module_key . "'");
-  //echo tep_db_num_rows($check_query);
   if (tep_db_num_rows($check_query)) {
     $check = tep_db_fetch_array($check_query);
     if ($check['configuration_value'] != implode(';', $installed_modules)) {
@@ -277,10 +256,20 @@
         $keys = substr($keys, 0, strrpos($keys, '<br><br>'));
 
         $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $mInfo->code . '&action=remove') . '">' . tep_image_button('button_module_remove.gif', IMAGE_MODULE_REMOVE) . '</a> <a href="' . tep_href_link(FILENAME_MODULES, 'set=' . $set . (isset($HTTP_GET_VARS['module']) ? '&module=' . $HTTP_GET_VARS['module'] : '') . '&action=edit') . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a>');
+
+        if (isset($mInfo->signature) && (list($scode, $smodule, $sversion, $soscversion) = explode('|', $mInfo->signature))) {
+          $contents[] = array('text' => '<br>' . tep_image(DIR_WS_IMAGES . 'icon_info.gif', IMAGE_ICON_INFO) . '&nbsp;<b>' . TEXT_INFO_VERSION . '</b> ' . $sversion . ' (<a href="http://sig.oscommerce.com/' . $mInfo->signature . '" target="_blank">' . TEXT_INFO_ONLINE_STATUS . '</a>)');
+        }
+
         $contents[] = array('text' => '<br>' . $mInfo->description);
         $contents[] = array('text' => '<br>' . $keys);
       } else {
         $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $mInfo->code . '&action=install') . '">' . tep_image_button('button_module_install.gif', IMAGE_MODULE_INSTALL) . '</a>');
+
+        if (isset($mInfo->signature) && (list($scode, $smodule, $sversion, $soscversion) = explode('|', $mInfo->signature))) {
+          $contents[] = array('text' => '<br>' . tep_image(DIR_WS_IMAGES . 'icon_info.gif', IMAGE_ICON_INFO) . '&nbsp;<b>' . TEXT_INFO_VERSION . '</b> ' . $sversion . ' (<a href="http://sig.oscommerce.com/' . $mInfo->signature . '" target="_blank">' . TEXT_INFO_ONLINE_STATUS . '</a>)');
+        }
+
         $contents[] = array('text' => '<br>' . $mInfo->description);
       }
       break;

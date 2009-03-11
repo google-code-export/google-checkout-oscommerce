@@ -57,7 +57,7 @@
         $file_extension = substr($PHP_SELF, strrpos($PHP_SELF, '.'));
         $class = basename($HTTP_GET_VARS['module']);
         if (file_exists($module_directory . $class . $file_extension)) {
-          include($module_directory . $class . $file_extension);
+          include_once($module_directory . $class . $file_extension);
           $module = new $class;
           if ($action == 'install') {
             $module->install();
@@ -129,8 +129,8 @@
   for ($i=0, $n=sizeof($directory_array); $i<$n; $i++) {
     $file = $directory_array[$i];
 
-    include(DIR_FS_CATALOG_LANGUAGES . $language . '/modules/' . $module_type . '/' . $file);
-    include($module_directory . $file);
+    include_once(DIR_FS_CATALOG_LANGUAGES . $language . '/modules/' . $module_type . '/' . $file);
+    include_once($module_directory . $file);
 
     $class = substr($file, 0, strrpos($file, '.'));
     if (tep_class_exists($class)) {

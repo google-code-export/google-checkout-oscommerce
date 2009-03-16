@@ -11,7 +11,7 @@
 */
 
   require('includes/application_top.php');
-  	
+  
   // *** BEGIN GOOGLE CHECKOUT ***
   require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders1.php');
   // *** END GOOGLE CHECKOUT ***
@@ -309,7 +309,7 @@
             </table></td>
             <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
 <!-- *** BEGIN GOOGLE CHECKOUT *** -->
-<?php 
+<?php
 require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders3.php');
 ?>
 <!-- *** END GOOGLE CHECKOUT *** -->

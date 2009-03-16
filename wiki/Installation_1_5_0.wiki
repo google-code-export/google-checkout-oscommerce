@@ -118,14 +118,32 @@ For this option, follow the instructions below:
     shopping_cart.php
 }}}
 
-*1. `<osc-directory>/catalog/admin/includes/functions/general.php (LINE 929)`*
+*1. `<osc-directory>/catalog/admin/includes/functions/general.php (LINE 923)`*
 
-Add:
+Replace:
 
 {{{
-// *** BEGIN GOOGLE CHECKOUT ***
-require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/functions/general.php');
-// *** END GOOGLE CHECKOUT ***
+    tep_db_query("delete from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_PRODUCTS . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_STATUS_HISTORY . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "'");
+  }
+}}}
+
+With:
+
+{{{
+    tep_db_query("delete from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_PRODUCTS . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_STATUS_HISTORY . " where orders_id = '" . (int)$order_id . "'");
+    tep_db_query("delete from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "'");
+
+    // *** BEGIN GOOGLE CHECKOUT ***
+    require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/functions/general.php');
+    // *** END GOOGLE CHECKOUT ***
+  }
 }}}
 
 *2a. `<osc-directory>/catalog/admin/modules.php (LINE 45)`*
@@ -146,7 +164,7 @@ With:
 {{{
       case 'save':
         // *** BEGIN GOOGLE CHECKOUT ***
-        require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules2.php');
+        require(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules2.php');
         // *** END GOOGLE CHECKOUT ***
         tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
         break;
@@ -157,9 +175,9 @@ With:
 Add:
 
 {{{
-// *** BEGIN GOOGLE CHECKOUT ***
-require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules1.php');
-// *** END GOOGLE CHECKOUT ***
+  // *** BEGIN GOOGLE CHECKOUT ***
+  require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules1.php');
+  // *** END GOOGLE CHECKOUT ***
 }}}
 
 
@@ -168,8 +186,8 @@ require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules1.php');
 Replace:
 
 {{{
-          </table></td>
-          <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+            </table></td>
+            <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
         </tr>
       </table></td>
 }}}
@@ -177,11 +195,11 @@ Replace:
 With:
 
 {{{
-          </table></td>
-          <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+            </table></td>
+            <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
 <!-- *** BEGIN GOOGLE CHECKOUT *** -->
 <?php
-require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/orders3.php');
+require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders3.php');
 ?>
 <!-- *** END GOOGLE CHECKOUT *** -->
           </tr>
@@ -210,7 +228,7 @@ Replace:
             $customer_notified = '1';
           }
 
-          tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments) . "')");
+          tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
 
           $order_updated = true;
         }
@@ -226,7 +244,7 @@ With:
           require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders2.php');
           // *** END GOOGLE CHECKOUT ***
 
-          tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments) . "')");
+          tep_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . (int)$oID . "', '" . tep_db_input($status) . "', now(), '" . tep_db_input($customer_notified) . "', '" . tep_db_input($comments)  . "')");
 
           $order_updated = true;
         }
@@ -237,9 +255,9 @@ With:
 Add:
 
 {{{
-// *** BEGIN GOOGLE CHECKOUT ***
-require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders1.php');
-// *** END GOOGLE CHECKOUT ***
+  // *** BEGIN GOOGLE CHECKOUT ***
+  require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/orders1.php');
+  // *** END GOOGLE CHECKOUT ***
 }}}
 
 *4. `<osc-directory>/catalog/checkout_payment.php (LINE 224)`*

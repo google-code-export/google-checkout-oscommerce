@@ -216,7 +216,7 @@ function session_win() {
           if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
             include_once('googlecheckout/gcheckout.php');
           }
-          // *** END GOOGLE CHECKOUT *** 
+          // *** END GOOGLE CHECKOUT ***
 ?>
         </td>
       </tr>

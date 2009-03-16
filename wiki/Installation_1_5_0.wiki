@@ -328,20 +328,20 @@ Replace:
 With:
 
 {{{
-              <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
-              <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      </form>
+                <td align="right" class="main"><?php echo '<a href="' . tep_href_link(FILENAME_CHECKOUT_SHIPPING, '', 'SSL') . '">' . tep_image_button('button_checkout.gif', IMAGE_BUTTON_CHECKOUT) . '</a>'; ?></td>
+                <td width="10"><?php echo tep_draw_separator('pixel_trans.gif', '10', '1'); ?></td>
+              </tr>
+            </table></td>
+          </tr>
+        </table>
+        </form>
 <?php
-        // *** BEGIN GOOGLE CHECKOUT ***
-        if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
-          include_once('googlecheckout/gcheckout.php');
-        }
-        // *** END GOOGLE CHECKOUT ***
+          // *** BEGIN GOOGLE CHECKOUT ***
+          if (defined('MODULE_PAYMENT_GOOGLECHECKOUT_STATUS') && MODULE_PAYMENT_GOOGLECHECKOUT_STATUS == 'True') {
+            include_once('googlecheckout/gcheckout.php');
+          }
+          // *** END GOOGLE CHECKOUT ***
 ?>
-      <form></td>
-    </tr>
+        <form></td>
+      </tr>
 }}}

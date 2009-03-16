@@ -232,7 +232,7 @@ With:
         }
 }}}
 
-*3c. `<osc-directory>/catalog/admin/orders.php (LINE 14)`*
+*3c. `<osc-directory>/catalog/admin/orders.php (LINE 15)`*
 
 Add:
 

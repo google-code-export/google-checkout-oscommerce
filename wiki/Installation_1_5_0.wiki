@@ -181,7 +181,7 @@ With:
           <td valign="top"><?php echo tep_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
 <!-- *** BEGIN GOOGLE CHECKOUT *** -->
 <?php
-require(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/orders3.php');
+require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/orders3.php');
 ?>
 <!-- *** END GOOGLE CHECKOUT *** -->
           </tr>

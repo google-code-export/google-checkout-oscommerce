@@ -133,23 +133,23 @@ require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/includes/functions/g
 Replace:
 
 {{{
-    case 'save':
-      while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
-        tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = '" . $value . "' where configuration_key = '" . $key . "'");
-      }
-      tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
-      break;
+      case 'save':
+        while (list($key, $value) = each($HTTP_POST_VARS['configuration'])) {
+          tep_db_query("update " . TABLE_CONFIGURATION . " set configuration_value = '" . $value . "' where configuration_key = '" . $key . "'");
+        }
+        tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+        break;
 }}}
 
 With:
 
 {{{
-    case 'save':
-      // *** BEGIN GOOGLE CHECKOUT ***
-      require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules2.php');
-      // *** END GOOGLE CHECKOUT ***
-      tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
-      break;
+      case 'save':
+        // *** BEGIN GOOGLE CHECKOUT ***
+        require_once(DIR_FS_CATALOG . 'googlecheckout/inserts/admin/modules2.php');
+        // *** END GOOGLE CHECKOUT ***
+        tep_redirect(tep_href_link(FILENAME_MODULES, 'set=' . $set . '&module=' . $HTTP_GET_VARS['module']));
+        break;
 }}}
 
 *2b. `<osc-directory>/catalog/admin/modules.php (LINE 15)`*

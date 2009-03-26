@@ -102,7 +102,20 @@ For this option, follow the instructions below:
     googlecheckout.php
 }}}
 
-2. Manually edit the following files from your system as instructed below:
+2. Set file permissions to 777 on the following files:
+
+{{{
+  <osc-directory>/catalog/googlecheckout/feeds/
+    products-static.xml
+    sitemap-static.xml
+
+  <osc-directory>/catalog/googlecheckout/logs/
+    last_updated.log
+    response_error.log
+    response_message.log
+}}}
+
+3. Manually edit the following files from your system as instructed below:
 
 {{{
   <osc-directory>/catalog/admin/includes/functions/

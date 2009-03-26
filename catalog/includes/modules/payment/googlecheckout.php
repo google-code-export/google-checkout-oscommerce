@@ -434,6 +434,14 @@ class googlecheckout {
       'MODULE_PAYMENT_GOOGLECHECKOUT_MERCHANTKEY_SNDBOX',
       );
   }
+  
+  /**
+   * osCommerce will call this when rendering the shopping cart page.
+   * This gives us a chance to insert our button into the page.
+   */
+  function checkout_initialization_method() {
+  	return '<p>Hello, world!</p>';
+  }
 }
 
 ?>

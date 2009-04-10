@@ -67,10 +67,12 @@ Advanced configuration options are available in the Google Checkout configuratio
 
 
 === Recommended ===
+http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/advanced-analytics-1.png
   # *Google Analytics ID*: Add Google Analytics to your osCommerce store. For more info, see "Google Analytics" below.<br/><br/>
 
 
 === Shipping ===
+http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/advanced-shipping-4.png
   # *Ship to United States P.O. Boxes*: If this is set to false, you won't ship to any P.O. box address in the US.<br/><br/>
   # *Enable Carrier Calculated Shipping*: Enable if you want to use carrier calculated shipping. Note that if you enable carrier calculated shipping, all merchant calculations will be ignored for Google Checkout orders. Only Flat Rate shipping rates will be included with CCS.<br/><br/>
   # *Carrier Calculated Shipping Configuration*: These are the default values, fixed and variable charges for each carrier calculated shipping method. The default value contains the default shipping cost for a carrier calculated shipping option. If Google is unable to obtain the carrier's shipping rate for a shipping option, the buyer will still have the option of selecting that shipping option and paying the default value to have the order shipped. See:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_price<br/><br/>The fixed value allows you to specify a fixed charge that will be added to the total cost of an order. See:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_additional-fixed-charge<br/><br/>The variable charge specifies a percentage by which a carrier calculated shipping rate will be adjusted. This tag's value may be positive or negative. See:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_XML_API_Carrier_Calculated_Shipping.html#tag_additional-variable-charge-percent<br/><br/>Set the default value to 0 to disable the method.<br/><br/>
@@ -78,11 +80,13 @@ Advanced configuration options are available in the Google Checkout configuratio
 
 
 === Rounding ===
+http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/advanced-rounding-1.png
   # *Rounding Policy Mode*: Determines how Google Checkout will round prices.<br/><br/>- US default: rounding rule is `TOTAL`, rounding mode is `HALF_EVEN`<br/>- UK default: rounding rule is `PER_LINE`, rounding mode is `HALF_UP`<br/><br/>For more info, see:<br/><br/>http://code.google.com/apis/checkout/developer/Google_Checkout_Rounding_Policy.html<br/><br/>
   # *Rounding Policy Rule*: (see above).<br/><br/>
 
 
 === Other ===
+http://google-checkout-oscommerce.googlecode.com/svn/wiki/images/advanced-other-1.png
   # *Enable .htaccess Basic Authentication Mode*: If your site is installed on a PHP CGI you will need to disable basic authentication over PHP. If you disable this feature, you can prevent spoofed messages from reaching `responsehandler.php` by configuring the `.htaccess` files in your installation. To do this, set 777 file permissions on `<osc-directory>/catalog/googlecheckout/` and visit:<br/><br/>`http://<your-domain>/catalog/admin/htaccess.php`<br/><br/>Remember to change the permissions back after creating the files.<br/><br/>
   # *Disable Google Checkout for Virtual Goods*: If this feature is enabled and a cart includes any virtual goods, the Google Checkout button will be disabled. For more information, see:<br/><br/>http://checkout.google.com/seller/policies.html#4<br/><br/>
   # *Sandbox Callback Protocol*: Sets the mode of operation for merchant calculations. If you are using sandbox mode, this can be `http` or `https`. In production, this must be set to `https`.<br/><br/>
